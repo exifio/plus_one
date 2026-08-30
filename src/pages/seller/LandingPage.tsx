@@ -14,17 +14,9 @@ export const LandingPage: React.FC = () => {
           원하는 가격에 판매해보세요
         </h1>
         <p className="hero-subtitle">
-          더 이상 안 쓰는 편의점 나만의 냉장고/포켓CU 보관상품을<br />
+          더 이상 안 쓰는 나만의 냉장고/포켓CU 보관상품을<br />
           간편하게 신청하고 판매를 진행할 수 있습니다.
         </p>
-
-        {status === 'OPEN' && (
-          <div className="hero-actions">
-            <Link to="/apply" className="btn btn-primary btn-lg">
-              판매 신청하기
-            </Link>
-          </div>
-        )}
 
         {status === 'PAUSED' && (
           <div className="status-notice status-notice-paused" role="status">
@@ -71,6 +63,22 @@ export const LandingPage: React.FC = () => {
           </li>
         </ol>
       </section>
+
+      {status === 'OPEN' && (
+        <div className="hero-actions hero-cta-desktop">
+          <Link to="/apply" className="btn btn-primary btn-lg">
+            판매 신청하기
+          </Link>
+        </div>
+      )}
+
+      {status === 'OPEN' && (
+        <div className="sticky-cta-bar">
+          <Link to="/apply" className="btn btn-primary btn-lg btn-block">
+            판매 신청하기
+          </Link>
+        </div>
+      )}
     </div>
   );
 };
