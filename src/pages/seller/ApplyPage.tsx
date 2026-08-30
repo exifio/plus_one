@@ -2,6 +2,7 @@ import { useState, type FormEvent } from 'react';
 import { Link } from 'react-router-dom';
 import { getRecruitmentStatus } from '../../mocks/recruitment';
 import type { PromotionType, Store } from '../../types';
+import { PriceSelection } from './PriceSelection';
 import {
   fieldErrorsFromZod,
   productInfoSchema,
@@ -230,6 +231,13 @@ export function ApplyPage() {
               </div>
             )}
           </form>
+
+          {saved !== null && (
+            <PriceSelection
+              key={`${saved.store}-${saved.promotionType}-${saved.productName}-${saved.originalPaidPrice}-${saved.quantity}-${saved.expiryDate}`}
+              productInfo={saved}
+            />
+          )}
         </>
       )}
     </div>
