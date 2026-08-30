@@ -1,0 +1,255 @@
+.seller-app {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  background-color: var(--surface-muted);
+}
+
+.seller-header {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background-color: var(--surface);
+  border-bottom: 1px solid var(--border);
+}
+
+.seller-header-container,
+.seller-footer-container {
+  max-width: var(--max-width-seller);
+  margin: 0 auto;
+  padding: 0 20px;
+}
+
+.seller-header-container {
+  height: 60px;
+  display: flex;
+  align-items: center;
+}
+
+.brand-logo {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.brand-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 32px;
+  height: 32px;
+  padding: 0 8px;
+  border-radius: var(--radius-sm);
+  background-color: var(--primary);
+  color: #fff;
+  font-weight: 800;
+  font-size: 16px;
+}
+
+.brand-title {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.seller-main {
+  flex: 1;
+}
+
+.seller-content-container {
+  max-width: var(--max-width-seller);
+  margin: 0 auto;
+  padding: 32px 20px 48px;
+}
+
+.seller-footer {
+  border-top: 1px solid var(--border);
+  background-color: var(--surface);
+}
+
+.seller-footer-container {
+  padding-top: 24px;
+  padding-bottom: 24px;
+}
+
+.footer-notice {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.footer-copy {
+  margin-top: 4px;
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
+.landing-page {
+  display: flex;
+  flex-direction: column;
+  gap: 40px;
+}
+
+.hero-section {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.hero-badge {
+  align-self: flex-start;
+  padding: 6px 12px;
+  border-radius: 999px;
+  background-color: var(--primary-soft);
+  color: var(--primary);
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.hero-title {
+  font-size: 30px;
+  font-weight: 800;
+  line-height: 1.35;
+  color: var(--text);
+}
+
+.hero-subtitle {
+  font-size: 16px;
+  line-height: 1.6;
+  color: var(--text-secondary);
+}
+
+.hero-actions {
+  margin-top: 8px;
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  border-radius: var(--radius-md);
+  font-weight: 700;
+  font-size: 16px;
+  transition: background-color 0.15s ease;
+}
+
+.btn-primary {
+  background-color: var(--primary);
+  color: #fff;
+}
+
+.btn-primary:hover {
+  background-color: var(--primary-hover);
+}
+
+.btn-lg {
+  height: 52px;
+  padding: 0 28px;
+  font-size: 17px;
+}
+
+.btn-block {
+  width: 100%;
+}
+
+.status-notice {
+  margin-top: 8px;
+  padding: 20px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.status-notice-title {
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.status-notice-desc {
+  font-size: 15px;
+  line-height: 1.6;
+  color: var(--text-secondary);
+}
+
+.status-notice-paused {
+  background-color: #FFFBEB;
+  border-color: #FDE68A;
+}
+
+.status-notice-paused .status-notice-title {
+  color: var(--warning);
+}
+
+.status-notice-closed {
+  background-color: var(--surface-muted);
+  border-color: var(--border);
+}
+
+.guide-card {
+  background-color: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 24px;
+}
+
+.guide-title {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.guide-steps {
+  list-style: none;
+  margin-top: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.guide-step-item {
+  display: flex;
+  gap: 14px;
+  align-items: flex-start;
+}
+
+.step-num {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 999px;
+  background-color: var(--primary-soft);
+  color: var(--primary);
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.step-info strong {
+  display: block;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.step-info p {
+  margin-top: 4px;
+  font-size: 15px;
+  line-height: 1.55;
+  color: var(--text-secondary);
+}
+
+@media (min-width: 768px) {
+  .seller-content-container {
+    padding-top: 48px;
+  }
+
+  .hero-title {
+    font-size: 36px;
+  }
+}
