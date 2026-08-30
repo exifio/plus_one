@@ -235,20 +235,6 @@
   border-top: 1px solid var(--border);
 }
 
-.price-reset-button {
-  align-self: flex-start;
-  min-height: 44px;
-  color: var(--text-secondary);
-  font-size: 14px;
-  font-weight: 600;
-  text-decoration: underline;
-  text-underline-offset: 3px;
-}
-
-.price-reset-button:hover {
-  color: var(--text);
-}
-
 @media (min-width: 768px) {
   .price-options {
     grid-template-columns: repeat(3, minmax(0, 1fr));

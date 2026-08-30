@@ -74,6 +74,14 @@ export function PriceSelection({ productInfo }: PriceSelectionProps) {
     case 'select':
       priceContent = (
         <section className="price-selection-card card" aria-labelledby="price-selection-title">
+          <div className="base-price-panel">
+            <span className="base-price-label">행사 기준 1개 가격</span>
+            <strong className="base-price-value">{formatWon(unitBasePrice)}</strong>
+            <span className="base-price-note">
+              {productInfo.promotionType} 행사에서 실제 결제금액을 나눈 금액이에요.
+            </span>
+          </div>
+
           <div className="price-section-header">
             <span className="price-eyebrow">가격 선택</span>
             <h2 className="price-section-title" id="price-selection-title">
@@ -82,14 +90,6 @@ export function PriceSelection({ productInfo }: PriceSelectionProps) {
             <p className="price-section-desc">
               행사 기준 1개 가격을 확인한 뒤, 판매하고 싶은 가격을 선택해주세요.
             </p>
-          </div>
-
-          <div className="base-price-panel">
-            <span className="base-price-label">행사 기준 1개 가격</span>
-            <strong className="base-price-value">{formatWon(unitBasePrice)}</strong>
-            <span className="base-price-note">
-              {productInfo.promotionType} 행사에서 실제 결제금액을 나눈 금액이에요.
-            </span>
           </div>
 
           <div className="price-options-group">
