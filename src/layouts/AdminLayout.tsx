@@ -1,5 +1,6 @@
 import React from 'react';
 import { Link, NavLink, Outlet } from 'react-router-dom';
+import { BrandBadge } from '../components/BrandBadge';
 
 export const AdminLayout: React.FC = () => {
   return (
@@ -8,7 +9,7 @@ export const AdminLayout: React.FC = () => {
         <div className="admin-header-container">
           <div className="admin-brand">
             <Link to="/admin" className="brand-logo">
-              <span className="brand-badge">1+</span>
+              <BrandBadge />
               <span className="admin-title">관리자 콘솔</span>
             </Link>
           </div>

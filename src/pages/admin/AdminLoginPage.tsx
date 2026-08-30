@@ -1,5 +1,6 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
+import { BrandBadge } from '../../components/BrandBadge';
 
 export const AdminLoginPage: React.FC = () => {
   const navigate = useNavigate();
@@ -13,7 +14,7 @@ export const AdminLoginPage: React.FC = () => {
     <div className="admin-login-page">
       <div className="login-card">
         <div className="login-header">
-          <span className="brand-badge">1+</span>
+          <BrandBadge />
           <h1 className="login-title">관리자 로그인</h1>
           <p className="login-desc">Frontend Phase Mock 로그인</p>
         </div>
