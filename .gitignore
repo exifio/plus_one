@@ -1,19 +1,35 @@
-.codex/
-.opencode/
+# OS
 .DS_Store
-.code-review-graph/
 
+# Dependencies & build
 node_modules/
 dist/
-output/
 tsconfig.tsbuildinfo
 
+# Local artifacts & tool output
+output/
+.playwright-cli/
+
+# Code review / graph tools
+.code-review-graph/
+.codegraph
+
+# AI coding assistants (local config)
 .agents/
 .claude/
 .codebuddy/
+.codex/
 .commandcode/
 .factory/
-.playwright-cli/
+.opencode/
 .qoder/
 .windsurf/
-.output/
+
+# Env (Backend phase)
+.env
+.env.*
+!.env.example
+
+# Test / cache (optional, harmless if unused)
+coverage/
+*.local
