@@ -290,3 +290,141 @@
     font-size: 22px;
   }
 }
+
+/* 신청 상세 */
+.admin-detail-page {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.admin-detail-header {
+  margin-bottom: 0;
+}
+
+.detail-back-link {
+  align-self: flex-start;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.detail-back-link:hover {
+  color: var(--primary);
+}
+
+.admin-detail-title-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.detail-card {
+  background-color: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 24px;
+}
+
+.detail-section-title {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: 16px;
+}
+
+.detail-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px 24px;
+}
+
+.detail-item dt {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  margin-bottom: 4px;
+}
+
+.detail-item dd {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.detail-note {
+  display: block;
+  margin-top: 4px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-secondary);
+}
+
+.detail-contact-value {
+  word-break: break-all;
+}
+
+.detail-hint {
+  font-size: 14px;
+  line-height: 1.55;
+  color: var(--text-secondary);
+  margin-bottom: 16px;
+}
+
+.status-saved-banner {
+  padding: 12px 16px;
+  border-radius: var(--radius-md);
+  background-color: #F0FDF4;
+  border: 1px solid #BBF7D0;
+  color: var(--success);
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.status-select-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  gap: 10px;
+}
+
+.status-option {
+  min-height: 44px;
+  padding: 0 14px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background-color: var(--surface);
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.status-option:hover {
+  border-color: var(--primary);
+  color: var(--primary);
+}
+
+.status-option.is-active {
+  border-color: var(--primary);
+  background-color: var(--primary-soft);
+  color: var(--primary);
+}
+
+.application-row {
+  cursor: pointer;
+}
+
+.application-row:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: -2px;
+}
+
+@media (max-width: 768px) {
+  .detail-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .detail-card {
+    padding: 20px;
+  }
+}

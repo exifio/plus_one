@@ -6,6 +6,7 @@ import { LandingPage } from './pages/seller/LandingPage';
 import { ApplyPage } from './pages/seller/ApplyPage';
 import { AdminLoginPage } from './pages/admin/AdminLoginPage';
 import { AdminApplicationsPage } from './pages/admin/AdminApplicationsPage';
+import { AdminApplicationDetailPage } from './pages/admin/AdminApplicationDetailPage';
 import { NotFoundPage } from './pages/NotFoundPage';
 
 export const App: React.FC = () => {
@@ -20,6 +21,7 @@ export const App: React.FC = () => {
 
       <Route path="/admin" element={<AdminLayout />}>
         <Route index element={<AdminApplicationsPage />} />
+        <Route path="applications/:id" element={<AdminApplicationDetailPage />} />
         <Route path="recruitment" element={<AdminApplicationsPage />} />
         <Route path="metrics" element={<AdminApplicationsPage />} />
       </Route>
