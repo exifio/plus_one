@@ -62,7 +62,6 @@ describe('productInfoSchema', () => {
       productName: '상품명을 입력해주세요.',
       originalPaidPrice: '결제금액을 입력해주세요.',
       quantity: '수량을 입력해주세요.',
-      expiryDate: '소비기한/유효기간을 선택해주세요.',
     });
   });
 
@@ -110,5 +109,16 @@ describe('productInfoSchema', () => {
 
     expect(parsed.success).toBe(true);
   });
-});
 
+  it('allows empty expiry date as optional', () => {
+    const parsed = productInfoSchema.safeParse({
+      ...validInput,
+      expiryDate: '',
+    });
+
+    expect(parsed.success).toBe(true);
+    if (parsed.success) {
+      expect(parsed.data.expiryDate).toBe('');
+    }
+  });
+});

@@ -22,7 +22,7 @@ export const productInfoSchema = z.object({
     .regex(/^\d+$/, '수량은 숫자만 입력해주세요.')
     .transform((value) => Number(value))
     .refine((value) => value >= 1, '수량은 1개 이상이어야 해요.'),
-  expiryDate: z.string().min(1, '소비기한/유효기간을 선택해주세요.'),
+  expiryDate: z.string().optional().default(''),
 });
 
 export type ProductInfo = z.infer<typeof productInfoSchema>;
