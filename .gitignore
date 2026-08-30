@@ -24,6 +24,7 @@ output/
 .opencode/
 .qoder/
 .windsurf/
+.omo/
 
 # Env (Backend phase)
 .env
