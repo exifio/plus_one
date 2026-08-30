@@ -428,3 +428,120 @@
     padding: 20px;
   }
 }
+
+/* 모집 관리 */
+.admin-recruitment-page {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.recruitment-status-card {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.recruitment-badge {
+  display: inline-flex;
+  align-self: flex-start;
+  padding: 6px 14px;
+  border-radius: 999px;
+  font-size: 14px;
+  font-weight: 600;
+  background-color: var(--surface-muted);
+  border: 1px solid var(--border);
+  color: var(--text-secondary);
+}
+
+.recruitment-badge-open {
+  background-color: #F0FDF4;
+  border-color: #BBF7D0;
+  color: var(--success);
+}
+
+.recruitment-badge-paused {
+  background-color: #FFFBEB;
+  border-color: #FDE68A;
+  color: var(--warning);
+}
+
+.recruitment-badge-closed {
+  background-color: #FEF2F2;
+  border-color: #FECACA;
+  color: var(--danger);
+}
+
+.recruitment-hint {
+  font-size: 14px;
+  line-height: 1.55;
+  color: var(--text-secondary);
+}
+
+.recruitment-select-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  gap: 10px;
+}
+
+.recruitment-option {
+  min-height: 44px;
+  padding: 0 14px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background-color: var(--surface);
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.recruitment-option:hover {
+  border-color: var(--primary);
+  color: var(--primary);
+}
+
+.recruitment-option.is-active {
+  border-color: var(--primary);
+  background-color: var(--primary-soft);
+  color: var(--primary);
+}
+
+/* 실험 현황 */
+.metric-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.metric-card {
+  background-color: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 16px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.metric-card dt {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.metric-card dd {
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.metrics-tables {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 20px;
+}
+
+.metrics-tables .detail-card {
+  min-width: 0;
+}
