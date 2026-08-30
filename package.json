@@ -1,14 +1,22 @@
 {
   "name": "plus-one-mvp",
-  "private": true,
   "version": "0.1.0",
+  "private": true,
+  "description": "",
+  "license": "ISC",
+  "author": "",
   "type": "module",
+  "main": "index.js",
+  "directories": {
+    "doc": "docs"
+  },
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
     "preview": "vite preview",
     "typecheck": "tsc --noEmit",
-    "test": "vitest run"
+    "test": "vitest run",
+    "doctor": "npx react-doctor@latest"
   },
   "dependencies": {
     "clsx": "^2.1.1",
@@ -23,6 +31,9 @@
     "@types/react": "^19.0.10",
     "@types/react-dom": "^19.0.4",
     "@vitejs/plugin-react": "^4.3.4",
+    "react-doctor": "^0.9.12",
+    "react-grab": "^0.2.0",
+    "react-scan": "^0.5.7",
     "typescript": "^5.7.3",
     "vite": "^6.2.0",
     "vitest": "^3.0.7"
