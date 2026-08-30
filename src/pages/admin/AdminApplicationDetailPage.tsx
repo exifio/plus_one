@@ -23,6 +23,7 @@ export const AdminApplicationDetailPage: React.FC = () => {
     application?.status ?? 'SUBMITTED',
   );
   const [saved, setSaved] = useState(false);
+  const [copiedKey, setCopiedKey] = useState<string | null>(null);
 
   if (!application) {
     return (
@@ -42,6 +43,20 @@ export const AdminApplicationDetailPage: React.FC = () => {
     updateApplicationStatus(application.id, next);
     setSaved(true);
   };
+
+  const handleCopy = (textToCopy: string, key: string) => {
+    if (navigator?.clipboard?.writeText) {
+      navigator.clipboard.writeText(textToCopy).catch(() => {});
+    }
+    setCopiedKey(key);
+    setTimeout(() => {
+      setCopiedKey(null);
+    }, 2000);
+  };
+
+  const proceedTemplate = `[+1] 안녕하세요! 신청해주신 '${application.productName}' 건 판매 진행 가능하여 연락드립니다.\n보관함의 상품 바코드/QR 캡처본을 회신해주시면 확인 즉시 ${formatWon(application.finalPrice)}을 토스/카카오페이로 입금해 드립니다.`;
+  const cancelTemplate = `[+1] 안녕하세요! 신청해주신 '${application.productName}' 건은 현재 매입 수량 마감으로 아쉽게도 이번 거래 진행이 어렵게 되었습니다.\n신청해주셔서 감사드리며 더 좋은 서비스로 찾아뵙겠습니다.`;
+  const completedTemplate = `[+1] 안녕하세요! '${application.productName}' 건의 판매 대금 ${formatWon(application.finalPrice)} 입금이 완료되었습니다.\n이용해주셔서 감사합니다!`;
 
   const priceChanged = application.initialPrice !== application.finalPrice;
 
@@ -91,7 +106,7 @@ export const AdminApplicationDetailPage: React.FC = () => {
           </div>
           <div className="detail-item">
             <dt>소비기한 / 유효기간</dt>
-            <dd>{application.expiryDate}</dd>
+            <dd>{application.expiryDate || '미입력'}</dd>
           </div>
           <div className="detail-item">
             <dt>행사 기준 1개 가격</dt>
@@ -153,6 +168,56 @@ export const AdminApplicationDetailPage: React.FC = () => {
             <dd className="detail-contact-value">{application.contactValue}</dd>
           </div>
         </dl>
+      </section>
+
+      <section className="detail-card">
+        <h2 className="detail-section-title">안내 메시지 템플릿</h2>
+        <p className="detail-hint">
+          판매자에게 보낼 문자를 클릭 한 번으로 복사하여 문자/카카오톡으로 발송할 수 있어요.
+        </p>
+        <div className="template-list">
+          <div className="template-item">
+            <div className="template-header">
+              <span className="template-tag">1. 판매 진행 / QR 요청</span>
+              <button
+                type="button"
+                className={`btn-template-copy ${copiedKey === 'proceed' ? 'is-copied' : ''}`}
+                onClick={() => handleCopy(proceedTemplate, 'proceed')}
+              >
+                {copiedKey === 'proceed' ? '복사됨!' : '문구 복사'}
+              </button>
+            </div>
+            <p className="template-text">{proceedTemplate}</p>
+          </div>
+
+          <div className="template-item">
+            <div className="template-header">
+              <span className="template-tag">2. 매입 불가 / 취소 안내</span>
+              <button
+                type="button"
+                className={`btn-template-copy ${copiedKey === 'cancel' ? 'is-copied' : ''}`}
+                onClick={() => handleCopy(cancelTemplate, 'cancel')}
+              >
+                {copiedKey === 'cancel' ? '복사됨!' : '문구 복사'}
+              </button>
+            </div>
+            <p className="template-text">{cancelTemplate}</p>
+          </div>
+
+          <div className="template-item">
+            <div className="template-header">
+              <span className="template-tag">3. 입금 완료 안내</span>
+              <button
+                type="button"
+                className={`btn-template-copy ${copiedKey === 'completed' ? 'is-copied' : ''}`}
+                onClick={() => handleCopy(completedTemplate, 'completed')}
+              >
+                {copiedKey === 'completed' ? '복사됨!' : '문구 복사'}
+              </button>
+            </div>
+            <p className="template-text">{completedTemplate}</p>
+          </div>
+        </div>
       </section>
 
       <section className="detail-card">

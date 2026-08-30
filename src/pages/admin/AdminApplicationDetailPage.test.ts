@@ -37,6 +37,7 @@ describe('AdminApplicationDetailPage', () => {
     expect(html).toContain('거절');
     expect(html).toContain('010-9876-5432');
     expect(html).toContain('증빙 확인'); // 현재 상태 배지
+    expect(html).toContain('안내 메시지 템플릿');
   });
 
   it('존재하지 않는 신청은 빈 상태를 보여준다', () => {
