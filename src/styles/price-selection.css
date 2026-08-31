@@ -73,7 +73,7 @@
 
 .base-price-slim-value {
   color: var(--primary);
-  font-size: 18px;
+  font-size: 24px;
   font-weight: 800;
   flex-shrink: 0;
 }

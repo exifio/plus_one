@@ -164,15 +164,6 @@ export function PriceSelection({
             tags={[productInfo.store, productInfo.promotionType]}
           />
 
-          <div className="price-section-header">
-            <h2 className="price-section-title" id="price-selection-title">
-              얼마에 판매하시겠어요?
-            </h2>
-            <p className="price-section-desc">
-              행사 기준 1개 가격을 확인한 뒤, 판매하고 싶은 가격을 선택해주세요.
-            </p>
-          </div>
-
           <div className="base-price-slim">
             <div className="base-price-slim-info">
               <span className="base-price-slim-label">행사 기준 1개 가격</span>
@@ -181,6 +172,15 @@ export function PriceSelection({
               </span>
             </div>
             <strong className="base-price-slim-value">{formatWon(unitBasePrice)}</strong>
+          </div>
+
+          <div className="price-section-header">
+            <h2 className="price-section-title" id="price-selection-title">
+              얼마에 판매하시겠어요?
+            </h2>
+            <p className="price-section-desc">
+              행사 기준 1개 가격 대비 판매하고 싶은 가격을 선택해주세요.
+            </p>
           </div>
 
           <div className="price-select-group">

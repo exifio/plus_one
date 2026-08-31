@@ -428,13 +428,13 @@ export function ApplyPage() {
           {currentStep === 'contact' && (
             <form className="apply-form card" onSubmit={handleContactSubmit} noValidate>
               <StepProgressBar currentStep={4} stepTitle="연락 수단 입력" tags={[store, promotionType]} />
-             <div className="page-header">
-               <h1 className="page-title">연락 수단을 입력해주세요</h1>
-               <p className="page-desc">
-                  24시간 이내에 진행 결과를 안내해 드리며,<br />
-                  대금은 토스·카카오페이로 바로 입금해 드려요.
-               </p>
-             </div>
+              <div className="page-header">
+                <h1 className="page-title">연락 수단을 입력해주세요</h1>
+                <p className="page-desc">
+                   신청 내용을 확인한 후 판매 진행이 가능한 경우<br />
+                   입력하신 연락처로 안내드릴게요.
+                </p>
+              </div>
 
               <fieldset className="form-group form-group-contact">
                 <legend className="form-label" id="contact-type-label">연락 수단 종류</legend>
@@ -497,8 +497,8 @@ export function ApplyPage() {
                 )}
                 <span className="form-input-help">
                   {contactType === 'kakao'
-                    ? '카카오톡으로 증빙 확인 및 입금 및 QR 코드 거래를 합니다.'
-                    : '문자로 증빙 확인 및 입금 및 QR 코드 거래를 합니다.'}
+                    ? '판매 진행이 확정되면 카카오톡으로 증빙과 QR을 확인해요.'
+                    : '판매 진행이 확정되면 문자로 증빙과 QR을 확인해요.'}
                 </span>
               </div>
 
@@ -610,8 +610,8 @@ export function ApplyPage() {
 
             <div className="confirm-guide-box">
               <p className="confirm-guide-text">
-                 24시간 이내에 진행 결과를 안내해 드리며,<br />
-                 대금은 토스·카카오페이로 바로 입금해 드려요.
+                신청 내용을 확인한 후 판매 진행이 가능한 경우<br />
+                입력하신 연락처로 안내드릴게요.
               </p>
             </div>
 
@@ -654,18 +654,14 @@ export function ApplyPage() {
                 </p>
               </div>
 
-             <div className="complete-notice-box">
-               <h2 className="complete-notice-title">이후 진행 안내</h2>
-               <ul className="complete-notice-list">
-                  <li>운영자가 신청 내용을 확인한 뒤 <strong>24시간 이내</strong>에 진행 여부(진행 또는 취소)를 문자로 안내해 드립니다.</li>
-                  <li>
-                    <strong>판매 진행 시:</strong> 입력하신 연락처({submittedApplication.contactValue})로 보관함 바코드/QR 확인 후 토스·카카오페이로 대금을 바로 입금해 드립니다.
-                  </li>
-                  <li>
-                    <strong>진행 불가 시:</strong> 매입 수량 마감 등의 사유와 함께 취소 안내 문자를 발송해 드립니다.
-                  </li>
-               </ul>
-             </div>
+              <div className="complete-notice-box">
+                <h2 className="complete-notice-title">이후 진행 안내</h2>
+                <ul className="complete-notice-list">
+                   <li>신청 내용을 확인한 후 <strong>판매 진행이 가능한 경우</strong> 입력하신 연락처({submittedApplication.contactValue})로 안내드릴게요.</li>
+                   <li>판매 진행 시에는 증빙과 QR을 확인한 뒤 입금이 진행돼요.</li>
+                   <li>진행 불가 시에도 연락드릴게요.</li>
+                </ul>
+              </div>
 
               <div className="complete-summary">
                 <h2 className="complete-summary-title">신청 내역 요약</h2>
