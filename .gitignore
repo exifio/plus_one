@@ -9,22 +9,30 @@ tsconfig.tsbuildinfo
 # Local artifacts & tool output
 output/
 .playwright-cli/
+.playwright-mcp/
+graphify-out/
+
+# Ad-hoc QA screenshots (app assets live in public/)
+/*.png
 
 # Code review / graph tools
 .code-review-graph/
 .codegraph
 
 # AI coding assistants (local config)
+.openai/
 .agents/
 .claude/
 .codebuddy/
 .codex/
 .commandcode/
+.cursor/
 .factory/
 .opencode/
 .qoder/
 .windsurf/
 .omo/
+docs/superpowers/
 
 # Env (Backend phase)
 .env

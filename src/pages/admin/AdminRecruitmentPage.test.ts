@@ -1,8 +1,13 @@
-import { describe, it, expect, afterEach } from 'vitest';
+import { describe, it, expect, afterEach, vi } from 'vitest';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { createElement as h } from 'react';
 import { AdminRecruitmentPage } from './AdminRecruitmentPage';
 import { getRecruitmentStatus, setRecruitmentStatus } from '../../mocks/recruitmentStore';
+
+vi.mock('../../services/supabaseClient', () => ({
+  supabase: null,
+  isSupabaseConfigured: false,
+}));
 
 function renderPage(): string {
   return renderToStaticMarkup(h(AdminRecruitmentPage));

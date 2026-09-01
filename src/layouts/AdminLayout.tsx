@@ -1,8 +1,74 @@
-import React from 'react';
-import { Link, NavLink, Outlet } from 'react-router-dom';
+import React, { useEffect, useState } from 'react';
+import { Link, Navigate, NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { BrandBadge } from '../components/BrandBadge';
+import {
+  getAdminSession,
+  signOutAdmin,
+  subscribeToAuthChanges,
+} from '../services/authService';
+import { isSupabaseConfigured } from '../services/supabaseClient';
 
 export const AdminLayout: React.FC = () => {
+  const navigate = useNavigate();
+  const location = useLocation();
+  const [access, setAccess] = useState<'checking' | 'allowed' | 'denied'>(
+    isSupabaseConfigured ? 'checking' : 'allowed',
+  );
+
+  useEffect(() => {
+    if (!isSupabaseConfigured) {
+      return;
+    }
+
+    let active = true;
+    const checkAccess = async () => {
+      try {
+        const session = await getAdminSession();
+        if (active) {
+          setAccess(session ? 'allowed' : 'denied');
+        }
+      } catch {
+        if (active) {
+          setAccess('denied');
+        }
+      }
+    };
+
+    void checkAccess();
+    const unsubscribe = subscribeToAuthChanges((session) => {
+      if (!session) {
+        setAccess('denied');
+        return;
+      }
+      window.setTimeout(() => void checkAccess(), 0);
+    });
+
+    return () => {
+      active = false;
+      unsubscribe();
+    };
+  }, []);
+
+  if (isSupabaseConfigured && access === 'checking') {
+    return (
+      <main className="admin-main">
+        <div className="admin-content-container admin-loading-card">관리자 권한을 확인하고 있어요.</div>
+      </main>
+    );
+  }
+
+  if (isSupabaseConfigured && access === 'denied') {
+    return <Navigate to="/admin/login" replace state={{ from: location.pathname }} />;
+  }
+
+  const handleLogout = async () => {
+    try {
+      await signOutAdmin();
+    } finally {
+      navigate('/admin/login', { replace: true });
+    }
+  };
+
   return (
     <div className="admin-app">
       <header className="admin-header">
@@ -36,6 +102,11 @@ export const AdminLayout: React.FC = () => {
             <Link to="/" className="admin-nav-item exit-link" target="_blank" rel="noreferrer">
               판매자 화면 ↗
             </Link>
+            {isSupabaseConfigured && (
+              <button type="button" className="admin-nav-item admin-logout" onClick={handleLogout}>
+                로그아웃
+              </button>
+            )}
           </nav>
         </div>
       </header>

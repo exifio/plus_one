@@ -1,7 +1,12 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { createElement as h } from 'react';
 import { AdminMetricsPage } from './AdminMetricsPage';
+
+vi.mock('../../services/supabaseClient', () => ({
+  supabase: null,
+  isSupabaseConfigured: false,
+}));
 
 describe('AdminMetricsPage', () => {
   it('집계 카드와 가격/상태 분포 표를 보여준다', () => {

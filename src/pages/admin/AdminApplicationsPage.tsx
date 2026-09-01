@@ -1,4 +1,6 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
+import { fetchApplications } from '../../services/applicationService';
+import type { Application } from '../../types';
 import { useNavigate } from 'react-router-dom';
 import { MOCK_APPLICATIONS } from '../../mocks/applications';
 import {
@@ -9,18 +11,41 @@ import {
   statusBadgeClass,
   type StatusFilter,
 } from '../../utils/adminStatus';
+import { isSupabaseConfigured } from '../../services/supabaseClient';
 
 export const AdminApplicationsPage: React.FC = () => {
   const [filter, setFilter] = useState<StatusFilter>('ALL');
   const navigate = useNavigate();
 
-  const applications = useMemo(
-    () =>
-      filter === 'ALL'
-        ? MOCK_APPLICATIONS
+  const [applications, setApplications] = useState<Application[]>(() =>
+    isSupabaseConfigured
+      ? []
+      : filter === 'ALL'
+        ? [...MOCK_APPLICATIONS]
         : MOCK_APPLICATIONS.filter((application) => application.status === filter),
-    [filter],
   );
+  const [isLoading, setIsLoading] = useState(isSupabaseConfigured);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    let active = true;
+    setIsLoading(true);
+    setError(null);
+    fetchApplications(filter).then((data) => {
+      if (active) {
+        setApplications(data);
+        setIsLoading(false);
+      }
+    }).catch(() => {
+      if (active) {
+        setError('신청 목록을 불러오지 못했어요. 잠시 후 다시 시도해주세요.');
+        setIsLoading(false);
+      }
+    });
+    return () => {
+      active = false;
+    };
+  }, [filter]);
 
   return (
     <div className="admin-dashboard-page">
@@ -45,7 +70,15 @@ export const AdminApplicationsPage: React.FC = () => {
         ))}
       </div>
 
-      {applications.length === 0 ? (
+      {error ? (
+        <div className="card admin-empty-card" role="alert">
+          <p>{error}</p>
+        </div>
+      ) : isLoading ? (
+        <div className="card admin-empty-card">
+          <p>신청 목록을 불러오고 있어요.</p>
+        </div>
+      ) : applications.length === 0 ? (
         <div className="card admin-empty-card">
           <p>선택한 상태의 신청이 아직 없어요.</p>
         </div>

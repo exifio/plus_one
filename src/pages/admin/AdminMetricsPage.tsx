@@ -1,8 +1,10 @@
-import { useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
+import { fetchApplications, fetchRecruitmentStatus } from '../../services/applicationService';
 import { getApplications } from '../../mocks/applicationsStore';
 import { getRecruitmentStatus } from '../../mocks/recruitmentStore';
+import { isSupabaseConfigured } from '../../services/supabaseClient';
 import { STATUS_LABELS, formatWon } from '../../utils/adminStatus';
-import type { Application } from '../../types';
+import type { Application, RecruitmentStatus } from '../../types';
 
 function priceBuckets(applications: Application[]) {
   const counts: Record<string, number> = {};
@@ -25,9 +27,34 @@ function statusCounts(applications: Application[]) {
 }
 
 export const AdminMetricsPage: React.FC = () => {
-  // 실제 구현에서는 API에서 집계된 결과. 여기선 Mock 저장소에서 즉시 집계.
-  const applications = useMemo(() => getApplications(), []);
-  const recStatus = useMemo(() => getRecruitmentStatus(), []);
+  const [applications, setApplications] = useState<Application[]>(() =>
+    isSupabaseConfigured ? [] : getApplications(),
+  );
+  const [recStatus, setRecStatus] = useState<RecruitmentStatus | null>(() =>
+    isSupabaseConfigured ? null : getRecruitmentStatus(),
+  );
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    let active = true;
+    fetchApplications()
+      .then((data) => {
+        if (active) setApplications(data);
+      })
+      .catch(() => {
+        if (active) setError('지표를 불러오지 못했어요.');
+      });
+    fetchRecruitmentStatus()
+      .then((status) => {
+        if (active) setRecStatus(status);
+      })
+      .catch(() => {
+        if (active) setError('모집 상태를 불러오지 못했어요.');
+      });
+    return () => {
+      active = false;
+    };
+  }, []);
 
   const total = applications.length;
   const paidSales = useMemo(() => applications.filter((a) => a.finalPrice > 0).length, [applications]);
@@ -50,9 +77,18 @@ export const AdminMetricsPage: React.FC = () => {
       <div className="admin-page-header">
         <h1 className="admin-page-title">실험 현황</h1>
         <p className="admin-page-subtitle">
-          현재 모집 상태: <strong className={`recruitment-badge recruitment-badge-${recStatus.toLowerCase()}`}>{recStatus}</strong>
+          현재 모집 상태:{' '}
+          {recStatus ? (
+            <strong className={`recruitment-badge recruitment-badge-${recStatus.toLowerCase()}`}>
+              {recStatus}
+            </strong>
+          ) : (
+            <strong>확인 중</strong>
+          )}
         </p>
       </div>
+
+      {error && <div className="status-notice status-notice-closed" role="alert">{error}</div>}
 
       <div className="metric-cards">
         <div className="metric-card">
@@ -95,7 +131,7 @@ export const AdminMetricsPage: React.FC = () => {
                 </tr>
               </thead>
               <tbody>
-                {priceDist.map(([price, count]) => (
+                {priceDist.map(([price, count]: [string, number]) => (
                   <tr key={price}>
                     <td>{price}</td>
                     <td>{count}</td>
@@ -116,7 +152,7 @@ export const AdminMetricsPage: React.FC = () => {
               </tr>
             </thead>
             <tbody>
-              {statusDist.map(([label, count]) => (
+              {statusDist.map(([label, count]: [string, number]) => (
                 <tr key={label}>
                   <td>{label}</td>
                   <td>{count}</td>

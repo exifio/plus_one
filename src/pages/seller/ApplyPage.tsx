@@ -1,7 +1,6 @@
 import { useEffect, useRef, useState, type FormEvent } from 'react';
 import { Link, useOutletContext } from 'react-router-dom';
-import { getRecruitmentStatus } from '../../mocks/recruitment';
-import { createApplication } from '../../mocks/applicationsStore';
+import { submitApplication } from '../../services/applicationService';
 import type { Application, PromotionType, Store } from '../../types';
 import type { SellerLayoutContext } from '../../layouts/SellerLayout';
 import { StepProgressBar } from '../../components/StepProgressBar';
@@ -27,9 +26,15 @@ const PROMOTIONS: readonly PromotionType[] = ['1+1', '2+1'];
 type ApplyStep = 'store' | 'product_info' | 'price' | 'contact' | 'confirm' | 'complete';
 
 export function ApplyPage() {
-  const status = getRecruitmentStatus();
   const outletContext = useOutletContext<SellerLayoutContext | undefined>();
   const setHeaderBack = outletContext?.setHeaderBack;
+  const recruitmentStatus = outletContext?.recruitmentStatus;
+  const status = recruitmentStatus ?? 'OPEN';
+  const recruitmentLoading = outletContext !== undefined && recruitmentStatus === null;
+  const canApply =
+    !recruitmentLoading &&
+    !outletContext?.recruitmentError &&
+    (outletContext === undefined ? status === 'OPEN' : recruitmentStatus === 'OPEN');
 
   // Wizard step
   const [currentStep, setCurrentStep] = useState<ApplyStep>('store');
@@ -63,6 +68,8 @@ export function ApplyPage() {
   const [contactValue, setContactValue] = useState('');
   const [contactErrors, setContactErrors] = useState<ContactFieldErrors>({});
   const [savedContact, setSavedContact] = useState<ContactInfo | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
 
   // Completed
   const [submittedApplication, setSubmittedApplication] = useState<Application | null>(null);
@@ -174,35 +181,84 @@ export function ApplyPage() {
     setCurrentStep('confirm');
   };
 
-  const handleFinalSubmit = () => {
-    if (!savedProduct || !priceResult || !savedContact) return;
+  const handleFinalSubmit = async () => {
+    if (!savedProduct || !priceResult || !savedContact || isSubmitting) return;
+    setIsSubmitting(true);
+    setSubmitError(null);
 
-    const newApp = createApplication({
-      store: savedProduct.store,
-      promotionType: savedProduct.promotionType,
-      productName: savedProduct.productName,
-      originalPaidPrice: savedProduct.originalPaidPrice,
-      quantity: savedProduct.quantity,
-      expiryDate: savedProduct.expiryDate,
-      unitBasePrice: priceResult.unitBasePrice,
-      initialRatio: priceResult.initialRatio,
-      initialPrice: priceResult.initialPrice,
-      hadPriceOffer: priceResult.hadPriceOffer,
-      offeredRatio: priceResult.offeredRatio,
-      offeredPrice: priceResult.offeredPrice,
-      offerAccepted: priceResult.offerAccepted,
-      finalRatio: priceResult.finalRatio,
-      finalPrice: priceResult.finalPrice,
-      contactType: savedContact.contactType,
-      contactValue: savedContact.contactValue,
-    });
+    try {
+      const newAppId = await submitApplication({
+        store: savedProduct.store,
+        promotionType: savedProduct.promotionType,
+        productName: savedProduct.productName,
+        originalPaidPrice: savedProduct.originalPaidPrice,
+        quantity: savedProduct.quantity,
+        expiryDate: savedProduct.expiryDate,
+        unitBasePrice: priceResult.unitBasePrice,
+        initialRatio: priceResult.initialRatio,
+        initialPrice: priceResult.initialPrice,
+        hadPriceOffer: priceResult.hadPriceOffer,
+        offeredRatio: priceResult.offeredRatio,
+        offeredPrice: priceResult.offeredPrice,
+        offerAccepted: priceResult.offerAccepted,
+        finalRatio: priceResult.finalRatio,
+        finalPrice: priceResult.finalPrice,
+        contactType: savedContact.contactType,
+        contactValue: savedContact.contactValue,
+      });
 
-    setSubmittedApplication(newApp);
-    setCurrentStep('complete');
+      const newApp: Application = {
+        id: newAppId,
+        createdAt: new Date().toISOString(),
+        store: savedProduct.store,
+        promotionType: savedProduct.promotionType,
+        productName: savedProduct.productName,
+        originalPaidPrice: savedProduct.originalPaidPrice,
+        quantity: savedProduct.quantity,
+        expiryDate: savedProduct.expiryDate,
+        unitBasePrice: priceResult.unitBasePrice,
+        initialRatio: priceResult.initialRatio,
+        initialPrice: priceResult.initialPrice,
+        hadPriceOffer: priceResult.hadPriceOffer,
+        offeredRatio: priceResult.offeredRatio,
+        offeredPrice: priceResult.offeredPrice,
+        offerAccepted: priceResult.offerAccepted,
+        finalRatio: priceResult.finalRatio,
+        finalPrice: priceResult.finalPrice,
+        contactType: savedContact.contactType,
+        contactValue: savedContact.contactValue,
+        status: 'SUBMITTED',
+      };
+
+      setSubmittedApplication(newApp);
+      setCurrentStep('complete');
+    } catch (err: unknown) {
+      if (err instanceof Error && err.message === 'RECRUITMENT_NOT_OPEN') {
+        setSubmitError('현재는 모집이 중단되어 판매 신청을 접수할 수 없습니다.');
+      } else {
+        setSubmitError('신청 처리 중 오류가 발생했습니다. 다시 시도해주세요.');
+      }
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
     <div className="apply-page">
+      {outletContext?.recruitmentError && (
+        <div className="status-notice status-notice-closed" role="alert">
+          <strong className="status-notice-title">신청 가능 여부를 확인하지 못했어요</strong>
+          <p className="status-notice-desc">잠시 후 다시 확인해주세요.</p>
+        </div>
+      )}
+
+      {recruitmentLoading && (
+        <div className="status-notice status-notice-paused" role="status">
+          <strong className="status-notice-title">신청 가능 여부를 확인하고 있어요</strong>
+          <p className="status-notice-desc">잠시만 기다려주세요.</p>
+        </div>
+      )}
+
       {status === 'PAUSED' && (
         <div className="status-notice status-notice-paused" role="status">
           <strong className="status-notice-title">지금은 신청을 잠시 멈춰두었어요</strong>
@@ -221,7 +277,7 @@ export function ApplyPage() {
         </div>
       )}
 
-      {status === 'OPEN' && (
+      {canApply && (
         <>
           {currentStep === 'store' && (
             <section className="wizard-step wizard-step-sticky-cta card" aria-labelledby="step-product-type-title">
@@ -617,6 +673,11 @@ export function ApplyPage() {
 
            </div>
 
+              {submitError && (
+                <div className="status-notice status-notice-closed" role="alert" style={{ margin: '16px 0' }}>
+                  <strong className="status-notice-title">{submitError}</strong>
+                </div>
+              )}
               <div className="confirm-bottom-bar">
                 <div className="confirm-bottom-bar-inner">
                   <button
@@ -629,9 +690,10 @@ export function ApplyPage() {
                   <button
                     type="button"
                     className="btn btn-primary btn-confirm-submit"
+                    disabled={isSubmitting}
                     onClick={handleFinalSubmit}
                   >
-                    판매 신청 완료하기
+                    {isSubmitting ? '신청 처리 중...' : '판매 신청 완료하기'}
                   </button>
                 </div>
               </div>

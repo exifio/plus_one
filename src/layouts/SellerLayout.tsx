@@ -1,6 +1,8 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Link, Outlet, useLocation, useNavigate } from "react-router-dom";
 import { BrandBadge } from "../components/BrandBadge";
+import { fetchRecruitmentStatus } from "../services/applicationService";
+import type { RecruitmentStatus } from "../types";
 
 export type HeaderBackConfig = {
   label: string;
@@ -10,6 +12,8 @@ export type HeaderBackConfig = {
 
 export type SellerLayoutContext = {
   setHeaderBack: (config: HeaderBackConfig | null) => void;
+  recruitmentStatus: RecruitmentStatus | null;
+  recruitmentError: boolean;
 };
 
 export const SellerLayout: React.FC = () => {
@@ -17,6 +21,27 @@ export const SellerLayout: React.FC = () => {
   const navigate = useNavigate();
   const isApplyPage = location.pathname.startsWith("/apply");
   const [headerBack, setHeaderBack] = useState<HeaderBackConfig | null>(null);
+  const [recruitmentStatus, setRecruitmentStatus] = useState<RecruitmentStatus | null>(null);
+  const [recruitmentError, setRecruitmentError] = useState(false);
+
+  useEffect(() => {
+    let active = true;
+    fetchRecruitmentStatus()
+      .then((status) => {
+        if (active) {
+          setRecruitmentStatus(status);
+          setRecruitmentError(false);
+        }
+      })
+      .catch(() => {
+        if (active) {
+          setRecruitmentError(true);
+        }
+      });
+    return () => {
+      active = false;
+    };
+  }, []);
 
   const handleBackClick = () => {
     if (headerBack?.onClick) {
@@ -58,7 +83,9 @@ export const SellerLayout: React.FC = () => {
       </header>
       <main className="seller-main">
         <div className="seller-content-container">
-          <Outlet context={{ setHeaderBack } satisfies SellerLayoutContext} />
+          <Outlet
+            context={{ setHeaderBack, recruitmentStatus, recruitmentError } satisfies SellerLayoutContext}
+          />
         </div>
       </main>
     </div>

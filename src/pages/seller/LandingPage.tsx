@@ -1,9 +1,12 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
-import { getRecruitmentStatus } from '../../mocks/recruitment';
+import { Link, useOutletContext } from 'react-router-dom';
+import type { SellerLayoutContext } from '../../layouts/SellerLayout';
 
 export const LandingPage: React.FC = () => {
-  const status = getRecruitmentStatus();
+  const outletContext = useOutletContext<SellerLayoutContext | undefined>();
+  const status = outletContext?.recruitmentStatus ?? 'OPEN';
+  const isLoading = outletContext !== undefined && outletContext.recruitmentStatus === null;
+  const canApply = !isLoading && !outletContext?.recruitmentError && status === 'OPEN';
 
   return (
     <div className="landing-page">
@@ -17,6 +20,13 @@ export const LandingPage: React.FC = () => {
           더 이상 안 쓰는 나만의 냉장고/포켓CU 보관상품을<br />
           간편하게 신청하고 판매를 진행할 수 있습니다.
         </p>
+
+        {outletContext?.recruitmentError && (
+          <div className="status-notice status-notice-closed" role="alert">
+            <strong className="status-notice-title">신청 가능 여부를 확인하지 못했어요</strong>
+            <p className="status-notice-desc">잠시 후 다시 확인해주세요.</p>
+          </div>
+        )}
 
         {status === 'PAUSED' && (
           <div className="status-notice status-notice-paused" role="status">
@@ -64,7 +74,7 @@ export const LandingPage: React.FC = () => {
         </ol>
       </section>
 
-      {status === 'OPEN' && (
+      {canApply && (
         <div className="hero-actions hero-cta-desktop">
           <Link to="/apply" className="btn btn-primary btn-lg">
             판매 신청하기
@@ -72,7 +82,7 @@ export const LandingPage: React.FC = () => {
         </div>
       )}
 
-      {status === 'OPEN' && (
+      {canApply && (
         <div className="sticky-cta-bar">
           <Link to="/apply" className="btn btn-primary btn-lg btn-block">
             판매 신청하기

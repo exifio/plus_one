@@ -71,6 +71,12 @@
   color: var(--text-secondary);
 }
 
+.admin-logout {
+  border: 0;
+  cursor: pointer;
+  font: inherit;
+}
+
 .admin-main {
   flex: 1;
 }
@@ -79,6 +85,11 @@
   max-width: var(--max-width-admin);
   margin: 0 auto;
   padding: 32px 24px 48px;
+}
+
+.admin-loading-card {
+  color: var(--text-secondary);
+  text-align: center;
 }
 
 .admin-page-header {

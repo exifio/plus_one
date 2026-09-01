@@ -1,4 +1,4 @@
-import { describe, it, expect, afterEach } from 'vitest';
+import { describe, it, expect, afterEach, vi } from 'vitest';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { createElement as h } from 'react';
 import { MemoryRouter, Routes, Route } from 'react-router-dom';
@@ -7,6 +7,11 @@ import {
   getApplicationById,
   updateApplicationStatus,
 } from '../../mocks/applicationsStore';
+
+vi.mock('../../services/supabaseClient', () => ({
+  supabase: null,
+  isSupabaseConfigured: false,
+}));
 
 function renderDetail(id: string): string {
   return renderToStaticMarkup(

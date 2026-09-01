@@ -1,6 +1,11 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
-import { getApplicationById, updateApplicationStatus } from '../../mocks/applicationsStore';
+import { getApplicationById } from '../../mocks/applicationsStore';
+import {
+  fetchApplicationById,
+  updateApplicationStatus as svcUpdateApplicationStatus,
+} from '../../services/applicationService';
+import { isSupabaseConfigured } from '../../services/supabaseClient';
 import {
   STATUS_FILTERS,
   STATUS_LABELS,
@@ -9,6 +14,7 @@ import {
   statusBadgeClass,
 } from '../../utils/adminStatus';
 import type { ApplicationStatus } from '../../types';
+import type { Application } from '../../types';
 
 const CONTACT_TYPE_LABELS: Record<'phone' | 'kakao', string> = {
   phone: '휴대전화',
@@ -17,13 +23,79 @@ const CONTACT_TYPE_LABELS: Record<'phone' | 'kakao', string> = {
 
 export const AdminApplicationDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
-  const application = id ? getApplicationById(id) : undefined;
+  const [application, setApplication] = useState<Application | undefined>(() =>
+    id && !isSupabaseConfigured ? getApplicationById(id) : undefined,
+  );
+  const [isLoading, setIsLoading] = useState(isSupabaseConfigured);
+  const [loadError, setLoadError] = useState<string | null>(null);
 
   const [status, setStatus] = useState<ApplicationStatus>(
     application?.status ?? 'SUBMITTED',
   );
   const [saved, setSaved] = useState(false);
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
+  const [saveError, setSaveError] = useState<string | null>(null);
+  const [isSaving, setIsSaving] = useState(false);
+
+  useEffect(() => {
+    if (!id) {
+      setApplication(undefined);
+      setIsLoading(false);
+      return;
+    }
+
+    if (!isSupabaseConfigured) {
+      setApplication(getApplicationById(id));
+      setIsLoading(false);
+      return;
+    }
+
+    let active = true;
+    setIsLoading(true);
+    setLoadError(null);
+    fetchApplicationById(id)
+      .then((nextApplication) => {
+        if (active) {
+          setApplication(nextApplication ?? undefined);
+        }
+      })
+      .catch(() => {
+        if (active) {
+          setLoadError('신청 상세를 불러오지 못했어요. 잠시 후 다시 시도해주세요.');
+        }
+      })
+      .finally(() => {
+        if (active) {
+          setIsLoading(false);
+        }
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [id]);
+
+  useEffect(() => {
+    if (application) {
+      setStatus(application.status);
+    }
+  }, [application]);
+
+  if (isLoading) {
+    return (
+      <div className="admin-detail-page">
+        <div className="card admin-empty-card">신청 상세를 불러오고 있어요.</div>
+      </div>
+    );
+  }
+
+  if (loadError) {
+    return (
+      <div className="admin-detail-page">
+        <div className="card admin-empty-card" role="alert">{loadError}</div>
+      </div>
+    );
+  }
 
   if (!application) {
     return (
@@ -38,10 +110,20 @@ export const AdminApplicationDetailPage: React.FC = () => {
     );
   }
 
-  const handleSave = (next: ApplicationStatus) => {
-    setStatus(next);
-    updateApplicationStatus(application.id, next);
-    setSaved(true);
+  const handleSave = async (next: ApplicationStatus) => {
+    if (isSaving) return;
+    setIsSaving(true);
+    setSaveError(null);
+    try {
+      await svcUpdateApplicationStatus(application.id, next);
+      setStatus(next);
+      setApplication((current) => (current ? { ...current, status: next } : current));
+      setSaved(true);
+    } catch {
+      setSaveError('상태를 저장하지 못했어요. 잠시 후 다시 시도해주세요.');
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const handleCopy = (textToCopy: string, key: string) => {
@@ -78,6 +160,12 @@ export const AdminApplicationDetailPage: React.FC = () => {
       {saved && (
         <div className="status-saved-banner" role="status">
           상태가 ‘{STATUS_LABELS[status]}’(으)로 변경되었어요.
+        </div>
+      )}
+
+      {saveError && (
+        <div className="status-notice status-notice-closed" role="alert">
+          <strong className="status-notice-title">{saveError}</strong>
         </div>
       )}
 
@@ -233,7 +321,8 @@ export const AdminApplicationDetailPage: React.FC = () => {
               role="radio"
               aria-checked={status === option.value}
               className={status === option.value ? 'status-option is-active' : 'status-option'}
-              onClick={() => handleSave(option.value as ApplicationStatus)}
+              onClick={() => void handleSave(option.value as ApplicationStatus)}
+              disabled={isSaving}
             >
               {option.label}
             </button>
