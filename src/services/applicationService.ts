@@ -192,7 +192,6 @@ export async function fetchRecruitmentStatus(): Promise<RecruitmentStatus> {
   const { data, error } = await supabase
     .from('recruitment_settings')
     .select('status')
-    .eq('id', 1)
     .maybeSingle();
   if (error) {
     throw toError(error, '모집 상태를 불러오지 못했습니다.');

@@ -66,8 +66,7 @@
   background-color: var(--primary-soft);
 }
 
-.admin-nav-item.exit-link,
-.admin-nav-item.logout-link {
+.admin-nav-item.exit-link {
   color: var(--text-secondary);
 }
 

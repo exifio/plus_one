@@ -37,15 +37,15 @@ describe('applicationService configured mode', () => {
     ).rejects.toThrow('database unavailable');
   });
 
-  it('모집 singleton을 숫자형 id 1로 조회한다', async () => {
+  it('익명 모집 상태 조회는 공개된 status 컬럼만 사용한다', async () => {
     const maybeSingle = vi.fn().mockResolvedValue({ data: { status: 'PAUSED' }, error: null });
-    const eq = vi.fn().mockReturnValue({ maybeSingle });
-    const select = vi.fn().mockReturnValue({ eq });
+    const query = { maybeSingle };
+    const select = vi.fn().mockReturnValue(query);
     supabaseMock.from.mockReturnValue({ select });
 
     await expect(fetchRecruitmentStatus()).resolves.toBe('PAUSED');
     expect(supabaseMock.from).toHaveBeenCalledWith('recruitment_settings');
-    expect(eq).toHaveBeenCalledWith('id', 1);
+    expect(select).toHaveBeenCalledWith('status');
   });
 
   it('유효기간을 입력하지 않으면 RPC에 null을 전달한다', async () => {

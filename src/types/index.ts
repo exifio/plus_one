@@ -14,7 +14,6 @@ export type ApplicationStatus =
 export interface PriceOption {
   ratio: number;
   price: number;
-  isRepresentative: boolean;
 }
 
 export interface Application {

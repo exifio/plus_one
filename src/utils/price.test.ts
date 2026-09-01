@@ -5,7 +5,6 @@ import {
   generatePriceOptions,
   getLowerPriceOffer,
   getPromotionQuantity,
-  isPaidSaleIntent,
   round100,
 } from './price';
 
@@ -61,48 +60,47 @@ describe('calculateRatioPrice', () => {
 describe('generatePriceOptions', () => {
   it('keeps every 10% step when rounded amounts stay unique', () => {
     expect(generatePriceOptions(1800)).toEqual([
-      { ratio: 100, price: 1800, isRepresentative: true },
-      { ratio: 90, price: 1600, isRepresentative: true },
-      { ratio: 80, price: 1400, isRepresentative: true },
-      { ratio: 70, price: 1300, isRepresentative: true },
-      { ratio: 60, price: 1100, isRepresentative: true },
-      { ratio: 50, price: 900, isRepresentative: true },
-      { ratio: 40, price: 700, isRepresentative: true },
-      { ratio: 30, price: 500, isRepresentative: true },
-      { ratio: 20, price: 400, isRepresentative: true },
-      { ratio: 10, price: 200, isRepresentative: true },
-      { ratio: 0, price: 0, isRepresentative: true },
+      { ratio: 100, price: 1800 },
+      { ratio: 90, price: 1600 },
+      { ratio: 80, price: 1400 },
+      { ratio: 70, price: 1300 },
+      { ratio: 60, price: 1100 },
+      { ratio: 50, price: 900 },
+      { ratio: 40, price: 700 },
+      { ratio: 30, price: 500 },
+      { ratio: 20, price: 400 },
+      { ratio: 10, price: 200 },
+      { ratio: 0, price: 0 },
     ]);
   });
 
   it('shows a collapsed amount once and keeps the highest ratio', () => {
     expect(generatePriceOptions(100)).toEqual([
-      { ratio: 100, price: 100, isRepresentative: true },
-      { ratio: 0, price: 0, isRepresentative: true },
+      { ratio: 100, price: 100 },
+      { ratio: 0, price: 0 },
     ]);
   });
 
   it('uses the highest ratio as the representative for each amount', () => {
     expect(generatePriceOptions(500)).toEqual([
-      { ratio: 100, price: 500, isRepresentative: true },
-      { ratio: 80, price: 400, isRepresentative: true },
-      { ratio: 60, price: 300, isRepresentative: true },
-      { ratio: 40, price: 200, isRepresentative: true },
-      { ratio: 20, price: 100, isRepresentative: true },
-      { ratio: 0, price: 0, isRepresentative: true },
+      { ratio: 100, price: 500 },
+      { ratio: 80, price: 400 },
+      { ratio: 60, price: 300 },
+      { ratio: 40, price: 200 },
+      { ratio: 20, price: 100 },
+      { ratio: 0, price: 0 },
     ]);
   });
 
   it('keeps 0 won as 0% even when a higher ratio also rounds to 0', () => {
     const options = generatePriceOptions(100);
     expect(options).toEqual([
-      { ratio: 100, price: 100, isRepresentative: true },
-      { ratio: 0, price: 0, isRepresentative: true },
+      { ratio: 100, price: 100 },
+      { ratio: 0, price: 0 },
     ]);
     expect(options.find((option) => option.price === 0)).toEqual({
       ratio: 0,
       price: 0,
-      isRepresentative: true,
     });
   });
 });
@@ -120,12 +118,5 @@ describe('getLowerPriceOffer', () => {
 
   it('does not offer when the lower ratio rounds to the same amount', () => {
     expect(getLowerPriceOffer(100, 100)).toBeNull();
-  });
-});
-
-describe('isPaidSaleIntent', () => {
-  it('treats 0 won as unpaid and any higher amount as paid', () => {
-    expect(isPaidSaleIntent(0)).toBe(false);
-    expect(isPaidSaleIntent(100)).toBe(true);
   });
 });

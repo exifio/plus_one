@@ -74,8 +74,8 @@ export const AdminLoginPage: React.FC = () => {
               required={isSupabaseConfigured}
             />
           </div>
-          {error && <p className="form-error" role="alert">{error}</p>}
-          <button type="submit" className="btn btn-primary btn-block">
+         {error && <p className="form-error" role="alert">{error}</p>}
+          <button type="submit" className="btn btn-primary btn-lg btn-block">
             {isSubmitting ? '로그인 중...' : isSupabaseConfigured ? '로그인' : '로그인 (Mock)'}
           </button>
         </form>

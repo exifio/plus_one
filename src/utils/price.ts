@@ -38,7 +38,6 @@ export function generatePriceOptions(unitBasePrice: number): PriceOption[] {
   return [...byPrice.entries()].map(([price, ratio]) => ({
     ratio,
     price,
-    isRepresentative: true,
   }));
 }
 
@@ -59,8 +58,4 @@ export function getLowerPriceOffer(
   }
 
   return { ratio: offeredRatio, price: offeredPrice };
-}
-
-export function isPaidSaleIntent(finalPrice: number): boolean {
-  return finalPrice > 0;
 }

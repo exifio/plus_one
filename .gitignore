@@ -1,44 +1,20 @@
-# OS
-.DS_Store
-
-# Dependencies & build
+# 의존성·빌드
 node_modules/
 dist/
 tsconfig.tsbuildinfo
 
-# Local artifacts & tool output
-output/
+# 로컬 도구 출력
 .playwright-cli/
-.playwright-mcp/
 graphify-out/
-
-# Ad-hoc QA screenshots (app assets live in public/)
-/*.png
-
-# Code review / graph tools
 .code-review-graph/
-.codegraph
-
-# AI coding assistants (local config)
-.openai/
-.agents/
-.claude/
-.codebuddy/
 .codex/
-.commandcode/
-.cursor/
-.factory/
 .opencode/
-.qoder/
-.windsurf/
-.omo/
-docs/superpowers/
 
-# Env (Backend phase)
+# 환경 변수
 .env
 .env.*
 !.env.example
 
-# Test / cache (optional, harmless if unused)
-coverage/
-*.local
+# 내부 작업 문서 (로컬 전용)
+AGENTS.md
+docs/

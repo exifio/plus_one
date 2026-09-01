@@ -120,6 +120,11 @@ DROP FUNCTION IF EXISTS public.submit_application(
   INTEGER, INTEGER, BOOLEAN, INTEGER, INTEGER, TEXT, TEXT
 );
 
+DROP FUNCTION IF EXISTS public.submit_application(
+  TEXT, TEXT, TEXT, INTEGER, INTEGER, DATE, INTEGER, INTEGER, INTEGER, BOOLEAN,
+  INTEGER, INTEGER, BOOLEAN, INTEGER, INTEGER, TEXT, TEXT
+);
+
 CREATE OR REPLACE FUNCTION public.submit_application(
   p_store TEXT, p_promotion_type TEXT, p_product_name TEXT,
   p_original_paid_price INTEGER, p_quantity INTEGER, p_expiry_date DATE,
