@@ -18,3 +18,5 @@ graphify-out/
 # 내부 작업 문서 (로컬 전용)
 AGENTS.md
 docs/
+
+.DS_Store
