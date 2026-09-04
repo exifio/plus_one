@@ -5,9 +5,9 @@
 상태 표기: `[ ]` 시작 전 · `[x]` 완료 · `[!]` 막힘
 
 ## 현재 작업
-**Phase:** QA 완료 → 배포 준비  
-**현재 Task:** DEPLOY — Vercel 배포
-**목표:** 배포 전 QA를 전부 통과했으므로 Vercel에 배포하고 라이브 환경에서 최종 확인한다.
+**Phase:** 배포 완료  
+**현재 Task:** 완료
+**목표:** Vercel Production 배포 완료. https://plus-hana.vercel.app
 
 ## 문서
 - [x] V2-01 `docs/PRD.md`, `docs/TASKS.md` 최종 V2 기준 반영
