@@ -1,6 +1,7 @@
 {
   "name": "plus_one",
-  "version": "1.0.0",
+  "private": true,
+  "version": "0.0.0",
   "description": "",
   "homepage": "https://github.com/exifio/plus_one#readme",
   "bugs": {
@@ -12,9 +13,35 @@
   },
   "license": "ISC",
   "author": "",
-  "type": "commonjs",
-  "main": "index.js",
+  "type": "module",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "dev": "vite",
+    "build": "vite build",
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "test:integration": "jest tests/integration --runInBand"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "latest",
+    "@vercel/analytics": "latest",
+    "react": "latest",
+    "react-dom": "latest",
+    "react-router-dom": "latest"
+  },
+  "devDependencies": {
+    "@babel/core": "latest",
+    "@babel/preset-env": "latest",
+    "@babel/preset-react": "latest",
+    "@testing-library/dom": "^10.4.1",
+    "@testing-library/jest-dom": "latest",
+    "@testing-library/react": "latest",
+    "@testing-library/user-event": "latest",
+    "@vitejs/plugin-react": "latest",
+    "babel-jest": "latest",
+    "dotenv": "latest",
+    "jest": "latest",
+    "jest-environment-jsdom": "latest",
+    "supabase": "latest",
+    "vite": "latest"
   }
 }

@@ -23,13 +23,13 @@ Task는 테스트와 검증이 끝난 경우에만 `[x]`로 변경합니다.
 
 # 2. 현재 단계
 
-**상태: 개발 시작 전**
+**상태: Task 1 완료**
 
 설계 및 구현 계획은 완료되었습니다.
 
 다음 시작 Task:
 
-> **Task 1 — 프로젝트 기반 + Jest + Seller 연락처 정규화**
+> **Task 2 — 핵심 Domain Validation과 DB Payload 변환**
 
 ---
 
@@ -50,16 +50,16 @@ Task는 테스트와 검증이 끝난 경우에만 `[x]`로 변경합니다.
 
 ## Task 1 — 프로젝트 기반 + Jest + Seller 연락처 정규화
 
-- [ ] React + Vite 프로젝트 생성
-- [ ] 필수 의존성 설치
-- [ ] Jest / Babel / Testing Library 설정
-- [ ] Seller 연락처 정규화 실패 테스트 작성
-- [ ] 실패 확인
-- [ ] `normalizeSellerContact()` 최소 구현
-- [ ] 관련 테스트 통과
-- [ ] Task 1 전체 검증
+- [x] React + Vite 프로젝트 생성
+- [x] 필수 의존성 설치
+- [x] Jest / Babel / Testing Library 설정
+- [x] Seller 연락처 정규화 실패 테스트 작성
+- [x] 실패 확인
+- [x] `normalizeSellerContact()` 최소 구현
+- [x] 관련 테스트 통과
+- [x] Task 1 전체 검증
 
-**상태:** 시작 전
+**상태:** 완료
 
 ---
 
@@ -263,22 +263,22 @@ Task는 테스트와 검증이 끝난 경우에만 `[x]`로 변경합니다.
 - TESTING 전략 확정
 - PLAN 확정
 - README / AGENTS / TASKS 문서 준비
-- 실제 구현은 아직 시작하지 않음
+- Task 1 구현 및 검증 완료
 
 ---
 
 # 7. 다음 작업
 
-다음 작업은 `docs/PLAN.md`의 **Task 1**입니다.
+다음 작업은 `docs/PLAN.md`의 **Task 2**입니다.
 
 시작 시 다음 순서를 지킵니다.
 
 ```text
 AGENTS.md 확인
 ↓
-PLAN Task 1 확인
+PLAN Task 2 확인
 ↓
-Task 1을 진행 중으로 변경
+Task 2를 진행 중으로 변경
 ↓
 실패 테스트 작성
 ↓
@@ -288,9 +288,9 @@ Task 1을 진행 중으로 변경
 ↓
 테스트 통과
 ↓
-Task 1 검증
+Task 2 검증
 ↓
 TASKS.md 완료 처리
 ```
 
-Task 1 완료 전 Task 2로 넘어가지 않습니다.
+Task 2 완료 전 Task 3으로 넘어가지 않습니다.
