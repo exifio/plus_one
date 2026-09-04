@@ -1,37 +1,20 @@
 {
-  "name": "plus-one-mvp",
-  "version": "0.1.0",
-  "private": true,
+  "name": "plus_one",
+  "version": "1.0.0",
   "description": "",
+  "homepage": "https://github.com/exifio/plus_one#readme",
+  "bugs": {
+    "url": "https://github.com/exifio/plus_one/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/exifio/plus_one.git"
+  },
   "license": "ISC",
   "author": "",
-  "type": "module",
+  "type": "commonjs",
   "main": "index.js",
-  "directories": {
-    "doc": "docs"
-  },
   "scripts": {
-    "dev": "vite",
-    "build": "tsc -b && vite build",
-    "preview": "vite preview",
-    "typecheck": "tsc --noEmit",
-    "test": "vitest run",
-    "doctor": "npx react-doctor@latest"
-  },
-  "dependencies": {
-    "@supabase/supabase-js": "^2.112.4",
-    "react": "^19.1.0",
-    "react-dom": "^19.1.0",
-    "react-router-dom": "^7.3.0",
-    "zod": "^3.24.2"
-  },
-  "devDependencies": {
-    "@types/react": "^19.0.10",
-    "@types/react-dom": "^19.0.4",
-    "@vitejs/plugin-react": "^4.3.4",
-    "react-doctor": "^0.9.12",
-    "typescript": "^5.7.3",
-    "vite": "^6.2.0",
-    "vitest": "^3.0.7"
+    "test": "echo \"Error: no test specified\" && exit 1"
   }
 }
