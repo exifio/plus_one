@@ -16,7 +16,9 @@ graphify-out/
 !.env.example
 
 # 내부 작업 문서 (로컬 전용)
-AGENTS.md
-docs/
+# AGENTS.md
+# docs/
 
 .DS_Store
+.vercel
+.env*

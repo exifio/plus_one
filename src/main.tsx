@@ -4,7 +4,6 @@ import { BrowserRouter } from 'react-router-dom';
 import App from './App';
 import './styles/tokens.css';
 import './styles/seller.css';
-import './styles/price-selection.css';
 import './styles/admin.css';
 
 ReactDOM.createRoot(document.getElementById('root')!).render(

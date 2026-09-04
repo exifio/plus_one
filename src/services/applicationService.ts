@@ -2,6 +2,7 @@ import type {
   Application,
   ApplicationStatus,
   PromotionType,
+  RegistrationMethod,
   RecruitmentStatus,
   Store,
 } from '../types';
@@ -16,24 +17,22 @@ import {
   getRecruitmentStatus as mockGetRecruitmentStatus,
   setRecruitmentStatus as mockSetRecruitmentStatus,
 } from '../mocks/recruitmentStore';
+import { calculateUnitBasePrice } from '../utils/price';
 import { supabase } from './supabaseClient';
 
 export interface CreateApplicationParams {
   store: Store;
   promotionType: PromotionType;
+  /** 등록 방식. 스크린샷 신청은 'SCREENSHOT'. 기본값은 'MANUAL'. */
+  registrationMethod?: RegistrationMethod;
+  /** 스크린샷 등록 시 Storage에 업로드한 파일명(객체 경로). */
+  screenshotFileName?: string;
   productName: string;
   originalPaidPrice: number;
   quantity: number;
   expiryDate?: string;
-  unitBasePrice: number;
-  initialRatio: number;
-  initialPrice: number;
-  hadPriceOffer: boolean;
-  offeredRatio?: number;
-  offeredPrice?: number;
-  offerAccepted?: boolean;
-  finalRatio: number;
-  finalPrice: number;
+  /** 판매자가 직접 입력한 판매 희망금액 (원 단위, 1개당). */
+  desiredPrice: number;
   contactType: 'phone' | 'kakao';
   contactValue: string;
 }
@@ -44,19 +43,15 @@ export function mapRowToApplication(row: Record<string, unknown>): Application {
     createdAt: String(row.created_at || new Date().toISOString()),
     store: row.store as Store,
     promotionType: row.promotion_type as PromotionType,
+    registrationMethod: row.registration_method === 'SCREENSHOT' ? 'SCREENSHOT' : 'MANUAL',
+    screenshotFileName:
+      row.screenshot_file_name == null ? undefined : String(row.screenshot_file_name),
     productName: String(row.product_name ?? ''),
     originalPaidPrice: Number(row.original_paid_price ?? 0),
     quantity: Number(row.quantity ?? 1),
     expiryDate: String(row.expiry_date ?? ''),
     unitBasePrice: Number(row.unit_base_price ?? 0),
-    initialRatio: Number(row.initial_ratio ?? 0),
-    initialPrice: Number(row.initial_price ?? 0),
-    hadPriceOffer: Boolean(row.had_price_offer),
-    offeredRatio: row.offered_ratio != null ? Number(row.offered_ratio) : undefined,
-    offeredPrice: row.offered_price != null ? Number(row.offered_price) : undefined,
-    offerAccepted: row.offer_accepted != null ? Boolean(row.offer_accepted) : undefined,
-    finalRatio: Number(row.final_ratio ?? 0),
-    finalPrice: Number(row.final_price ?? 0),
+    desiredPrice: Number(row.desired_price ?? 0),
     contactType: (row.contact_type as 'phone' | 'kakao') || 'phone',
     contactValue: String(row.contact_value ?? ''),
     status: (row.status as ApplicationStatus) || 'SUBMITTED',
@@ -67,19 +62,14 @@ function mockApplication(params: CreateApplicationParams): string {
   return mockCreateApplication({
     store: params.store,
     promotionType: params.promotionType,
+    registrationMethod: params.registrationMethod ?? 'MANUAL',
+    screenshotFileName: params.screenshotFileName,
     productName: params.productName,
     originalPaidPrice: params.originalPaidPrice,
     quantity: params.quantity,
     expiryDate: params.expiryDate ?? '',
-    unitBasePrice: params.unitBasePrice,
-    initialRatio: params.initialRatio,
-    initialPrice: params.initialPrice,
-    hadPriceOffer: params.hadPriceOffer,
-    offeredRatio: params.offeredRatio,
-    offeredPrice: params.offeredPrice,
-    offerAccepted: params.offerAccepted,
-    finalRatio: params.finalRatio,
-    finalPrice: params.finalPrice,
+    unitBasePrice: calculateUnitBasePrice(params.originalPaidPrice, params.promotionType),
+    desiredPrice: params.desiredPrice,
     contactType: params.contactType,
     contactValue: params.contactValue,
   }).id;
@@ -87,6 +77,43 @@ function mockApplication(params: CreateApplicationParams): string {
 
 function toError(error: { message?: string } | null, fallback: string): Error {
   return new Error(error?.message || fallback);
+}
+
+export const SCREENSHOT_STORAGE_BUCKET = 'screenshots';
+
+function fileExtension(filename: string): string {
+  const dotIndex = filename.lastIndexOf('.');
+  if (dotIndex <= 0 || dotIndex === filename.length - 1) {
+    return 'png';
+  }
+  return filename.slice(dotIndex + 1).toLowerCase();
+}
+
+export function buildScreenshotObjectPath(filename: string): string {
+  const id = globalThis.crypto?.randomUUID?.() ?? `${Date.now()}-${Math.round(Math.random() * 1e9)}`;
+  return `${id}.${fileExtension(filename)}`;
+}
+
+/**
+ * 스크린샷 이미지를 private Storage 버킷에 업로드하고 객체 경로를 반환한다.
+ * Mock 모드에서는 파일명 그대로 반환한다.
+ */
+export async function uploadScreenshot(file: File): Promise<string> {
+  if (!supabase) {
+    return file.name;
+  }
+
+  const objectPath = buildScreenshotObjectPath(file.name);
+  const { error } = await supabase.storage
+    .from(SCREENSHOT_STORAGE_BUCKET)
+    .upload(objectPath, file, {
+      contentType: file.type || 'image/png',
+      upsert: false,
+    });
+  if (error) {
+    throw new Error(error.message || '이미지 업로드에 실패했습니다.');
+  }
+  return objectPath;
 }
 
 export async function submitApplication(params: CreateApplicationParams): Promise<string> {
@@ -101,17 +128,11 @@ export async function submitApplication(params: CreateApplicationParams): Promis
     p_original_paid_price: params.originalPaidPrice,
     p_quantity: params.quantity,
     p_expiry_date: params.expiryDate || null,
-    p_unit_base_price: params.unitBasePrice,
-    p_initial_ratio: params.initialRatio,
-    p_initial_price: params.initialPrice,
-    p_had_price_offer: params.hadPriceOffer,
-    p_offered_ratio: params.offeredRatio ?? null,
-    p_offered_price: params.offeredPrice ?? null,
-    p_offer_accepted: params.offerAccepted ?? null,
-    p_final_ratio: params.finalRatio,
-    p_final_price: params.finalPrice,
+    p_desired_price: params.desiredPrice,
     p_contact_type: params.contactType,
     p_contact_value: params.contactValue,
+    p_registration_method: params.registrationMethod ?? 'MANUAL',
+    p_screenshot_file_name: params.screenshotFileName ?? null,
   });
 
   if (error) {

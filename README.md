@@ -22,13 +22,18 @@ VITE_SUPABASE_ANON_KEY=<anon-key>
 ## 초기 설정
 
 1. Supabase SQL Editor에서 [`supabase/schema.sql`](supabase/schema.sql)을 실행합니다.
-2. Authentication에서 관리자 사용자를 만들고, UID를 등록합니다.
+2. Authentication > Users에서 관리자 이메일/비밀번호 계정을 만듭니다.
+3. 생성된 사용자의 UID를 `admin_users`에 등록합니다.
+
+기존 프로젝트를 업데이트하는 경우에는 `supabase/migrations/20260902000001_recalculate_unit_base_price.sql`과 `20260902000002_repair_application_update_trigger.sql`도 순서대로 적용합니다.
 
 ```sql
 INSERT INTO public.admin_users (user_id)
 VALUES ('<USER-UID>')
 ON CONFLICT (user_id) DO NOTHING;
 ```
+
+브라우저에는 `VITE_SUPABASE_URL`과 anon key만 사용하며, 관리자 비밀번호나 `service_role` 키는 환경 변수에 넣지 않습니다.
 
 ## 배포
 

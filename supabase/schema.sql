@@ -24,20 +24,18 @@ CREATE TABLE IF NOT EXISTS public.applications (
   store TEXT NOT NULL CHECK (store IN ('GS25', 'CU')),
   promotion_type TEXT NOT NULL CHECK (promotion_type IN ('1+1', '2+1')),
   product_name TEXT NOT NULL,
-  original_paid_price INTEGER NOT NULL CHECK (original_paid_price > 0),
+  original_paid_price INTEGER NOT NULL CHECK (original_paid_price >= 0),
   quantity INTEGER NOT NULL DEFAULT 1 CHECK (quantity > 0),
   expiry_date DATE,
   unit_base_price INTEGER NOT NULL CHECK (unit_base_price >= 0),
-  initial_ratio INTEGER NOT NULL CHECK (initial_ratio BETWEEN 0 AND 100),
-  initial_price INTEGER NOT NULL CHECK (initial_price >= 0),
-  had_price_offer BOOLEAN NOT NULL DEFAULT false,
-  offered_ratio INTEGER CHECK (offered_ratio IS NULL OR offered_ratio BETWEEN 0 AND 100),
-  offered_price INTEGER CHECK (offered_price IS NULL OR offered_price >= 0),
-  offer_accepted BOOLEAN,
-  final_ratio INTEGER NOT NULL CHECK (final_ratio BETWEEN 0 AND 100),
-  final_price INTEGER NOT NULL CHECK (final_price >= 0),
+  desired_price INTEGER NOT NULL DEFAULT 0 CHECK (desired_price >= 0),
   contact_type TEXT NOT NULL CHECK (contact_type IN ('phone', 'kakao')),
   contact_value TEXT NOT NULL,
+  registration_method TEXT NOT NULL DEFAULT 'MANUAL' CHECK (registration_method IN ('SCREENSHOT', 'MANUAL')),
+  screenshot_file_name TEXT,
+  CONSTRAINT applications_product_name_check CHECK (
+    registration_method = 'SCREENSHOT' OR length(btrim(product_name)) > 0
+  ),
   status TEXT NOT NULL DEFAULT 'SUBMITTED' CHECK (
     status IN (
       'SUBMITTED', 'CONTACTED', 'EVIDENCE_VERIFIED', 'QR_RECEIVED',
@@ -48,7 +46,7 @@ CREATE TABLE IF NOT EXISTS public.applications (
 
 CREATE INDEX IF NOT EXISTS idx_applications_status ON public.applications (status);
 CREATE INDEX IF NOT EXISTS idx_applications_created_at ON public.applications (created_at DESC);
-CREATE INDEX IF NOT EXISTS idx_applications_final_price ON public.applications (final_price);
+CREATE INDEX IF NOT EXISTS idx_applications_desired_price ON public.applications (desired_price);
 
 CREATE OR REPLACE FUNCTION public.handle_updated_at()
 RETURNS TRIGGER LANGUAGE plpgsql SECURITY DEFINER SET search_path = '' AS $$
@@ -67,6 +65,33 @@ DROP TRIGGER IF EXISTS set_recruitment_settings_updated_at ON public.recruitment
 CREATE TRIGGER set_recruitment_settings_updated_at
   BEFORE UPDATE ON public.recruitment_settings
   FOR EACH ROW EXECUTE FUNCTION public.handle_updated_at();
+
+CREATE OR REPLACE FUNCTION public.protect_application_update()
+RETURNS TRIGGER
+LANGUAGE plpgsql
+SET search_path = ''
+AS $$
+DECLARE
+  v_status TEXT := NEW.status;
+BEGIN
+  IF NOT public.is_admin() THEN
+    RAISE EXCEPTION 'ADMIN_ONLY';
+  END IF;
+  NEW := jsonb_populate_record(
+    NULL::public.applications,
+    to_jsonb(OLD) || jsonb_build_object(
+      'status', v_status,
+      'updated_at', to_jsonb(now())
+    )
+  );
+  RETURN NEW;
+END;
+$$;
+
+DROP TRIGGER IF EXISTS applications_protect_update ON public.applications;
+CREATE TRIGGER applications_protect_update
+  BEFORE UPDATE ON public.applications
+  FOR EACH ROW EXECUTE FUNCTION public.protect_application_update();
 
 ALTER TABLE public.recruitment_settings ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.admin_users ENABLE ROW LEVEL SECURITY;
@@ -125,36 +150,56 @@ DROP FUNCTION IF EXISTS public.submit_application(
   INTEGER, INTEGER, BOOLEAN, INTEGER, INTEGER, TEXT, TEXT
 );
 
+DROP FUNCTION IF EXISTS public.submit_application(
+  TEXT, TEXT, TEXT, INTEGER, INTEGER, DATE, INTEGER, INTEGER, TEXT, TEXT
+);
+
+DROP FUNCTION IF EXISTS public.submit_application(
+  TEXT, TEXT, TEXT, INTEGER, INTEGER, DATE, INTEGER, TEXT, TEXT, TEXT, TEXT
+);
+
 CREATE OR REPLACE FUNCTION public.submit_application(
   p_store TEXT, p_promotion_type TEXT, p_product_name TEXT,
-  p_original_paid_price INTEGER, p_quantity INTEGER, p_expiry_date DATE,
-  p_unit_base_price INTEGER, p_initial_ratio INTEGER, p_initial_price INTEGER,
-  p_had_price_offer BOOLEAN, p_offered_ratio INTEGER DEFAULT NULL,
-  p_offered_price INTEGER DEFAULT NULL, p_offer_accepted BOOLEAN DEFAULT NULL,
-  p_final_ratio INTEGER DEFAULT NULL, p_final_price INTEGER DEFAULT NULL,
-  p_contact_type TEXT DEFAULT 'phone', p_contact_value TEXT DEFAULT ''
+  p_original_paid_price INTEGER, p_quantity INTEGER, p_expiry_date DATE DEFAULT NULL,
+  p_desired_price INTEGER DEFAULT 0,
+  p_contact_type TEXT DEFAULT 'phone', p_contact_value TEXT DEFAULT '',
+  p_registration_method TEXT DEFAULT 'MANUAL',
+  p_screenshot_file_name TEXT DEFAULT NULL
 )
 RETURNS UUID LANGUAGE plpgsql SECURITY DEFINER SET search_path = '' AS $$
-DECLARE v_recruitment_status TEXT; v_new_id UUID;
+DECLARE
+  v_recruitment_status TEXT;
+  v_new_id UUID;
+  v_unit_base_price INTEGER;
 BEGIN
-  IF p_store NOT IN ('GS25', 'CU') OR p_promotion_type NOT IN ('1+1', '2+1') THEN
-    RAISE EXCEPTION '상품 유형을 확인해주세요.';
+  IF p_store NOT IN ('GS25', 'CU') THEN
+    RAISE EXCEPTION '편의점을 확인해주세요.';
   END IF;
-  IF p_product_name IS NULL OR length(btrim(p_product_name)) = 0 OR length(btrim(p_product_name)) > 200 THEN
-    RAISE EXCEPTION '상품명을 확인해주세요.';
+  IF p_promotion_type NOT IN ('1+1', '2+1') THEN
+    RAISE EXCEPTION '행사 유형을 확인해주세요.';
   END IF;
-  IF p_original_paid_price IS NULL OR p_original_paid_price <= 0 OR p_quantity IS NULL OR p_quantity <= 0 THEN
-    RAISE EXCEPTION '상품 정보를 확인해주세요.';
+  IF p_registration_method NOT IN ('SCREENSHOT', 'MANUAL') THEN
+    RAISE EXCEPTION '등록 방식을 확인해주세요.';
   END IF;
-  IF p_unit_base_price IS NULL OR p_unit_base_price < 0
-    OR p_initial_ratio IS NULL OR p_initial_ratio NOT BETWEEN 0 AND 100
-    OR p_final_ratio IS NULL OR p_final_ratio NOT BETWEEN 0 AND 100
-    OR p_initial_price IS NULL OR p_initial_price < 0
-    OR p_final_price IS NULL OR p_final_price < 0 THEN
-    RAISE EXCEPTION '판매가격을 확인해주세요.';
+
+  IF p_registration_method = 'MANUAL' THEN
+    IF p_product_name IS NULL OR length(btrim(p_product_name)) = 0 OR length(btrim(p_product_name)) > 200 THEN
+      RAISE EXCEPTION '상품명을 확인해주세요.';
+    END IF;
+    IF p_original_paid_price IS NULL OR p_original_paid_price <= 0 THEN
+      RAISE EXCEPTION '결제금액을 확인해주세요.';
+    END IF;
+  ELSE
+    -- 스크린샷 등록: 상품명·결제금액을 입력받지 않는다 (PRD 5장). 빈 상품명/0원 결제금액 허용.
+    p_product_name := '';
+    p_original_paid_price := 0;
   END IF;
-  IF p_had_price_offer AND (p_offered_ratio IS NULL OR p_offered_price IS NULL OR p_offer_accepted IS NULL) THEN
-    RAISE EXCEPTION '가격 제안 정보를 확인해주세요.';
+
+  IF p_quantity IS NULL OR p_quantity <= 0 THEN
+    RAISE EXCEPTION '수량을 확인해주세요.';
+  END IF;
+  IF p_desired_price IS NULL OR p_desired_price < 0 THEN
+    RAISE EXCEPTION '판매 희망금액을 확인해주세요.';
   END IF;
   IF p_contact_type NOT IN ('phone', 'kakao') OR length(btrim(coalesce(p_contact_value, ''))) = 0 THEN
     RAISE EXCEPTION '연락처를 확인해주세요.';
@@ -169,27 +214,57 @@ BEGIN
     RAISE EXCEPTION '현재는 판매 신청을 받고 있지 않습니다. (상태: %)', coalesce(v_recruitment_status, 'UNKNOWN');
   END IF;
 
+  v_unit_base_price := (
+    round(
+      (p_original_paid_price::numeric /
+        CASE p_promotion_type WHEN '1+1' THEN 2 WHEN '2+1' THEN 3 END) / 100
+    ) * 100
+  )::integer;
+
   INSERT INTO public.applications (
     store, promotion_type, product_name, original_paid_price, quantity,
-    expiry_date, unit_base_price, initial_ratio, initial_price, had_price_offer,
-    offered_ratio, offered_price, offer_accepted, final_ratio, final_price,
-    contact_type, contact_value, status
+    expiry_date, unit_base_price, desired_price, contact_type, contact_value,
+    registration_method, screenshot_file_name, status
   ) VALUES (
     p_store, p_promotion_type, btrim(p_product_name), p_original_paid_price, p_quantity,
-    p_expiry_date, p_unit_base_price, p_initial_ratio,
-    p_initial_price, p_had_price_offer, p_offered_ratio, p_offered_price,
-    p_offer_accepted, p_final_ratio, p_final_price, p_contact_type,
-    btrim(p_contact_value), 'SUBMITTED'
+    p_expiry_date, v_unit_base_price, p_desired_price, p_contact_type,
+    btrim(p_contact_value), p_registration_method, p_screenshot_file_name, 'SUBMITTED'
   ) RETURNING id INTO v_new_id;
   RETURN v_new_id;
 END;
 $$;
 
+-- 스크린샷 Storage bucket 및 정책 (private)
+INSERT INTO storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
+VALUES ('screenshots', 'screenshots', false, NULL, NULL)
+ON CONFLICT (id) DO NOTHING;
+
+DROP POLICY IF EXISTS "screenshot_upload_anon" ON storage.objects;
+CREATE POLICY "screenshot_upload_anon"
+  ON storage.objects
+  FOR INSERT
+  TO anon
+  WITH CHECK (bucket_id = 'screenshots');
+
+-- 관리자 콘솔에 로그인한 브라우저에서 판매자 신청을 테스트하는 경우
+-- supabase-js가 authenticated 토큰으로 업로드하므로 authenticated INSERT도 허용한다.
+DROP POLICY IF EXISTS "screenshot_upload_authenticated" ON storage.objects;
+CREATE POLICY "screenshot_upload_authenticated"
+  ON storage.objects
+  FOR INSERT
+  TO authenticated
+  WITH CHECK (bucket_id = 'screenshots');
+
+DROP POLICY IF EXISTS "screenshot_read_admin" ON storage.objects;
+CREATE POLICY "screenshot_read_admin"
+  ON storage.objects
+  FOR SELECT
+  TO authenticated
+  USING (bucket_id = 'screenshots' AND public.is_admin());
+
 REVOKE ALL ON FUNCTION public.submit_application(
-  TEXT, TEXT, TEXT, INTEGER, INTEGER, DATE, INTEGER, INTEGER, INTEGER, BOOLEAN,
-  INTEGER, INTEGER, BOOLEAN, INTEGER, INTEGER, TEXT, TEXT
+  TEXT, TEXT, TEXT, INTEGER, INTEGER, DATE, INTEGER, TEXT, TEXT, TEXT, TEXT
 ) FROM PUBLIC;
 GRANT EXECUTE ON FUNCTION public.submit_application(
-  TEXT, TEXT, TEXT, INTEGER, INTEGER, DATE, INTEGER, INTEGER, INTEGER, BOOLEAN,
-  INTEGER, INTEGER, BOOLEAN, INTEGER, INTEGER, TEXT, TEXT
+  TEXT, TEXT, TEXT, INTEGER, INTEGER, DATE, INTEGER, TEXT, TEXT, TEXT, TEXT
 ) TO anon, authenticated;

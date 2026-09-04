@@ -1,9 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
-  calculateRatioPrice,
+  calculateDesiredRatio,
   calculateUnitBasePrice,
-  generatePriceOptions,
-  getLowerPriceOffer,
   getPromotionQuantity,
   round100,
 } from './price';
@@ -46,77 +44,15 @@ describe('calculateUnitBasePrice', () => {
   });
 });
 
-describe('calculateRatioPrice', () => {
-  it('returns the unit base price at 100% and 0 at 0%', () => {
-    expect(calculateRatioPrice(1800, 100)).toBe(1800);
-    expect(calculateRatioPrice(1800, 0)).toBe(0);
+describe('calculateDesiredRatio', () => {
+  it('computes the desired price ratio against the unit base price', () => {
+    expect(calculateDesiredRatio(1500, 1100)).toBe(73);
+    expect(calculateDesiredRatio(1000, 900)).toBe(90);
+    expect(calculateDesiredRatio(1000, 0)).toBe(0);
   });
 
-  it('rounds a 90% option of 1800 to 1600', () => {
-    expect(calculateRatioPrice(1800, 90)).toBe(1600);
+  it('returns 0 when the unit base price is 0', () => {
+    expect(calculateDesiredRatio(0, 900)).toBe(0);
   });
 });
 
-describe('generatePriceOptions', () => {
-  it('keeps every 10% step when rounded amounts stay unique', () => {
-    expect(generatePriceOptions(1800)).toEqual([
-      { ratio: 100, price: 1800 },
-      { ratio: 90, price: 1600 },
-      { ratio: 80, price: 1400 },
-      { ratio: 70, price: 1300 },
-      { ratio: 60, price: 1100 },
-      { ratio: 50, price: 900 },
-      { ratio: 40, price: 700 },
-      { ratio: 30, price: 500 },
-      { ratio: 20, price: 400 },
-      { ratio: 10, price: 200 },
-      { ratio: 0, price: 0 },
-    ]);
-  });
-
-  it('shows a collapsed amount once and keeps the highest ratio', () => {
-    expect(generatePriceOptions(100)).toEqual([
-      { ratio: 100, price: 100 },
-      { ratio: 0, price: 0 },
-    ]);
-  });
-
-  it('uses the highest ratio as the representative for each amount', () => {
-    expect(generatePriceOptions(500)).toEqual([
-      { ratio: 100, price: 500 },
-      { ratio: 80, price: 400 },
-      { ratio: 60, price: 300 },
-      { ratio: 40, price: 200 },
-      { ratio: 20, price: 100 },
-      { ratio: 0, price: 0 },
-    ]);
-  });
-
-  it('keeps 0 won as 0% even when a higher ratio also rounds to 0', () => {
-    const options = generatePriceOptions(100);
-    expect(options).toEqual([
-      { ratio: 100, price: 100 },
-      { ratio: 0, price: 0 },
-    ]);
-    expect(options.find((option) => option.price === 0)).toEqual({
-      ratio: 0,
-      price: 0,
-    });
-  });
-});
-
-describe('getLowerPriceOffer', () => {
-  it('does not offer when the initial ratio is 60% or lower', () => {
-    expect(getLowerPriceOffer(1800, 60)).toBeNull();
-    expect(getLowerPriceOffer(1800, 0)).toBeNull();
-  });
-
-  it('offers 10%p lower when the initial ratio is 70% or higher', () => {
-    expect(getLowerPriceOffer(1800, 90)).toEqual({ ratio: 80, price: 1400 });
-    expect(getLowerPriceOffer(1800, 70)).toEqual({ ratio: 60, price: 1100 });
-  });
-
-  it('does not offer when the lower ratio rounds to the same amount', () => {
-    expect(getLowerPriceOffer(100, 100)).toBeNull();
-  });
-});

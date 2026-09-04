@@ -3,18 +3,30 @@ import { fetchApplications, fetchRecruitmentStatus } from '../../services/applic
 import { getApplications } from '../../mocks/applicationsStore';
 import { getRecruitmentStatus } from '../../mocks/recruitmentStore';
 import { isSupabaseConfigured } from '../../services/supabaseClient';
-import { STATUS_LABELS, formatWon } from '../../utils/adminStatus';
+import { REGISTRATION_METHOD_LABELS, STATUS_LABELS, formatWon } from '../../utils/adminStatus';
+import { calculateDesiredRatio } from '../../utils/price';
 import type { Application, RecruitmentStatus } from '../../types';
 
-function priceBuckets(applications: Application[]) {
+function countBy(
+  applications: Application[],
+  labelOf: (application: Application) => string,
+) {
   const counts: Record<string, number> = {};
   for (const a of applications) {
-    const label = formatWon(a.finalPrice);
+    const label = labelOf(a);
     counts[label] = (counts[label] ?? 0) + 1;
   }
   return Object.entries(counts).sort(([a], [b]) =>
     a.localeCompare(b, 'ko', { numeric: true }),
   );
+}
+
+function priceBuckets(applications: Application[]) {
+  return countBy(applications, (a) => formatWon(a.desiredPrice));
+}
+
+function ratioBuckets(applications: Application[]) {
+  return countBy(applications, (a) => `${calculateDesiredRatio(a.unitBasePrice, a.desiredPrice)}%`);
 }
 
 function statusCounts(applications: Application[]) {
@@ -57,19 +69,27 @@ export const AdminMetricsPage: React.FC = () => {
   }, []);
 
   const total = applications.length;
-  const paidSales = useMemo(() => applications.filter((a) => a.finalPrice > 0).length, [applications]);
-  const freeTransfers = useMemo(() => applications.filter((a) => a.finalPrice === 0).length, [applications]);
-  const priceOfferCount = useMemo(() => applications.filter((a) => a.hadPriceOffer).length, [applications]);
-  const offerAcceptedCount = useMemo(
-    () => applications.filter((a) => a.hadPriceOffer && a.offerAccepted).length,
+  const paidSales = useMemo(
+    () => applications.filter((a) => a.desiredPrice > 0).length,
+    [applications],
+  );
+  const freeTransfers = useMemo(
+    () => applications.filter((a) => a.desiredPrice === 0).length,
     [applications],
   );
   const completed = useMemo(() => applications.filter((a) => a.status === 'COMPLETED').length, [applications]);
 
-  const offerAcceptRate =
-    priceOfferCount === 0 ? 0 : Math.round((offerAcceptedCount / priceOfferCount) * 100);
-
   const priceDist = useMemo(() => priceBuckets(applications), [applications]);
+  const ratioDist = useMemo(() => ratioBuckets(applications), [applications]);
+  const registrationMethodDist = useMemo(
+    () => countBy(applications, (a) => REGISTRATION_METHOD_LABELS[a.registrationMethod]),
+    [applications],
+  );
+  const storeDist = useMemo(() => countBy(applications, (a) => a.store), [applications]);
+  const promotionDist = useMemo(
+    () => countBy(applications, (a) => a.promotionType),
+    [applications],
+  );
   const statusDist = useMemo(() => statusCounts(applications), [applications]);
 
   return (
@@ -100,16 +120,8 @@ export const AdminMetricsPage: React.FC = () => {
           <dd>{paidSales}</dd>
         </div>
         <div className="metric-card">
-          <dt>무상 양도(0%)</dt>
+          <dt>무상 양도(0원)</dt>
           <dd>{freeTransfers}</dd>
-        </div>
-        <div className="metric-card">
-          <dt>가격 제안 횟수</dt>
-          <dd>{priceOfferCount}</dd>
-        </div>
-        <div className="metric-card">
-          <dt>제안 수락률</dt>
-          <dd>{offerAcceptRate}%</dd>
         </div>
         <div className="metric-card">
           <dt>거래 완료</dt>
@@ -119,14 +131,14 @@ export const AdminMetricsPage: React.FC = () => {
 
       <div className="metrics-tables">
         <section className="detail-card">
-          <h2 className="detail-section-title">최종 가격 분포</h2>
+          <h2 className="detail-section-title">판매 희망금액 분포</h2>
           {priceDist.length === 0 ? (
             <p className="admin-empty-card">데이터가 없어요.</p>
           ) : (
             <table className="applications-table">
               <thead>
                 <tr>
-                  <th scope="col">최종 가격</th>
+                  <th scope="col">판매 희망금액</th>
                   <th scope="col">신청 수</th>
                 </tr>
               </thead>
@@ -140,6 +152,90 @@ export const AdminMetricsPage: React.FC = () => {
               </tbody>
             </table>
           )}
+        </section>
+
+        <section className="detail-card">
+          <h2 className="detail-section-title">등록 방식별 신청 수</h2>
+          <table className="applications-table">
+            <thead>
+              <tr>
+                <th scope="col">등록 방식</th>
+                <th scope="col">신청 수</th>
+              </tr>
+            </thead>
+            <tbody>
+              {registrationMethodDist.map(([method, count]: [string, number]) => (
+                <tr key={method}>
+                  <td>{method}</td>
+                  <td>{count}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </section>
+
+        <section className="detail-card">
+          <h2 className="detail-section-title">희망가격 비율 분포 (분석용)</h2>
+          {ratioDist.length === 0 ? (
+            <p className="admin-empty-card">데이터가 없어요.</p>
+          ) : (
+            <table className="applications-table">
+              <thead>
+                <tr>
+                  <th scope="col">희망가격 비율</th>
+                  <th scope="col">신청 수</th>
+                </tr>
+              </thead>
+              <tbody>
+                {ratioDist.map(([ratio, count]: [string, number]) => (
+                  <tr key={ratio}>
+                    <td>{ratio}</td>
+                    <td>{count}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+        </section>
+
+        <section className="detail-card">
+          <h2 className="detail-section-title">편의점별 신청 수</h2>
+          <table className="applications-table">
+            <thead>
+              <tr>
+                <th scope="col">편의점</th>
+                <th scope="col">신청 수</th>
+              </tr>
+            </thead>
+            <tbody>
+              {storeDist.map(([store, count]: [string, number]) => (
+                <tr key={store}>
+                  <td>{store}</td>
+                  <td>{count}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </section>
+
+        <section className="detail-card">
+          <h2 className="detail-section-title">행사 유형별 신청 수</h2>
+          <table className="applications-table">
+            <thead>
+              <tr>
+                <th scope="col">행사 유형</th>
+                <th scope="col">신청 수</th>
+              </tr>
+            </thead>
+            <tbody>
+              {promotionDist.map(([promotion, count]: [string, number]) => (
+                <tr key={promotion}>
+                  <td>{promotion}</td>
+                  <td>{count}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </section>
 
         <section className="detail-card">

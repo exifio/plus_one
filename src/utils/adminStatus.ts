@@ -1,4 +1,4 @@
-import type { ApplicationStatus } from '../types';
+import type { ApplicationStatus, RegistrationMethod } from '../types';
 
 export type StatusFilter = 'ALL' | ApplicationStatus;
 
@@ -21,6 +21,11 @@ export const STATUS_LABELS: Record<ApplicationStatus, string> = {
   COMPLETED: '거래 완료',
   NOT_PURCHASED: '매입 안 함',
   FAILED: '진행 실패',
+};
+
+export const REGISTRATION_METHOD_LABELS: Record<RegistrationMethod, string> = {
+  SCREENSHOT: '스크린샷 등록',
+  MANUAL: '직접 입력',
 };
 
 export const formatWon = (price: number): string =>

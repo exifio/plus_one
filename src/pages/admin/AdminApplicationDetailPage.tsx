@@ -4,15 +4,18 @@ import { getApplicationById } from '../../mocks/applicationsStore';
 import {
   fetchApplicationById,
   updateApplicationStatus as svcUpdateApplicationStatus,
+  SCREENSHOT_STORAGE_BUCKET,
 } from '../../services/applicationService';
-import { isSupabaseConfigured } from '../../services/supabaseClient';
+import { isSupabaseConfigured, supabase } from '../../services/supabaseClient';
 import {
   STATUS_FILTERS,
   STATUS_LABELS,
+  REGISTRATION_METHOD_LABELS,
   formatWon,
   formatDateTime,
   statusBadgeClass,
 } from '../../utils/adminStatus';
+import { calculateDesiredRatio } from '../../utils/price';
 import type { ApplicationStatus } from '../../types';
 import type { Application } from '../../types';
 
@@ -36,6 +39,7 @@ export const AdminApplicationDetailPage: React.FC = () => {
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
   const [saveError, setSaveError] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
+  const [screenshotUrl, setScreenshotUrl] = useState<string | null>(null);
 
   useEffect(() => {
     if (!id) {
@@ -79,6 +83,37 @@ export const AdminApplicationDetailPage: React.FC = () => {
     if (application) {
       setStatus(application.status);
     }
+  }, [application]);
+
+  // 스크린샷 원본은 private Storage이므로 관리자 세션의 signed URL로만 조회한다.
+  useEffect(() => {
+    setScreenshotUrl(null);
+    if (
+      !supabase ||
+      application?.registrationMethod !== 'SCREENSHOT' ||
+      !application.screenshotFileName
+    ) {
+      return;
+    }
+
+    let active = true;
+    supabase.storage
+      .from(SCREENSHOT_STORAGE_BUCKET)
+      .createSignedUrl(application.screenshotFileName, 600)
+      .then(({ data }) => {
+        if (active && data?.signedUrl) {
+          setScreenshotUrl(data.signedUrl);
+        }
+      })
+      .catch(() => {
+        if (active) {
+          setScreenshotUrl(null);
+        }
+      });
+
+    return () => {
+      active = false;
+    };
   }, [application]);
 
   if (isLoading) {
@@ -136,11 +171,16 @@ export const AdminApplicationDetailPage: React.FC = () => {
     }, 2000);
   };
 
-  const proceedTemplate = `[+1] 안녕하세요! 신청해주신 '${application.productName}' 건 판매 진행 가능하여 연락드립니다.\n보관함의 상품 바코드/QR 캡처본을 회신해주시면 확인 즉시 ${formatWon(application.finalPrice)}을 토스/카카오페이로 입금해 드립니다.`;
-  const cancelTemplate = `[+1] 안녕하세요! 신청해주신 '${application.productName}' 건은 현재 매입 수량 마감으로 아쉽게도 이번 거래 진행이 어렵게 되었습니다.\n신청해주셔서 감사드리며 더 좋은 서비스로 찾아뵙겠습니다.`;
-  const completedTemplate = `[+1] 안녕하세요! '${application.productName}' 건의 판매 대금 ${formatWon(application.finalPrice)} 입금이 완료되었습니다.\n이용해주셔서 감사합니다!`;
+  const applicationLabel = application.registrationMethod === 'SCREENSHOT'
+    ? REGISTRATION_METHOD_LABELS.SCREENSHOT
+    : application.productName;
+  const proceedTemplate = `[+1] 안녕하세요! 신청해주신 '${applicationLabel}' 건 판매 진행 가능하여 연락드립니다.\n보관함의 상품 바코드/QR 캡처본을 회신해주시면 확인 즉시 ${formatWon(application.desiredPrice)}을 토스/카카오페이로 입금해 드립니다.`;
+  const cancelTemplate = `[+1] 안녕하세요! 신청해주신 '${applicationLabel}' 건은 현재 매입 수량 마감으로 아쉽게도 이번 거래 진행이 어렵게 되었습니다.\n신청해주셔서 감사드리며 더 좋은 서비스로 찾아뵙겠습니다.`;
+  const completedTemplate = `[+1] 안녕하세요! '${applicationLabel}' 건의 판매 대금 ${formatWon(application.desiredPrice)} 입금이 완료되었습니다.\n이용해주셔서 감사합니다!`;
 
-  const priceChanged = application.initialPrice !== application.finalPrice;
+  const desiredRatio = application.registrationMethod === 'MANUAL'
+    ? calculateDesiredRatio(application.unitBasePrice, application.desiredPrice)
+    : null;
 
   return (
     <div className="admin-detail-page">
@@ -149,7 +189,7 @@ export const AdminApplicationDetailPage: React.FC = () => {
           ← 목록으로
         </Link>
         <div className="admin-detail-title-row">
-          <h1 className="admin-page-title">{application.productName}</h1>
+          <h1 className="admin-page-title">{applicationLabel}</h1>
           <span className={statusBadgeClass(status)}>{STATUS_LABELS[status]}</span>
         </div>
         <p className="admin-page-subtitle">
@@ -181,66 +221,85 @@ export const AdminApplicationDetailPage: React.FC = () => {
             <dd>{application.promotionType}</dd>
           </div>
           <div className="detail-item">
-            <dt>상품명</dt>
-            <dd>{application.productName}</dd>
-          </div>
-          <div className="detail-item">
-            <dt>실제 결제금액</dt>
-            <dd>{formatWon(application.originalPaidPrice)}</dd>
+            <dt>등록 방식</dt>
+            <dd>
+              <span
+                className={`registration-method registration-method-${application.registrationMethod.toLowerCase()}`}
+                data-registration-method={application.registrationMethod}
+              >
+                {REGISTRATION_METHOD_LABELS[application.registrationMethod]}
+              </span>
+            </dd>
           </div>
           <div className="detail-item">
             <dt>판매 희망 수량</dt>
             <dd>{application.quantity}개</dd>
           </div>
-          <div className="detail-item">
-            <dt>소비기한 / 유효기간</dt>
-            <dd>{application.expiryDate || '미입력'}</dd>
-          </div>
-          <div className="detail-item">
-            <dt>행사 기준 1개 가격</dt>
-            <dd>{formatWon(application.unitBasePrice)}</dd>
-          </div>
         </dl>
       </section>
 
+      {application.registrationMethod === 'SCREENSHOT' ? (
+        <section className="detail-card">
+          <h2 className="detail-section-title">등록한 스크린샷</h2>
+          <div
+            className="detail-screenshot-preview"
+            role="img"
+            aria-label="업로드한 보관상품 스크린샷 미리보기"
+          >
+            {screenshotUrl ? (
+              <img
+                className="detail-screenshot-image"
+                src={screenshotUrl}
+                alt="업로드한 보관상품 스크린샷"
+              />
+            ) : (
+              <>
+                <span className="detail-screenshot-preview-badge" aria-hidden="true">IMG</span>
+                <strong>보관 상품 스크린샷</strong>
+              </>
+            )}
+          </div>
+          <p className="detail-hint">
+            파일명: {application.screenshotFileName ?? '스크린샷 파일명 없음'}
+          </p>
+        </section>
+      ) : (
+        <section className="detail-card">
+          <h2 className="detail-section-title">직접 입력 정보</h2>
+          <dl className="detail-grid">
+            <div className="detail-item">
+              <dt>상품명</dt>
+              <dd>{application.productName}</dd>
+            </div>
+            <div className="detail-item">
+              <dt>실제 결제금액</dt>
+              <dd>{formatWon(application.originalPaidPrice)}</dd>
+            </div>
+            <div className="detail-item">
+              <dt>소비기한 / 유효기간</dt>
+              <dd>{application.expiryDate || '미입력'}</dd>
+            </div>
+            <div className="detail-item">
+              <dt>행사 기준 1개 가격</dt>
+              <dd>{formatWon(application.unitBasePrice)}</dd>
+            </div>
+          </dl>
+        </section>
+      )}
+
       <section className="detail-card">
-        <h2 className="detail-section-title">가격 결정 내역</h2>
+        <h2 className="detail-section-title">판매 희망금액</h2>
         <dl className="detail-grid">
           <div className="detail-item">
-            <dt>최초 비율 / 금액</dt>
-            <dd>
-              {application.initialRatio}% · {formatWon(application.initialPrice)}
-            </dd>
+            <dt>판매 희망금액 (1개당)</dt>
+            <dd>{formatWon(application.desiredPrice)}</dd>
           </div>
-          <div className="detail-item">
-            <dt>가격 제안 여부</dt>
-            <dd>{application.hadPriceOffer ? '제안함' : '제안 없음'}</dd>
-          </div>
-          {application.hadPriceOffer && (
+          {desiredRatio !== null && (
             <div className="detail-item">
-              <dt>제안 비율 / 금액</dt>
-              <dd>
-                {application.offeredRatio}% · {formatWon(application.offeredPrice ?? 0)}
-              </dd>
+              <dt>희망가격 비율 (분석용)</dt>
+              <dd>{desiredRatio}%</dd>
             </div>
           )}
-          {application.hadPriceOffer && (
-            <div className="detail-item">
-              <dt>제안 수락 여부</dt>
-              <dd>{application.offerAccepted ? '수락' : '거절'}</dd>
-            </div>
-          )}
-          <div className="detail-item">
-            <dt>최종 비율 / 금액</dt>
-            <dd>
-              {application.finalRatio}% · {formatWon(application.finalPrice)}
-              {priceChanged && (
-                <span className="detail-note">
-                  (최초 {formatWon(application.initialPrice)} → 변경)
-                </span>
-              )}
-            </dd>
-          </div>
         </dl>
       </section>
 

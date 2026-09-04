@@ -1,10 +1,9 @@
-import { useEffect, useRef, useState, type FormEvent } from 'react';
+import { useEffect, useRef, useState, type ChangeEvent, type FormEvent } from 'react';
 import { Link, useOutletContext } from 'react-router-dom';
-import { submitApplication } from '../../services/applicationService';
+import { submitApplication, uploadScreenshot } from '../../services/applicationService';
 import type { Application, PromotionType, Store } from '../../types';
 import type { SellerLayoutContext } from '../../layouts/SellerLayout';
 import { StepProgressBar } from '../../components/StepProgressBar';
-import { PriceSelection, type PriceResult } from './PriceSelection';
 import { calculateUnitBasePrice } from '../../utils/price';
 import {
   fieldErrorsFromZod,
@@ -19,11 +18,155 @@ import {
   type ContactInfo,
   type ContactType,
 } from './contactSchema';
+import {
+  desiredPriceSchema,
+  fieldErrorsFromDesiredPriceZod,
+} from './desiredPriceSchema';
 
 const STORES: readonly Store[] = ['GS25', 'CU'];
 const PROMOTIONS: readonly PromotionType[] = ['1+1', '2+1'];
 
-type ApplyStep = 'store' | 'product_info' | 'price' | 'contact' | 'confirm' | 'complete';
+type ApplyStep = 'store' | 'product_info' | 'desired_contact' | 'complete';
+export type RegistrationMethod = 'screenshot' | 'manual';
+
+type RegistrationMethodSelectorProps = {
+  value: RegistrationMethod | '';
+  onChange: (value: RegistrationMethod) => void;
+};
+
+const REGISTRATION_METHODS = [
+  {
+    value: 'screenshot',
+    label: '스크린샷으로 등록',
+    description: '보관함에서 상품 화면을 이미지 1장으로 등록해요.',
+  },
+  {
+    value: 'manual',
+    label: '직접 입력하기',
+    description: '상품명과 행사 당시 결제금액을 입력해요.',
+  },
+] as const;
+
+type ScreenshotUploadProps = {
+  file: File | null;
+  onChange: (file: File | null) => void;
+};
+
+export function isScreenshotFile(file: File): boolean {
+  return file.type.startsWith('image/');
+}
+
+export function ScreenshotUpload({ file, onChange }: ScreenshotUploadProps) {
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!file) {
+      setPreviewUrl(null);
+      return;
+    }
+
+    const nextPreviewUrl = URL.createObjectURL(file);
+    setPreviewUrl(nextPreviewUrl);
+    return () => URL.revokeObjectURL(nextPreviewUrl);
+  }, [file]);
+
+  const handleFileChange = (event: ChangeEvent<HTMLInputElement>) => {
+    const nextFile = event.currentTarget.files?.[0] ?? null;
+    event.currentTarget.value = '';
+
+    if (!nextFile) return;
+    if (!isScreenshotFile(nextFile)) {
+      setError('이미지 파일만 선택해주세요.');
+      return;
+    }
+
+    setError(null);
+    onChange(nextFile);
+  };
+
+  return (
+    <div className="screenshot-upload">
+      <input
+        id="screenshot-file"
+        className="screenshot-file-input"
+        type="file"
+        accept="image/*"
+        aria-label="보관 상품 스크린샷"
+        onChange={handleFileChange}
+      />
+
+      {!file ? (
+        <label className="screenshot-upload-empty" htmlFor="screenshot-file">
+          <span className="screenshot-upload-icon" aria-hidden="true">IMG</span>
+          <strong className="screenshot-upload-title">이미지 1장 선택</strong>
+          <span className="screenshot-upload-help">보관함에서 상품이 보이는 화면을 선택해주세요.</span>
+        </label>
+      ) : (
+        <div className="screenshot-preview" aria-live="polite">
+          <div className="screenshot-preview-image">
+            {previewUrl ? (
+              <img src={previewUrl} alt="선택한 보관 상품 스크린샷 미리보기" />
+            ) : (
+              <span role="status">미리보기 준비 중</span>
+            )}
+          </div>
+          <div className="screenshot-preview-details">
+            <strong>보관 상품 스크린샷</strong>
+            <span className="screenshot-preview-name">{file.name}</span>
+          </div>
+        </div>
+      )}
+
+      {file && (
+        <div className="screenshot-actions">
+          <label className="btn btn-secondary" htmlFor="screenshot-file">이미지 교체</label>
+          <button
+            type="button"
+            className="btn btn-danger"
+            onClick={() => {
+              setError(null);
+              onChange(null);
+            }}
+          >
+            삭제
+          </button>
+        </div>
+      )}
+
+      {error && <p className="form-error" role="alert">{error}</p>}
+    </div>
+  );
+}
+
+export function RegistrationMethodSelector({
+  value,
+  onChange,
+}: RegistrationMethodSelectorProps) {
+  return (
+    <fieldset className="form-group">
+      <legend className="form-label" id="registration-method-label">등록 방식 선택</legend>
+      <div className="choice-grid choice-grid-hero" role="radiogroup" aria-labelledby="registration-method-label">
+        {REGISTRATION_METHODS.map((option) => (
+          <label
+            key={option.value}
+            className={`choice-card choice-card-hero ${value === option.value ? 'is-selected' : ''}`}
+          >
+            <input
+              type="radio"
+              name="registrationMethod"
+              value={option.value}
+              checked={value === option.value}
+              onChange={() => onChange(option.value)}
+            />
+            <strong className="choice-hero-name">{option.label}</strong>
+            <span className="choice-hero-desc">{option.description}</span>
+          </label>
+        ))}
+      </div>
+    </fieldset>
+  );
+}
 
 export function ApplyPage() {
   const outletContext = useOutletContext<SellerLayoutContext | undefined>();
@@ -42,32 +185,22 @@ export function ApplyPage() {
   const [store, setStore] = useState<Store | ''>('');
   const [promotionType, setPromotionType] = useState<PromotionType | ''>('');
   const promotionSectionRef = useRef<HTMLFieldSetElement | null>(null);
+  const [registrationMethod, setRegistrationMethod] = useState<RegistrationMethod | ''>('');
 
-  // Step 3: Product Info
+  // Step 2: Product Info & Desired Price
+  const [screenshotFile, setScreenshotFile] = useState<File | null>(null);
   const [productName, setProductName] = useState('');
   const [originalPaidPrice, setOriginalPaidPrice] = useState('');
-  const [quantity] = useState('1');
   const [expiryDate, setExpiryDate] = useState('');
   const [productErrors, setProductErrors] = useState<FieldErrors>({});
   const [savedProduct, setSavedProduct] = useState<ProductInfo | null>(null);
-  const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const [desiredPrice, setDesiredPrice] = useState('');
+  const [desiredPriceError, setDesiredPriceError] = useState<string | null>(null);
 
-  useEffect(() => {
-    if (!toastMessage) return;
-    const timer = setTimeout(() => {
-      setToastMessage(null);
-    }, 2800);
-    return () => clearTimeout(timer);
-  }, [toastMessage]);
-
-  // Step 4: Price Selection
-  const [priceResult, setPriceResult] = useState<PriceResult | null>(null);
-
-  // Step 5: Contact
+  // Step 3: Contact
   const [contactType, setContactType] = useState<ContactType | ''>('phone');
   const [contactValue, setContactValue] = useState('');
   const [contactErrors, setContactErrors] = useState<ContactFieldErrors>({});
-  const [savedContact, setSavedContact] = useState<ContactInfo | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
 
@@ -85,14 +218,8 @@ export function ApplyPage() {
       case 'product_info':
         setHeaderBack({ label: '← 뒤로가기', onClick: () => setCurrentStep('store') });
         break;
-      case 'price':
+      case 'desired_contact':
         setHeaderBack({ label: '← 뒤로가기', onClick: () => setCurrentStep('product_info') });
-        break;
-      case 'contact':
-        setHeaderBack({ label: '← 뒤로가기', onClick: () => setCurrentStep('price') });
-        break;
-      case 'confirm':
-        setHeaderBack({ label: '← 뒤로가기', onClick: () => setCurrentStep('contact') });
         break;
       case 'complete':
         setHeaderBack(null);
@@ -140,12 +267,38 @@ export function ApplyPage() {
 
   const handleProductSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+
+    const parsedPrice = desiredPriceSchema.safeParse({ desiredPrice });
+    if (!parsedPrice.success) {
+      setDesiredPriceError(fieldErrorsFromDesiredPriceZod(parsedPrice.error).desiredPrice ?? null);
+      return;
+    }
+    setDesiredPriceError(null);
+
+    if (registrationMethod === 'screenshot') {
+      if (!screenshotFile || !store || !promotionType) {
+        return;
+      }
+      setProductErrors({});
+      setSavedProduct({
+        store,
+        promotionType,
+        productName: '',
+        originalPaidPrice: 0,
+        quantity: 1,
+        expiryDate: '',
+      });
+      setCurrentStep('desired_contact');
+      return;
+    }
+
+    if (registrationMethod !== 'manual') return;
+
     const parsed = productInfoSchema.safeParse({
       store,
       promotionType,
       productName,
       originalPaidPrice,
-      quantity,
       expiryDate,
     });
 
@@ -156,92 +309,105 @@ export function ApplyPage() {
 
     setProductErrors({});
     setSavedProduct(parsed.data);
-    setCurrentStep('price');
+    setCurrentStep('desired_contact');
   };
 
-  const handlePriceSelect = (result: PriceResult) => {
-    setPriceResult(result);
-    setCurrentStep('contact');
-  };
-
-  const handleContactSubmit = (event: FormEvent<HTMLFormElement>) => {
+  const handleApplySubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    const parsed = contactInfoSchema.safeParse({
-      contactType,
-      contactValue,
-    });
+    if (!savedProduct || isSubmitting) return;
 
-    if (!parsed.success) {
-      setContactErrors(fieldErrorsFromContactZod(parsed.error));
+    const parsedPrice = desiredPriceSchema.safeParse({ desiredPrice });
+    if (!parsedPrice.success) {
+      setDesiredPriceError(fieldErrorsFromDesiredPriceZod(parsedPrice.error).desiredPrice ?? null);
       return;
     }
 
-    setContactErrors({});
-    setSavedContact(parsed.data);
-    setCurrentStep('confirm');
-  };
+    const parsedContact = contactInfoSchema.safeParse({ contactType, contactValue });
+    if (!parsedContact.success) {
+      setContactErrors(fieldErrorsFromContactZod(parsedContact.error));
+      return;
+    }
 
-  const handleFinalSubmit = async () => {
-    if (!savedProduct || !priceResult || !savedContact || isSubmitting) return;
+    const contact: ContactInfo = parsedContact.data;
+    const submittedMethod: 'SCREENSHOT' | 'MANUAL' =
+      registrationMethod === 'screenshot' ? 'SCREENSHOT' : 'MANUAL';
+    const unitBasePrice = calculateUnitBasePrice(
+      savedProduct.originalPaidPrice,
+      savedProduct.promotionType,
+    );
+
     setIsSubmitting(true);
     setSubmitError(null);
 
     try {
+      let screenshotFileName: string | undefined;
+      if (submittedMethod === 'SCREENSHOT') {
+        if (!screenshotFile) {
+          throw new Error('스크린샷을 선택해주세요.');
+        }
+        screenshotFileName = await uploadScreenshot(screenshotFile);
+      }
+
       const newAppId = await submitApplication({
         store: savedProduct.store,
         promotionType: savedProduct.promotionType,
+        registrationMethod: submittedMethod,
+        screenshotFileName,
         productName: savedProduct.productName,
         originalPaidPrice: savedProduct.originalPaidPrice,
         quantity: savedProduct.quantity,
         expiryDate: savedProduct.expiryDate,
-        unitBasePrice: priceResult.unitBasePrice,
-        initialRatio: priceResult.initialRatio,
-        initialPrice: priceResult.initialPrice,
-        hadPriceOffer: priceResult.hadPriceOffer,
-        offeredRatio: priceResult.offeredRatio,
-        offeredPrice: priceResult.offeredPrice,
-        offerAccepted: priceResult.offerAccepted,
-        finalRatio: priceResult.finalRatio,
-        finalPrice: priceResult.finalPrice,
-        contactType: savedContact.contactType,
-        contactValue: savedContact.contactValue,
+        desiredPrice: parsedPrice.data.desiredPrice,
+        contactType: contact.contactType,
+        contactValue: contact.contactValue,
       });
 
-      const newApp: Application = {
+      // 신청 조회는 관리자 권한이 필요하므로(개인정보 RLS) 완료 화면은 제출 정보로 구성한다.
+      setSubmittedApplication({
         id: newAppId,
         createdAt: new Date().toISOString(),
         store: savedProduct.store,
         promotionType: savedProduct.promotionType,
+        registrationMethod: submittedMethod,
+        screenshotFileName,
         productName: savedProduct.productName,
         originalPaidPrice: savedProduct.originalPaidPrice,
         quantity: savedProduct.quantity,
         expiryDate: savedProduct.expiryDate,
-        unitBasePrice: priceResult.unitBasePrice,
-        initialRatio: priceResult.initialRatio,
-        initialPrice: priceResult.initialPrice,
-        hadPriceOffer: priceResult.hadPriceOffer,
-        offeredRatio: priceResult.offeredRatio,
-        offeredPrice: priceResult.offeredPrice,
-        offerAccepted: priceResult.offerAccepted,
-        finalRatio: priceResult.finalRatio,
-        finalPrice: priceResult.finalPrice,
-        contactType: savedContact.contactType,
-        contactValue: savedContact.contactValue,
+        unitBasePrice,
+        desiredPrice: parsedPrice.data.desiredPrice,
+        contactType: contact.contactType,
+        contactValue: contact.contactValue,
         status: 'SUBMITTED',
-      };
-
-      setSubmittedApplication(newApp);
+      });
       setCurrentStep('complete');
     } catch (err: unknown) {
-      if (err instanceof Error && err.message === 'RECRUITMENT_NOT_OPEN') {
+      const message = err instanceof Error ? err.message : '';
+      if (message === 'RECRUITMENT_NOT_OPEN') {
         setSubmitError('현재는 모집이 중단되어 판매 신청을 접수할 수 없습니다.');
       } else {
-        setSubmitError('신청 처리 중 오류가 발생했습니다. 다시 시도해주세요.');
+        // 운영 테스트 단계: 원인 파악을 위해 서버 오류 메시지를 그대로 노출한다.
+        console.error('[apply] 판매 신청 제출 실패:', err);
+        setSubmitError(
+          message
+            ? `신청 접수 실패: ${message}`
+            : '신청 처리 중 오류가 발생했습니다. 다시 시도해주세요.',
+        );
       }
     } finally {
       setIsSubmitting(false);
     }
   };
+
+  const parsedPaidPrice = Number(originalPaidPrice.replace(/\D/g, ''));
+  const calculatedUnitPrice =
+    registrationMethod === 'manual' && parsedPaidPrice > 0 && promotionType
+      ? calculateUnitBasePrice(parsedPaidPrice, promotionType as PromotionType)
+      : null;
+  const desiredPricePlaceholder =
+    calculatedUnitPrice !== null
+      ? `예: ${calculatedUnitPrice.toLocaleString('ko-KR')}`
+      : '예: 1500';
 
   return (
     <div className="apply-page">
@@ -280,15 +446,12 @@ export function ApplyPage() {
       {canApply && (
         <>
           {currentStep === 'store' && (
-            <section className="wizard-step wizard-step-sticky-cta card" aria-labelledby="step-product-type-title">
-              <StepProgressBar currentStep={1} stepTitle="상품 유형 선택" />
+            <section className="wizard-step wizard-step-sticky-cta card" aria-labelledby="step-store-promotion-title">
+              <StepProgressBar currentStep={1} totalSteps={3} stepTitle="편의점·행사 선택" />
               <div className="page-header">
-                <h1 className="page-title" id="step-product-type-title">
-                  어떤 보관상품을 판매하시나요?
+                <h1 className="page-title" id="step-store-promotion-title">
+                  편의점과 행사 유형을 선택해주세요
                 </h1>
-                <p className="page-desc">
-                  보관 중인 편의점과 행사 유형을 선택해주세요.
-                </p>
               </div>
 
               <form className="apply-form" onSubmit={handleProductTypeSubmit} noValidate>
@@ -314,7 +477,7 @@ export function ApplyPage() {
 
                 {store && (
                   <fieldset ref={promotionSectionRef} className="form-group promotion-form-group" aria-live="polite">
-                    <legend className="form-label" id="promotion-label">어떤 행사로 구매하셨나요?</legend>
+                    <legend className="form-label" id="promotion-label">행사 유형 선택</legend>
                     <div className="choice-grid choice-grid-hero" role="radiogroup" aria-labelledby="promotion-label">
                       {PROMOTIONS.map((option) => (
                         <button
@@ -345,70 +508,68 @@ export function ApplyPage() {
 
           {currentStep === 'product_info' && (
             <section className="wizard-step card">
-              <StepProgressBar currentStep={2} stepTitle="상품 정보 입력" tags={[store, promotionType]} />
+              <StepProgressBar currentStep={2} totalSteps={3} stepTitle="상품 정보 등록" tags={[store, promotionType]} />
               <div className="page-header">
-                <h1 className="page-title">상품 정보를 입력해주세요</h1>
+                <h1 className="page-title">상품 정보를 등록해주세요</h1>
                 <p className="page-desc">
-                  희망 판매가격은 입력하신 정보를 바탕으로 다음 단계에서 바로 계산됩니다.
+                  등록 방식을 선택한 후 필요한 정보를 입력해주세요.
                 </p>
               </div>
 
               <form className="apply-form" onSubmit={handleProductSubmit} noValidate>
-                <div className="form-group">
-                  <label className="form-label" htmlFor="quantity">판매 희망 수량</label>
-                  <button
-                    id="quantity"
-                    type="button"
-                    className="form-input form-input-fixed"
-                    onClick={() => {
-                      setToastMessage('현재는 1개 단위 신청만 가능해요!\n다량 판매 기능은 준비 중 입니다.');
-                      clearProductError('quantity');
-                    }}
-                    aria-label="판매 희망 수량 1개 (수량 변경 불가 안내 보기)"
-                  >
-                    <span className="fixed-value">1개</span>
-                  </button>
-                  <span className="form-input-help">현재는 1개 단위 판매 신청만 지원하고 있어요.</span>
-                  {productErrors.quantity !== undefined && (
-                    <p className="form-error">{productErrors.quantity}</p>
-                  )}
-                </div>
+                <RegistrationMethodSelector
+                  value={registrationMethod}
+                  onChange={setRegistrationMethod}
+                />
 
-                <div className="form-group">
-                  <div className="form-label-row">
-                    <label className="form-label" htmlFor="expiry-date">
-                      유효기간
-                    </label>
-                    <span className="optional-badge">선택</span>
+                {registrationMethod === 'screenshot' && (
+                  <div className="form-group">
+                    <span className="form-label">보관 상품 스크린샷</span>
+                    <ScreenshotUpload file={screenshotFile} onChange={setScreenshotFile} />
+                    <span className="form-input-help">보관함에서 상품이 보이는 화면을 이미지 1장으로 등록해주세요.</span>
                   </div>
-                  <input
-                    id="expiry-date"
-                    className="form-input"
-                    type="date"
-                    min={new Date().toISOString().split('T')[0]}
-                    value={expiryDate}
-                    onClick={(event) => {
-                      try {
-                        event.currentTarget.showPicker();
-                      } catch {}
-                    }}
-                    onChange={(event) => {
-                      setExpiryDate(event.target.value);
-                      clearProductError('expiryDate');
-                    }}
-                  />
-                  <span className="form-input-help">꼭 입력하지 않으셔도 괜찮아요</span>
-                  {productErrors.expiryDate !== undefined && (
-                    <p className="form-error">{productErrors.expiryDate}</p>
-                  )}
-                </div>
+                )}
 
-                <div className="form-group">
-                  <label className="form-label" htmlFor="product-name">상품명</label>
+                {registrationMethod === 'manual' && (
+                  <>
+                    <div className="form-group">
+                      <div className="form-label-row">
+                        <label className="form-label" htmlFor="expiry-date">유효기간</label>
+                        <span className="optional-badge">선택</span>
+                      </div>
+                      <input
+                        id="expiry-date"
+                        className="form-input"
+                        type="date"
+                        min={new Date().toISOString().split('T')[0]}
+                        value={expiryDate}
+                        onClick={(event) => {
+                          try {
+                            event.currentTarget.showPicker();
+                          } catch {}
+                        }}
+                        onChange={(event) => {
+                          setExpiryDate(event.target.value);
+                          clearProductError('expiryDate');
+                        }}
+                      />
+                      <span className="form-input-help">꼭 입력하지 않으셔도 괜찮아요</span>
+                      {productErrors.expiryDate !== undefined && (
+                        <p className="form-error">{productErrors.expiryDate}</p>
+                      )}
+                    </div>
+
+                    <div className="form-group">
+                      <div className="form-label-row">
+                        <label className="form-label" htmlFor="product-name">상품명</label>
+                        <span className="required-badge" aria-hidden="true">필수</span>
+                      </div>
                   <input
                     id="product-name"
                     className="form-input"
                     type="text"
+                    required
+                    aria-required="true"
                     autoComplete="off"
                     placeholder="예: 코카콜라 500ml, 바나나맛우유"
                     value={productName}
@@ -420,18 +581,22 @@ export function ApplyPage() {
                   {productErrors.productName !== undefined && (
                     <p className="form-error">{productErrors.productName}</p>
                   )}
-                </div>
+                    </div>
 
-                {/* 4. 1+1 행사 당시 결제 금액 */}
-                <div className="form-group">
-                  <label className="form-label" htmlFor="paid-price">
-                    {promotionType ? `${promotionType} 행사 당시 결제 금액` : '행사 당시 결제 금액'}
-                  </label>
+                    <div className="form-group">
+                      <div className="form-label-row">
+                        <label className="form-label" htmlFor="paid-price">
+                          {promotionType ? `${promotionType} 행사 당시 실제 결제금액` : '행사 당시 실제 결제금액'}
+                        </label>
+                        <span className="required-badge" aria-hidden="true">필수</span>
+                      </div>
                   <div className="input-with-unit">
                     <input
                       id="paid-price"
                       className="form-input"
                       type="text"
+                      required
+                      aria-required="true"
                       inputMode="numeric"
                       autoComplete="off"
                       placeholder="예: 3600"
@@ -443,26 +608,59 @@ export function ApplyPage() {
                     />
                     <span className="input-unit">원</span>
                   </div>
-                  {(() => {
-                    const parsedNum = Number(originalPaidPrice.replace(/\D/g, ''));
-                    if (parsedNum > 0 && promotionType) {
-                      const unitPrice = calculateUnitBasePrice(parsedNum, promotionType as PromotionType);
-                      const qty = promotionType === '1+1' ? 2 : 3;
-                      return (
+                  {calculatedUnitPrice !== null && promotionType && (
                         <span className="form-input-help is-calculated">
-                          총 {parsedNum.toLocaleString('ko-KR')}원 기준 <strong>1개당 약 {unitPrice.toLocaleString('ko-KR')}원</strong> ({parsedNum.toLocaleString('ko-KR')}원 ÷ {qty}개)
+                          총 {parsedPaidPrice.toLocaleString('ko-KR')}원 기준 <strong>1개당 약 {calculatedUnitPrice.toLocaleString('ko-KR')}원</strong> ({parsedPaidPrice.toLocaleString('ko-KR')}원 ÷ {promotionType === '1+1' ? 2 : 3}개)
                         </span>
-                      );
-                    }
-                    return null;
-                  })()}
+                      )}
                   {productErrors.originalPaidPrice !== undefined && (
                     <p className="form-error">{productErrors.originalPaidPrice}</p>
+                  )}
+                    </div>
+                  </>
+                )}
+
+                <div className="form-group">
+                  <div className="form-label-row">
+                    <label className="form-label" htmlFor="desired-price">판매 희망금액</label>
+                    <span className="required-badge" aria-hidden="true">필수</span>
+                  </div>
+                  <div className="input-with-unit">
+                    <input
+                      id="desired-price"
+                      className="form-input"
+                      type="text"
+                      required
+                      aria-required="true"
+                      inputMode="numeric"
+                      autoComplete="off"
+                      placeholder={desiredPricePlaceholder}
+                      value={desiredPrice}
+                      onChange={(event) => {
+                        setDesiredPrice(event.target.value);
+                        setDesiredPriceError(null);
+                      }}
+                    />
+                    <span className="input-unit">원</span>
+                  </div>
+                  <span className="form-input-help">판매 희망하시는 금액을 원 단위로 입력해주세요.</span>
+                  {desiredPriceError !== null && (
+                    <p className="form-error">{desiredPriceError}</p>
+                  )}
+                  {desiredPrice === '0' && (
+                    <p className="form-input-help">0원은 무상 양도/처분 의향으로 기록돼요.</p>
                   )}
                 </div>
 
                 <div className="wizard-actions">
-                  <button type="submit" className="btn btn-primary btn-lg btn-block">
+                  <button
+                    type="submit"
+                    className="btn btn-primary btn-lg btn-block"
+                    disabled={
+                      registrationMethod === '' ||
+                      (registrationMethod === 'screenshot' && screenshotFile === null)
+                    }
+                  >
                     다음
                   </button>
                 </div>
@@ -470,31 +668,28 @@ export function ApplyPage() {
             </section>
           )}
 
-          {currentStep === 'price' && savedProduct && (
-            <section className="wizard-step">
-              <PriceSelection
-                productInfo={savedProduct}
-                initialPriceResult={priceResult}
-                onPriceSelect={handlePriceSelect}
-                onBack={() => setCurrentStep('product_info')}
+          {currentStep === 'desired_contact' && (
+            <form className="apply-form card" onSubmit={handleApplySubmit} noValidate>
+              <StepProgressBar
+                currentStep={3}
+                totalSteps={3}
+                stepTitle="연락처"
+                tags={[store, promotionType]}
               />
-            </section>
-          )}
-
-          {currentStep === 'contact' && (
-            <form className="apply-form card" onSubmit={handleContactSubmit} noValidate>
-              <StepProgressBar currentStep={4} stepTitle="연락 수단 입력" tags={[store, promotionType]} />
               <div className="page-header">
-                <h1 className="page-title">연락 수단을 입력해주세요</h1>
+                <h1 className="page-title">연락처를 알려주세요</h1>
                 <p className="page-desc">
-                   신청 내용을 확인한 후 판매 진행이 가능한 경우<br />
-                   입력하신 연락처로 안내드릴게요.
+                  판매 신청을 남겨주시면<br />
+                  입력하신 연락처로 증빙과 QR 전달 방법을 안내드릴게요.
                 </p>
               </div>
 
               <fieldset className="form-group form-group-contact">
-                <legend className="form-label" id="contact-type-label">연락 수단 종류</legend>
-                <div className="choice-grid" role="radiogroup" aria-labelledby="contact-type-label">
+                <legend className="form-label form-label-row" id="contact-type-label">
+                  <span>연락 수단 종류</span>
+                  <span className="required-badge" aria-hidden="true">필수</span>
+                </legend>
+                <div className="choice-grid" role="radiogroup" aria-label="연락 수단 종류">
                   <label className={`choice-card ${contactType === 'phone' ? 'is-selected' : ''}`}>
                     <input
                       type="radio"
@@ -529,13 +724,18 @@ export function ApplyPage() {
               </fieldset>
 
               <div className="form-group">
-                <label className="form-label" htmlFor="contact-value">
-                  {contactType === 'kakao' ? '카카오톡 ID 또는 오픈채팅 링크' : '휴대전화 번호'}
-                </label>
+                <div className="form-label-row">
+                  <label className="form-label" htmlFor="contact-value">
+                    {contactType === 'kakao' ? '카카오톡 ID 또는 오픈채팅 링크' : '휴대전화 번호'}
+                  </label>
+                  <span className="required-badge" aria-hidden="true">필수</span>
+                </div>
                 <input
                   id="contact-value"
                   className="form-input"
                   type={contactType === 'phone' ? 'tel' : 'text'}
+                  required
+                  aria-required="true"
                   autoComplete={contactType === 'phone' ? 'tel' : 'off'}
                   placeholder={
                     contactType === 'kakao'
@@ -553,152 +753,24 @@ export function ApplyPage() {
                 )}
                 <span className="form-input-help">
                   {contactType === 'kakao'
-                    ? '판매 진행이 확정되면 카카오톡으로 증빙과 QR을 확인해요.'
-                    : '판매 진행이 확정되면 문자로 증빙과 QR을 확인해요.'}
+                    ? '구매 진행을 위해 카카오톡으로 진행 방법 설명 후 구매 진행합니다'
+                    : '구매 진행을 위해 번호로 문자로 진행 방법 설명 후 구매 진행합니다'}
                 </span>
               </div>
 
+              {submitError && (
+                <div className="status-notice status-notice-closed" role="alert">
+                  <strong className="status-notice-title">{submitError}</strong>
+                </div>
+              )}
+
               <div className="wizard-actions">
-                <button type="submit" className="btn btn-primary btn-lg btn-block">
-                  다음
+                <button type="submit" className="btn btn-primary btn-lg btn-block" disabled={isSubmitting}>
+                  {isSubmitting ? '신청 처리 중...' : '판매 신청하기'}
                 </button>
               </div>
             </form>
           )}
-
-         {currentStep === 'confirm' && savedProduct && priceResult && savedContact && (
-            <>
-            <div className="confirm-section card">
-              <StepProgressBar currentStep={5} stepTitle="최종 확인" tags={[store, promotionType]} />
-              <div className="page-header">
-                <h1 className="page-title">신청 내용을 확인해주세요</h1>
-                <p className="page-desc">
-                  내용을 확인 후 판매 신청을 완료해주세요.
-                </p>
-              </div>
-
-             {/* Product Info Block */}
-             <div className="confirm-block">
-               <div className="confirm-block-header">
-                 <h2 className="confirm-block-title">상품 정보</h2>
-               </div>
-               <dl className="confirm-dl">
-                 <div className="confirm-dl-row">
-                   <dt>편의점</dt>
-                   <dd>{savedProduct.store}</dd>
-                 </div>
-                 <div className="confirm-dl-row">
-                   <dt>행사 유형</dt>
-                   <dd>{savedProduct.promotionType}</dd>
-                 </div>
-                 <div className="confirm-dl-row">
-                   <dt>상품명</dt>
-                   <dd>{savedProduct.productName}</dd>
-                 </div>
-                 <div className="confirm-dl-row">
-                   <dt>실제 결제금액</dt>
-                   <dd>{savedProduct.originalPaidPrice.toLocaleString('ko-KR')}원</dd>
-                 </div>
-                 <div className="confirm-dl-row">
-                   <dt>판매 희망 수량</dt>
-                   <dd>{savedProduct.quantity}개</dd>
-                 </div>
-                 <div className="confirm-dl-row">
-                   <dt>소비기한/유효기간</dt>
-                   <dd>{savedProduct.expiryDate || '미입력'}</dd>
-                 </div>
-               </dl>
-             </div>
-
-             {/* Price Info Block */}
-             <div className="confirm-block">
-               <div className="confirm-block-header">
-                 <h2 className="confirm-block-title">판매 희망가격</h2>
-               </div>
-               <dl className="confirm-dl">
-                 <div className="confirm-dl-row">
-                   <dt>행사 기준 1개 가격</dt>
-                   <dd>{priceResult.unitBasePrice.toLocaleString('ko-KR')}원</dd>
-                 </div>
-                 <div className="confirm-dl-row is-highlight">
-                   <dt>최종 희망 판매가격</dt>
-                   <dd>
-                     <strong className="confirm-price-value">
-                       {priceResult.finalPrice.toLocaleString('ko-KR')}원
-                     </strong>
-                   </dd>
-                 </div>
-                 {priceResult.hadPriceOffer && (
-                   <div className="confirm-dl-row confirm-dl-sub">
-                     <dt>가격 확인 이력</dt>
-                     <dd>
-                       {priceResult.offerAccepted
-                         ? `${priceResult.offeredPrice?.toLocaleString('ko-KR')}원 (${priceResult.offeredRatio}%) 확인 수락`
-                         : `처음 희망가 ${priceResult.initialPrice.toLocaleString('ko-KR')}원 (${priceResult.initialRatio}%) 유지`}
-                     </dd>
-                   </div>
-                 )}
-                 {priceResult.finalPrice === 0 && (
-                   <div className="confirm-dl-row">
-                     <dt>참고</dt>
-                     <dd className="confirm-zero-note">무상 양도/처분 의향으로 등록됩니다.</dd>
-                   </div>
-                 )}
-               </dl>
-             </div>
-
-             {/* Contact Info Block */}
-             <div className="confirm-block">
-               <div className="confirm-block-header">
-                 <h2 className="confirm-block-title">연락 수단</h2>
-               </div>
-               <dl className="confirm-dl">
-                 <div className="confirm-dl-row">
-                   <dt>구분</dt>
-                   <dd>{savedContact.contactType === 'phone' ? '휴대전화 번호' : '카카오톡'}</dd>
-                 </div>
-                 <div className="confirm-dl-row">
-                   <dt>연락처</dt>
-                   <dd><strong>{savedContact.contactValue}</strong></dd>
-                 </div>
-               </dl>
-             </div>
-
-            <div className="confirm-guide-box">
-              <p className="confirm-guide-text">
-                신청 내용을 확인한 후 판매 진행이 가능한 경우<br />
-                입력하신 연락처로 안내드릴게요.
-              </p>
-            </div>
-
-           </div>
-
-              {submitError && (
-                <div className="status-notice status-notice-closed" role="alert" style={{ margin: '16px 0' }}>
-                  <strong className="status-notice-title">{submitError}</strong>
-                </div>
-              )}
-              <div className="confirm-bottom-bar">
-                <div className="confirm-bottom-bar-inner">
-                  <button
-                    type="button"
-                    className="btn btn-secondary btn-confirm-edit"
-                    onClick={() => setCurrentStep('product_info')}
-                  >
-                    내용 수정
-                  </button>
-                  <button
-                    type="button"
-                    className="btn btn-primary btn-confirm-submit"
-                    disabled={isSubmitting}
-                    onClick={handleFinalSubmit}
-                  >
-                    {isSubmitting ? '신청 처리 중...' : '판매 신청 완료하기'}
-                  </button>
-                </div>
-              </div>
-            </>
-         )}
 
           {currentStep === 'complete' && submittedApplication && (
             <div className="complete-card card" role="status">
@@ -712,16 +784,15 @@ export function ApplyPage() {
                 <span className="complete-badge">신청 접수 완료</span>
                 <h1 className="complete-title">판매 신청이 완료되었습니다</h1>
                 <p className="complete-desc">
-                  신청번호 <strong>{submittedApplication.id}</strong>로 정상 접수되었습니다.
+                  입력하신 연락처로 구매 진행을 할게요!
                 </p>
               </div>
 
               <div className="complete-notice-box">
                 <h2 className="complete-notice-title">이후 진행 안내</h2>
                 <ul className="complete-notice-list">
-                   <li>신청 내용을 확인한 후 <strong>판매 진행이 가능한 경우</strong> 입력하신 연락처({submittedApplication.contactValue})로 안내드릴게요.</li>
-                   <li>판매 진행 시에는 증빙과 QR을 확인한 뒤 입금이 진행돼요.</li>
-                   <li>진행 불가 시에도 연락드릴게요.</li>
+                  <li><strong>신청 접수</strong>가 완료되었어요.</li>
+                  <li>입력하신 연락처({submittedApplication.contactValue})로 <strong>구매 진행하겠습니다.</strong></li>
                 </ul>
               </div>
 
@@ -730,12 +801,18 @@ export function ApplyPage() {
                 <dl className="complete-summary-dl">
                   <div>
                     <dt>상품</dt>
-                    <dd>{submittedApplication.store} · {submittedApplication.productName} ({submittedApplication.quantity}개)</dd>
+                    <dd>
+                      {submittedApplication.store} ·{' '}
+                      {submittedApplication.registrationMethod === 'SCREENSHOT'
+                        ? '스크린샷 등록'
+                        : submittedApplication.productName}
+                      {' '}({submittedApplication.quantity}개)
+                    </dd>
                   </div>
                   <div>
-                    <dt>최종 희망가격</dt>
+                    <dt>판매 희망금액</dt>
                     <dd>
-                      <strong>{submittedApplication.finalPrice.toLocaleString('ko-KR')}원</strong>
+                      <strong>{submittedApplication.desiredPrice.toLocaleString('ko-KR')}원</strong>
                       <span> / 개당</span>
                     </dd>
                   </div>
@@ -756,18 +833,6 @@ export function ApplyPage() {
         </>
       )}
 
-      {toastMessage && (
-        <div className="toast-notification" role="status" aria-live="polite">
-          <span className="toast-icon" aria-hidden="true">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-              <circle cx="12" cy="12" r="10" />
-              <line x1="12" y1="16" x2="12" y2="12" />
-              <line x1="12" y1="8" x2="12.01" y2="8" />
-            </svg>
-          </span>
-          <span className="toast-text">{toastMessage}</span>
-        </div>
-      )}
     </div>
   );
 }

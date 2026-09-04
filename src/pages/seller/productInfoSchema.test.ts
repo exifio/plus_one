@@ -6,7 +6,6 @@ const validInput = {
   promotionType: '1+1',
   productName: '서울우유 1L',
   originalPaidPrice: '3600',
-  quantity: '2',
   expiryDate: '2026-09-01',
 };
 
@@ -24,9 +23,18 @@ describe('productInfoSchema', () => {
       promotionType: '1+1',
       productName: '서울우유 1L',
       originalPaidPrice: 3600,
-      quantity: 2,
+      quantity: 1,
       expiryDate: '2026-09-01',
     });
+  });
+
+  it('does not require a quantity input and fixes the internal quantity to one', () => {
+    const parsed = productInfoSchema.safeParse(validInput);
+
+    expect(parsed.success).toBe(true);
+    if (parsed.success) {
+      expect(parsed.data.quantity).toBe(1);
+    }
   });
 
   it('trims product name before validation', () => {
@@ -47,7 +55,6 @@ describe('productInfoSchema', () => {
       promotionType: '',
       productName: '',
       originalPaidPrice: '',
-      quantity: '',
       expiryDate: '',
     });
 
@@ -61,15 +68,13 @@ describe('productInfoSchema', () => {
       promotionType: '행사 유형을 선택해주세요.',
       productName: '상품명을 입력해주세요.',
       originalPaidPrice: '결제금액을 입력해주세요.',
-      quantity: '수량을 입력해주세요.',
     });
   });
 
-  it('rejects non-numeric paid price and quantity', () => {
+  it('rejects a non-numeric paid price', () => {
     const parsed = productInfoSchema.safeParse({
       ...validInput,
       originalPaidPrice: '3,600',
-      quantity: '2개',
     });
 
     expect(parsed.success).toBe(false);
@@ -79,15 +84,13 @@ describe('productInfoSchema', () => {
 
     expect(fieldErrorsFromZod(parsed.error)).toEqual({
       originalPaidPrice: '결제금액은 숫자만 입력해주세요.',
-      quantity: '수량은 숫자만 입력해주세요.',
     });
   });
 
-  it('rejects zero paid price and quantity', () => {
+  it('rejects a zero paid price', () => {
     const parsed = productInfoSchema.safeParse({
       ...validInput,
       originalPaidPrice: '0',
-      quantity: '0',
     });
 
     expect(parsed.success).toBe(false);
@@ -97,7 +100,6 @@ describe('productInfoSchema', () => {
 
     expect(fieldErrorsFromZod(parsed.error)).toEqual({
       originalPaidPrice: '결제금액은 1원 이상이어야 해요.',
-      quantity: '수량은 1개 이상이어야 해요.',
     });
   });
 

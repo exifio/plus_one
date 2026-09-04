@@ -6,6 +6,7 @@ import { MOCK_APPLICATIONS } from '../../mocks/applications';
 import {
   STATUS_FILTERS,
   STATUS_LABELS,
+  REGISTRATION_METHOD_LABELS,
   formatWon,
   formatDate,
   statusBadgeClass,
@@ -88,11 +89,11 @@ export const AdminApplicationsPage: React.FC = () => {
             <thead>
               <tr>
                 <th scope="col">신청일</th>
-                <th scope="col">편의점</th>
+                <th scope="col">편의점 / 행사</th>
+                <th scope="col">등록 방식</th>
                 <th scope="col">상품명</th>
                 <th scope="col">수량</th>
-                <th scope="col">최초 희망가격</th>
-                <th scope="col">최종 희망가격</th>
+                <th scope="col">판매 희망금액</th>
                 <th scope="col">현재 상태</th>
               </tr>
             </thead>
@@ -104,7 +105,7 @@ export const AdminApplicationsPage: React.FC = () => {
                   onClick={() => navigate(`/admin/applications/${application.id}`)}
                   tabIndex={0}
                   role="link"
-                  aria-label={`${application.productName} 신청 상세 보기`}
+                  aria-label={`${application.registrationMethod === 'SCREENSHOT' ? REGISTRATION_METHOD_LABELS.SCREENSHOT : application.productName} 신청 상세 보기`}
                   onKeyDown={(e) => {
                     if (e.key === 'Enter' || e.key === ' ') {
                       e.preventDefault();
@@ -113,11 +114,22 @@ export const AdminApplicationsPage: React.FC = () => {
                   }}
                 >
                   <td>{formatDate(application.createdAt)}</td>
-                  <td>{application.store}</td>
-                  <td className="cell-product">{application.productName}</td>
+                  <td>{application.store} · {application.promotionType}</td>
+                  <td>
+                    <span
+                      className={`registration-method registration-method-${application.registrationMethod.toLowerCase()}`}
+                      data-registration-method={application.registrationMethod}
+                    >
+                      {REGISTRATION_METHOD_LABELS[application.registrationMethod]}
+                    </span>
+                  </td>
+                  <td className="cell-product">
+                    {application.registrationMethod === 'SCREENSHOT'
+                      ? REGISTRATION_METHOD_LABELS.SCREENSHOT
+                      : application.productName}
+                  </td>
                   <td>{application.quantity}개</td>
-                  <td>{formatWon(application.initialPrice)}</td>
-                  <td className="cell-final-price">{formatWon(application.finalPrice)}</td>
+                  <td className="cell-desired-price">{formatWon(application.desiredPrice)}</td>
                   <td>
                     <span className={statusBadgeClass(application.status)}>
                       {STATUS_LABELS[application.status]}

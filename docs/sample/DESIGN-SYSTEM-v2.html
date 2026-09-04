@@ -1,0 +1,1056 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>1+ Design System</title>
+  <style>
+    :root {
+      --primary: #4F46E5;
+      --primary-hover: #4338CA;
+      --primary-soft: #EEF2FF;
+      --text: #111827;
+      --text-secondary: #6B7280;
+      --border: #E5E7EB;
+      --surface: #FFFFFF;
+      --surface-muted: #F8FAFC;
+      --success: #15803D;
+      --warning: #B45309;
+      --danger: #DC2626;
+      --shadow-soft: 0 10px 30px rgba(17, 24, 39, 0.05);
+      --radius-control: 12px;
+      --radius-card: 16px;
+      --content: 1180px;
+    }
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      font-family: Pretendard, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color: var(--text);
+      background: var(--surface-muted);
+      line-height: 1.55;
+      -webkit-font-smoothing: antialiased;
+    }
+    button, input { font: inherit; }
+    button { cursor: pointer; }
+    a { color: inherit; text-decoration: none; }
+
+    .shell {
+      min-height: 100vh;
+      display: grid;
+      grid-template-columns: 248px minmax(0, 1fr);
+    }
+
+    .sidebar {
+      position: sticky;
+      scrollbar-width: none;
+      top: 0;
+      height: 100vh;
+      padding: 28px 20px;
+      background: var(--surface);
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      gap: 28px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+    }
+    .wordmark {
+      width: 42px;
+      height: 42px;
+      border-radius: 13px;
+      display: grid;
+      place-items: center;
+      background: var(--primary);
+      color: #fff;
+      font-size: 20px;
+      font-weight: 800;
+      box-shadow: 0 8px 18px rgba(79, 70, 229, 0.18);
+    }
+    .brand small {
+      display: block;
+      margin-top: 2px;
+      color: var(--text-secondary);
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 0;
+    }
+
+    .nav {
+      display: grid;
+      gap: 4px;
+    }
+    .nav a {
+      padding: 9px 10px;
+      border-radius: 10px;
+      color: var(--text-secondary);
+      font-size: 14px;
+      font-weight: 600;
+    }
+    .nav a:hover,
+    .nav a:focus-visible {
+      color: var(--primary);
+      background: var(--primary-soft);
+      outline: none;
+    }
+
+    .sidebar::-webkit-scrollbar { display: none; }
+
+    .sidebar-note {
+      margin-top: auto;
+      padding-top: 18px;
+      border-top: 1px solid var(--border);
+      color: var(--text-secondary);
+      font-size: 12px;
+      line-height: 1.5;
+    }
+
+    main {
+      min-width: 0;
+      padding: 64px 48px 96px;
+    }
+
+    .content {
+      width: min(100%, var(--content));
+      margin: 0 auto;
+    }
+
+    .hero {
+      display: grid;
+      grid-template-columns: minmax(0, 1.5fr) minmax(290px, 0.7fr);
+      gap: 48px;
+      align-items: end;
+      padding: 36px 0 64px;
+      border-bottom: 1px solid var(--border);
+    }
+    .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--primary);
+      font-size: 14px;
+      font-weight: 700;
+      letter-spacing: 0.01em;
+    }
+    .eyebrow::before {
+      content: "";
+      width: 8px;
+      height: 8px;
+      border-radius: 999px;
+      background: var(--primary);
+    }
+    h1 {
+      margin: 16px 0 18px;
+      font-size: clamp(36px, 5vw, 62px);
+      line-height: 1.05;
+      letter-spacing: -0.045em;
+    }
+    .hero p {
+      max-width: 700px;
+      margin: 0;
+      color: var(--text-secondary);
+      font-size: 17px;
+      line-height: 1.7;
+    }
+    .hero-principles {
+      display: grid;
+      gap: 10px;
+    }
+    .principle {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      padding: 14px 16px;
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      background: var(--surface);
+      font-size: 14px;
+      font-weight: 650;
+    }
+    .principle span {
+      display: grid;
+      place-items: center;
+      flex: 0 0 22px;
+      width: 22px;
+      height: 22px;
+      border-radius: 999px;
+      color: var(--primary);
+      background: var(--primary-soft);
+      font-size: 12px;
+      font-weight: 800;
+    }
+
+    section {
+      padding: 64px 0;
+      border-bottom: 1px solid var(--border);
+    }
+    section:last-child { border-bottom: 0; }
+
+    .section-head {
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      gap: 32px;
+      margin-bottom: 30px;
+    }
+    .section-kicker {
+      margin-bottom: 8px;
+      color: var(--primary);
+      font-size: 13px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+    h2 {
+      margin: 0;
+      font-size: clamp(26px, 3vw, 34px);
+      line-height: 1.2;
+      letter-spacing: -0.03em;
+    }
+    .section-head p {
+      max-width: 470px;
+      margin: 0;
+      color: var(--text-secondary);
+      font-size: 14px;
+    }
+
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-card);
+      padding: 24px;
+    }
+    .card-title {
+      margin: 0 0 6px;
+      font-size: 19px;
+      font-weight: 750;
+      letter-spacing: -0.015em;
+    }
+    .card-copy {
+      margin: 0;
+      color: var(--text-secondary);
+      font-size: 14px;
+    }
+
+    .token-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 14px;
+    }
+    .color-token {
+      overflow: hidden;
+      padding: 0;
+    }
+    .swatch { height: 92px; }
+    .token-meta {
+      padding: 16px;
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      align-items: baseline;
+    }
+    .token-name { font-size: 14px; font-weight: 750; }
+    .token-hex {
+      color: var(--text-secondary);
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      font-size: 12px;
+    }
+
+    .type-card { padding: 32px; }
+    .type-row {
+      display: grid;
+      grid-template-columns: 180px minmax(0, 1fr);
+      gap: 24px;
+      align-items: baseline;
+      padding: 22px 0;
+      border-bottom: 1px solid var(--border);
+    }
+    .type-row:first-child { padding-top: 0; }
+    .type-row:last-child { border-bottom: 0; padding-bottom: 0; }
+    .type-label {
+      color: var(--text-secondary);
+      font-size: 13px;
+      font-weight: 650;
+    }
+    .type-sample { margin: 0; letter-spacing: -0.025em; }
+    .hero-type { font-size: 38px; line-height: 1.2; font-weight: 800; }
+    .section-type { font-size: 27px; line-height: 1.25; font-weight: 700; }
+    .card-type { font-size: 20px; line-height: 1.35; font-weight: 700; }
+    .body-type { font-size: 16px; line-height: 1.55; font-weight: 450; letter-spacing: -0.005em; }
+    .meta-type { font-size: 14px; line-height: 1.5; font-weight: 600; color: var(--text-secondary); letter-spacing: 0; }
+
+    .split-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 16px;
+    }
+    .spacing-list { display: grid; gap: 14px; margin-top: 24px; }
+    .space-row {
+      display: grid;
+      grid-template-columns: 44px 1fr 48px;
+      align-items: center;
+      gap: 14px;
+      color: var(--text-secondary);
+      font-size: 13px;
+    }
+    .space-bar {
+      height: 9px;
+      border-radius: 999px;
+      background: var(--primary-soft);
+      border-left: solid var(--primary);
+    }
+    .radius-demo {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 16px;
+      margin-top: 24px;
+    }
+    .radius-box {
+      height: 108px;
+      display: grid;
+      place-items: center;
+      background: var(--surface-muted);
+      border: 1px solid var(--border);
+      color: var(--text-secondary);
+      font-size: 13px;
+      font-weight: 650;
+    }
+
+    .component-stack { display: grid; gap: 18px; }
+    .button-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      align-items: center;
+      margin-top: 22px;
+    }
+    .btn {
+      min-height: 48px;
+      padding: 0 20px;
+      border-radius: var(--radius-control);
+      border: 1px solid transparent;
+      font-weight: 750;
+      transition: background .15s ease, border-color .15s ease, color .15s ease;
+    }
+    .btn-primary { background: var(--primary); color: #fff; }
+    .btn-primary:hover { background: var(--primary-hover); }
+    .btn-secondary { background: var(--surface); color: var(--text); border-color: var(--border); }
+    .btn-secondary:hover { background: var(--surface-muted); }
+    .btn-danger { background: #fff; color: var(--danger); border-color: #FECACA; }
+    .btn:focus-visible, input:focus-visible, .select-card:focus-visible {
+      outline: 3px solid rgba(79, 70, 229, 0.22);
+      outline-offset: 2px;
+    }
+    .inline-rule {
+      margin-top: 20px;
+      padding: 14px 16px;
+      border-radius: 12px;
+      background: var(--primary-soft);
+      color: #3730A3;
+      font-size: 13px;
+      font-weight: 650;
+    }
+
+    .form-demo {
+      max-width: 590px;
+      margin-top: 24px;
+      display: grid;
+      gap: 20px;
+    }
+    .field { display: grid; gap: 8px; }
+    .field label { font-size: 14px; font-weight: 700; }
+    .input-shell {
+      display: flex;
+      align-items: center;
+      min-height: 50px;
+      border: 1px solid var(--border);
+      background: var(--surface);
+      border-radius: var(--radius-control);
+      overflow: hidden;
+    }
+    .input-shell.focus-demo {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.12);
+    }
+    .input-shell.error-demo { border-color: var(--danger); }
+    .input-shell input {
+      width: 100%;
+      border: 0;
+      outline: 0;
+      padding: 0 14px;
+      color: var(--text);
+      background: transparent;
+    }
+    .unit {
+      padding: 0 14px;
+      color: var(--text-secondary);
+      font-size: 14px;
+      font-weight: 700;
+      border-left: 1px solid var(--border);
+    }
+    .helper { color: var(--text-secondary); font-size: 13px; }
+    .error { color: var(--danger); font-size: 13px; font-weight: 650; }
+
+    .choice-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 14px;
+      margin-top: 24px;
+    }
+    .select-card {
+      min-height: 132px;
+      text-align: left;
+      padding: 20px;
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      background: var(--surface);
+      color: var(--text);
+    }
+    .select-card.selected {
+      border: 2px solid var(--primary);
+      background: var(--primary-soft);
+    }
+    .select-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 14px;
+      margin-bottom: 22px;
+    }
+    .select-icon {
+      width: 36px;
+      height: 36px;
+      display: grid;
+      place-items: center;
+      border-radius: 11px;
+      border: 1px solid var(--border);
+      background: var(--surface-muted);
+      font-size: 14px;
+      font-weight: 800;
+      color: var(--text-secondary);
+    }
+    .selected .select-icon {
+      color: var(--primary);
+      background: #fff;
+      border-color: #C7D2FE;
+    }
+    .check {
+      width: 22px;
+      height: 22px;
+      display: grid;
+      place-items: center;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      color: transparent;
+      background: #fff;
+      font-size: 12px;
+    }
+    .selected .check {
+      color: #fff;
+      border-color: var(--primary);
+      background: var(--primary);
+    }
+    .select-card strong { display: block; margin-bottom: 5px; font-size: 16px; }
+    .select-card p { margin: 0; color: var(--text-secondary); font-size: 13px; line-height: 1.5; }
+
+    .choice-grid.two { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+
+    .mode-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 16px;
+      margin-top: 20px;
+    }
+    .mode-card { padding: 22px; }
+    .mode-tag {
+      display: inline-flex;
+      margin-bottom: 16px;
+      padding: 5px 9px;
+      border-radius: 999px;
+      background: var(--surface-muted);
+      color: var(--text-secondary);
+      font-size: 12px;
+      font-weight: 750;
+    }
+    .upload-box {
+      margin-top: 18px;
+      min-height: 172px;
+      display: grid;
+      place-items: center;
+      border: 1px dashed #CBD5E1;
+      border-radius: 14px;
+      background: var(--surface-muted);
+      text-align: center;
+      padding: 20px;
+    }
+    .upload-placeholder {
+      width: 58px;
+      height: 58px;
+      margin: 0 auto 10px;
+      display: grid;
+      place-items: center;
+      border-radius: 14px;
+      background: var(--primary-soft);
+      color: var(--primary);
+      font-weight: 800;
+    }
+    .mini-form { display: grid; gap: 12px; margin-top: 18px; }
+    .mini-field {
+      min-height: 46px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 13px;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      color: var(--text-secondary);
+      font-size: 13px;
+      background: #fff;
+    }
+
+    .price-example {
+      margin-top: 24px;
+      max-width: 640px;
+      padding: 28px;
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      background: #fff;
+    }
+    .price-example h3 { margin: 0 0 6px; font-size: 23px; letter-spacing: -0.02em; }
+    .price-example p { margin: 0 0 22px; color: var(--text-secondary); font-size: 14px; }
+    .price-input {
+      display: flex;
+      align-items: center;
+      height: 56px;
+      border: 1px solid var(--primary);
+      border-radius: 12px;
+      box-shadow: 0 0 0 3px rgba(79,70,229,.10);
+      overflow: hidden;
+    }
+    .price-input input {
+      width: 100%;
+      height: 100%;
+      padding: 0 16px;
+      border: 0;
+      outline: 0;
+      font-size: 20px;
+      font-weight: 750;
+    }
+    .price-input .unit { height: 100%; display: grid; place-items: center; }
+
+    .layout-grid {
+      display: grid;
+      grid-template-columns: 0.78fr 1.42fr;
+      gap: 20px;
+      align-items: start;
+    }
+    .device {
+      width: min(100%, 360px);
+      margin: 0 auto;
+      border: 1px solid #D1D5DB;
+      border-radius: 30px;
+      padding: 12px;
+      background: #fff;
+      box-shadow: var(--shadow-soft);
+    }
+    .device-screen {
+      min-height: 560px;
+      overflow: hidden;
+      border-radius: 20px;
+      background: var(--surface-muted);
+      display: flex;
+      flex-direction: column;
+    }
+    .mobile-head {
+      height: 64px;
+      padding: 0 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid var(--border);
+      background: #fff;
+    }
+    .mobile-brand { font-weight: 800; color: var(--primary); }
+    .progress { color: var(--text-secondary); font-size: 12px; font-weight: 700; }
+    .mobile-body { padding: 28px 20px 24px; flex: 1; }
+    .mobile-body h3 { margin: 0 0 8px; font-size: 27px; line-height: 1.25; letter-spacing: -0.035em; }
+    .mobile-body > p { margin: 0 0 24px; color: var(--text-secondary); font-size: 14px; }
+    .mobile-choice { display: grid; gap: 10px; }
+    .mobile-choice div {
+      padding: 15px;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background: #fff;
+      font-size: 14px;
+      font-weight: 700;
+    }
+    .mobile-choice .active { border: 2px solid var(--primary); background: var(--primary-soft); }
+    .mobile-cta {
+      padding: 14px 20px 18px;
+      border-top: 1px solid var(--border);
+      background: rgba(255,255,255,.97);
+    }
+    .mobile-cta .btn { width: 100%; }
+
+    .admin-shell {
+      overflow: hidden;
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      background: var(--surface);
+      box-shadow: var(--shadow-soft);
+    }
+    .admin-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 20px;
+      padding: 20px 22px;
+      border-bottom: 1px solid var(--border);
+    }
+    .admin-head strong { font-size: 18px; }
+    .admin-body { padding: 20px; background: var(--surface-muted); }
+    .stat-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 12px;
+      margin-bottom: 14px;
+    }
+    .stat {
+      padding: 17px;
+      border: 1px solid var(--border);
+      border-radius: 13px;
+      background: #fff;
+    }
+    .stat small { color: var(--text-secondary); font-size: 12px; font-weight: 700; }
+    .stat strong { display: block; margin-top: 6px; font-size: 25px; letter-spacing: -0.03em; }
+    .table-card { overflow: hidden; border: 1px solid var(--border); border-radius: 13px; background: #fff; }
+    .table-row {
+      display: grid;
+      grid-template-columns: 1.15fr .85fr .8fr .7fr;
+      gap: 10px;
+      padding: 13px 14px;
+      border-bottom: 1px solid var(--border);
+      font-size: 12px;
+      align-items: center;
+    }
+    .table-row:last-child { border-bottom: 0; }
+    .table-row.head { color: var(--text-secondary); font-weight: 750; background: #FAFAFA; }
+    .status-text { color: var(--success); font-weight: 750; }
+
+    .state-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 14px;
+    }
+    .state {
+      min-height: 150px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      padding: 20px;
+      border-radius: 14px;
+      background: #fff;
+      border: 1px solid var(--border);
+    }
+    .state-icon {
+      width: 36px;
+      height: 36px;
+      display: grid;
+      place-items: center;
+      border-radius: 999px;
+      font-size: 14px;
+      font-weight: 800;
+    }
+    .state.success .state-icon { color: var(--success); background: #F0FDF4; }
+    .state.warning .state-icon { color: var(--warning); background: #FFFBEB; }
+    .state.danger .state-icon { color: var(--danger); background: #FEF2F2; }
+    .state.neutral .state-icon { color: var(--text-secondary); background: var(--surface-muted); }
+    .state strong { display: block; margin-top: 18px; font-size: 15px; }
+    .state p { margin: 5px 0 0; color: var(--text-secondary); font-size: 13px; }
+    .loader {
+      width: 22px;
+      height: 22px;
+      border: 2px solid #E5E7EB;
+      border-top-color: var(--primary);
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    @media (prefers-reduced-motion: reduce) {
+      * { scroll-behavior: auto !important; }
+      .loader { animation: none; border-top-color: #E5E7EB; }
+    }
+
+    .checklist-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 16px;
+    }
+    .checklist { display: grid; gap: 11px; margin-top: 20px; }
+    .check-item {
+      display: flex;
+      gap: 11px;
+      align-items: flex-start;
+      color: var(--text-secondary);
+      font-size: 14px;
+    }
+    .check-dot {
+      flex: 0 0 20px;
+      width: 20px;
+      height: 20px;
+      display: grid;
+      place-items: center;
+      border-radius: 999px;
+      color: var(--success);
+      background: #F0FDF4;
+      font-size: 11px;
+      font-weight: 800;
+    }
+    .avoid .check-dot { color: var(--danger); background: #FEF2F2; }
+
+    .footer {
+      padding: 46px 0 8px;
+      display: flex;
+      justify-content: space-between;
+      gap: 24px;
+      color: var(--text-secondary);
+      font-size: 13px;
+    }
+    .footer strong { color: var(--text); }
+
+    @media (max-width: 1080px) {
+      .shell { grid-template-columns: 1fr; }
+      .sidebar {
+        position: static;
+        height: auto;
+        padding: 18px 24px;
+        border-right: 0;
+        border-bottom: 1px solid var(--border);
+        flex-direction: row;
+        align-items: center;
+        overflow-x: auto;
+      }
+      .brand { flex: 0 0 auto; }
+      .brand small, .sidebar-note { display: none; }
+      .nav { display: flex; gap: 2px; white-space: nowrap; }
+      main { padding: 42px 28px 72px; }
+      .hero { grid-template-columns: 1fr; gap: 28px; }
+      .hero-principles { grid-template-columns: repeat(3, minmax(0,1fr)); }
+      .token-grid { grid-template-columns: repeat(3, minmax(0,1fr)); }
+      .layout-grid { grid-template-columns: 1fr; }
+      .device { margin-bottom: 8px; }
+    }
+
+    @media (max-width: 760px) {
+      .sidebar { padding: 14px 16px; }
+      .wordmark { width: 38px; height: 38px; border-radius: 12px; font-size: 18px; }
+      .brand > div:last-child { display: none; }
+      main { padding: 26px 20px 56px; }
+      .hero { padding: 24px 0 44px; }
+      .hero-principles { grid-template-columns: 1fr; }
+      section { padding: 48px 0; }
+      .section-head { display: grid; gap: 10px; }
+      .token-grid, .split-grid, .mode-grid, .checklist-grid { grid-template-columns: 1fr; }
+      .token-grid { grid-template-columns: repeat(2, minmax(0,1fr)); }
+      .type-card { padding: 22px; }
+      .type-row { grid-template-columns: 1fr; gap: 8px; }
+      .choice-grid, .choice-grid.two { grid-template-columns: 1fr; }
+      .state-grid { grid-template-columns: 1fr; }
+      .stat-grid { grid-template-columns: 1fr 1fr; }
+      .stat:last-child { grid-column: 1 / -1; }
+      .table-row { grid-template-columns: 1.2fr .8fr .8fr; }
+      .table-row > :nth-child(4) { display: none; }
+      .footer { flex-direction: column; }
+    }
+
+    @media (max-width: 420px) {
+      .token-grid { grid-template-columns: 1fr; }
+      .button-row .btn { width: 100%; }
+      .radius-demo { grid-template-columns: 1fr; }
+      .admin-body { padding: 12px; }
+      .admin-head { padding: 16px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <aside class="sidebar" aria-label="디자인 시스템 목차">
+      <a class="brand" href="#top" aria-label="1+ 디자인 시스템 맨 위로">
+        <div class="wordmark" aria-hidden="true">1+</div>
+        <div>Design System<small>Minimum product rules</small></div>
+      </a>
+
+      <nav class="nav">
+        <a href="#foundations">Foundations</a>
+        <a href="#components">Components</a>
+        <a href="#registration">Registration</a>
+        <a href="#layouts">Layouts</a>
+        <a href="#states">States</a>
+        <a href="#accessibility">Accessibility</a>
+      </nav>
+
+      <div class="sidebar-note">판매자와 관리자 화면을 일관된 품질로 유지하기 위한 최소 기준입니다. 대형 컴포넌트 라이브러리 구축을 목표로 하지 않습니다.</div>
+    </aside>
+
+    <main id="top">
+      <div class="content">
+        <header class="hero">
+          <div>
+            <div class="eyebrow">1+ Product UI</div>
+            <h1>명확하고, 단순하고,<br />실제 서비스답게.</h1>
+            <p>판매자 화면은 설문이나 실험 페이지가 아니라 실제로 운영되는 판매 신청 서비스처럼 보여야 합니다. 중립적인 표면을 기본으로 하고 중요한 행동에만 Primary 색상을 사용합니다.</p>
+          </div>
+          <div class="hero-principles" aria-label="핵심 디자인 원칙">
+            <div class="principle"><span>01</span>명확한 정보 위계와 큰 제목</div>
+            <div class="principle"><span>02</span>충분한 여백과 정돈된 카드</div>
+            <div class="principle"><span>03</span>한 단계에는 하나의 Primary CTA</div>
+          </div>
+        </header>
+
+        <section id="foundations">
+          <div class="section-head">
+            <div>
+              <div class="section-kicker">01 · Foundations</div>
+              <h2>Color tokens</h2>
+            </div>
+            <p>컴포넌트마다 임의 색상을 추가하지 않고 의미 기반 토큰을 우선합니다. Primary는 중요한 행동과 선택 상태에만 사용합니다.</p>
+          </div>
+
+          <div class="token-grid">
+            <article class="card color-token"><div class="swatch" style="background:#4F46E5"></div><div class="token-meta"><span class="token-name">Primary</span><span class="token-hex">#4F46E5</span></div></article>
+            <article class="card color-token"><div class="swatch" style="background:#4338CA"></div><div class="token-meta"><span class="token-name">Primary hover</span><span class="token-hex">#4338CA</span></div></article>
+            <article class="card color-token"><div class="swatch" style="background:#EEF2FF"></div><div class="token-meta"><span class="token-name">Primary soft</span><span class="token-hex">#EEF2FF</span></div></article>
+            <article class="card color-token"><div class="swatch" style="background:#111827"></div><div class="token-meta"><span class="token-name">Text</span><span class="token-hex">#111827</span></div></article>
+            <article class="card color-token"><div class="swatch" style="background:#6B7280"></div><div class="token-meta"><span class="token-name">Text secondary</span><span class="token-hex">#6B7280</span></div></article>
+            <article class="card color-token"><div class="swatch" style="background:#E5E7EB"></div><div class="token-meta"><span class="token-name">Border</span><span class="token-hex">#E5E7EB</span></div></article>
+            <article class="card color-token"><div class="swatch" style="background:#15803D"></div><div class="token-meta"><span class="token-name">Success</span><span class="token-hex">#15803D</span></div></article>
+            <article class="card color-token"><div class="swatch" style="background:#B45309"></div><div class="token-meta"><span class="token-name">Warning</span><span class="token-hex">#B45309</span></div></article>
+            <article class="card color-token"><div class="swatch" style="background:#DC2626"></div><div class="token-meta"><span class="token-name">Danger</span><span class="token-hex">#DC2626</span></div></article>
+            <article class="card color-token"><div class="swatch" style="background:#FFFFFF"></div><div class="token-meta"><span class="token-name">Surface</span><span class="token-hex">#FFFFFF</span></div></article>
+            <article class="card color-token"><div class="swatch" style="background:#F8FAFC"></div><div class="token-meta"><span class="token-name">Surface muted</span><span class="token-hex">#F8FAFC</span></div></article>
+          </div>
+        </section>
+
+        <section>
+          <div class="section-head">
+            <div><div class="section-kicker">Typography</div><h2>크기는 적게, 위계는 분명하게</h2></div>
+            <p>Pretendard를 우선하되 별도 설정이 없다면 시스템 폰트를 사용합니다. 한국어 본문 line-height는 약 1.4~1.6을 유지합니다.</p>
+          </div>
+          <div class="card type-card">
+            <div class="type-row"><div class="type-label">Hero / Page title<br />32–40px · 700–800</div><p class="type-sample hero-type">판매하고 싶은 상품을 알려주세요</p></div>
+            <div class="type-row"><div class="type-label">Section title<br />22–28px · 700</div><p class="type-sample section-type">상품 등록 방법을 선택해주세요</p></div>
+            <div class="type-row"><div class="type-label">Card title<br />18–20px · 600–700</div><p class="type-sample card-type">스크린샷으로 등록</p></div>
+            <div class="type-row"><div class="type-label">Body<br />16px · 400–500</div><p class="type-sample body-type">보관 상품 화면의 스크린샷을 선택하면 등록에 필요한 정보를 확인할 수 있습니다.</p></div>
+            <div class="type-row"><div class="type-label">Meta / Label<br />14–15px · 500–600</div><p class="type-sample meta-type">행사 당시 실제 결제금액</p></div>
+          </div>
+        </section>
+
+        <section>
+          <div class="section-head">
+            <div><div class="section-kicker">Spacing & Shape</div><h2>여백과 선으로 구분합니다</h2></div>
+            <p>강한 그림자보다 border와 spacing을 우선합니다. 기본 spacing scale은 4, 8, 12, 16, 24, 32, 40, 48, 64입니다.</p>
+          </div>
+          <div class="split-grid">
+            <div class="card">
+              <h3 class="card-title">Spacing scale</h3><p class="card-copy">한정된 간격 체계로 화면 리듬을 맞춥니다.</p>
+              <div class="spacing-list">
+                <div class="space-row"><strong>4</strong><div class="space-bar" style="border-left-width:4px"></div><span>4px</span></div>
+                <div class="space-row"><strong>8</strong><div class="space-bar" style="border-left-width:8px"></div><span>8px</span></div>
+                <div class="space-row"><strong>12</strong><div class="space-bar" style="border-left-width:12px"></div><span>12px</span></div>
+                <div class="space-row"><strong>16</strong><div class="space-bar" style="border-left-width:16px"></div><span>16px</span></div>
+                <div class="space-row"><strong>24</strong><div class="space-bar" style="border-left-width:24px"></div><span>24px</span></div>
+                <div class="space-row"><strong>32</strong><div class="space-bar" style="border-left-width:32px"></div><span>32px</span></div>
+                <div class="space-row"><strong>48</strong><div class="space-bar" style="border-left-width:48px"></div><span>48px</span></div>
+                <div class="space-row"><strong>64</strong><div class="space-bar" style="border-left-width:64px"></div><span>64px</span></div>
+              </div>
+            </div>
+            <div class="card">
+              <h3 class="card-title">Radius & container</h3><p class="card-copy">Input/Button 10–12px · Card 14–16px</p>
+              <div class="radius-demo">
+                <div class="radius-box" style="border-radius:10px">Control · 10px</div>
+                <div class="radius-box" style="border-radius:12px">Control · 12px</div>
+                <div class="radius-box" style="border-radius:14px">Card · 14px</div>
+                <div class="radius-box" style="border-radius:16px">Card · 16px</div>
+              </div>
+              <div class="inline-rule">판매자 화면 최대 폭 약 640–720px · 관리자 화면 최대 폭 약 1120–1280px</div>
+            </div>
+          </div>
+        </section>
+
+        <section id="components">
+          <div class="section-head">
+            <div><div class="section-kicker">02 · Components</div><h2>Buttons & actions</h2></div>
+            <p>버튼 문구는 ‘확인’보다 행동을 설명해야 합니다. Destructive 스타일은 실제 삭제나 위험한 관리자 동작에만 사용합니다.</p>
+          </div>
+          <div class="split-grid">
+            <div class="card">
+              <h3 class="card-title">Primary & secondary</h3>
+              <p class="card-copy">판매자 Primary button 높이는 최소 48px을 권장합니다.</p>
+              <div class="button-row"><button class="btn btn-primary">판매 신청하기</button><button class="btn btn-secondary">이전으로</button></div>
+              <div class="inline-rule">한 단계에서 가장 중요한 Primary action은 하나만 명확하게 보여줍니다.</div>
+            </div>
+            <div class="card">
+              <h3 class="card-title">Supporting actions</h3>
+              <p class="card-copy">파일 교체나 삭제처럼 주 행동이 아닌 기능은 시각적 우선순위를 낮춥니다.</p>
+              <div class="button-row"><button class="btn btn-secondary">이미지 교체</button><button class="btn btn-danger">삭제</button></div>
+            </div>
+          </div>
+        </section>
+
+        <section>
+          <div class="section-head">
+            <div><div class="section-kicker">Forms</div><h2>Label은 항상 보이게</h2></div>
+            <p>Placeholder를 Label 대신 사용하지 않습니다. 오류는 해당 입력 바로 아래에 표시하고 숫자 입력에는 단위를 분명하게 보여줍니다.</p>
+          </div>
+          <div class="card">
+            <div class="form-demo">
+              <div class="field">
+                <label for="product-name">상품명</label>
+                <div class="input-shell"><input id="product-name" value="오리온 초코송이" aria-describedby="product-helper" /></div>
+                <div class="helper" id="product-helper">보관 상품 화면에 표시된 이름을 입력해주세요.</div>
+              </div>
+              <div class="field">
+                <label for="paid-price">행사 당시 실제 결제금액</label>
+                <div class="input-shell focus-demo"><input id="paid-price" inputmode="numeric" value="2,000" /><span class="unit">원</span></div>
+              </div>
+              <div class="field">
+                <label for="invalid-price">판매 희망금액</label>
+                <div class="input-shell error-demo"><input id="invalid-price" inputmode="numeric" aria-invalid="true" aria-describedby="price-error" /><span class="unit">원</span></div>
+                <div class="error" id="price-error">판매 희망금액을 입력해주세요.</div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section>
+          <div class="section-head">
+            <div><div class="section-kicker">Selection cards</div><h2>선택은 색상만으로 구분하지 않습니다</h2></div>
+            <p>선택 상태는 border/outline과 연한 Primary 배경을 함께 사용해 명확하게 구분합니다.</p>
+          </div>
+          <div class="choice-grid" role="group" aria-label="편의점 선택 예시">
+            <button class="select-card selected" type="button"><div class="select-top"><span class="select-icon">GS</span><span class="check">✓</span></div><strong>GS25</strong><p>나만의 냉장고에 보관된 상품</p></button>
+            <button class="select-card" type="button"><div class="select-top"><span class="select-icon">CU</span><span class="check">✓</span></div><strong>CU</strong><p>포켓CU에 보관된 상품</p></button>
+            <button class="select-card" type="button"><div class="select-top"><span class="select-icon">+1</span><span class="check">✓</span></div><strong>행사 유형</strong><p>1+1 또는 2+1 상품 선택</p></button>
+          </div>
+        </section>
+
+        <section id="registration">
+          <div class="section-head">
+            <div><div class="section-kicker">03 · Registration</div><h2>상품 등록 방식</h2></div>
+            <p>2단계에서는 ‘스크린샷으로 등록’과 ‘직접 입력하기’ 중 하나를 먼저 선택합니다. 실제 화면에서는 선택한 방식의 입력만 노출합니다.</p>
+          </div>
+          <div class="choice-grid two">
+            <button class="select-card selected" type="button"><div class="select-top"><span class="select-icon">▣</span><span class="check">✓</span></div><strong>스크린샷으로 등록</strong><p>보관 상품 화면에서 이미지 1장을 선택합니다.</p></button>
+            <button class="select-card" type="button"><div class="select-top"><span class="select-icon">Aa</span><span class="check">✓</span></div><strong>직접 입력하기</strong><p>상품명과 행사 당시 실제 결제금액을 직접 입력합니다.</p></button>
+          </div>
+
+          <div class="mode-grid" aria-label="등록 방식 컴포넌트 예시">
+            <article class="card mode-card">
+              <span class="mode-tag">SPECIMEN · Screenshot</span>
+              <h3 class="card-title">이미지 1장 선택</h3><p class="card-copy">업로드 후 미리보기를 제공하고 교체·삭제는 보조 행동으로 둡니다.</p>
+              <div class="upload-box"><div><div class="upload-placeholder">IMG</div><strong>보관 상품 스크린샷</strong><div class="helper">자동 판독·보정 UI 없이 선택과 미리보기 경험에 집중</div></div></div>
+              <div class="button-row"><button class="btn btn-secondary">이미지 교체</button><button class="btn btn-danger">삭제</button></div>
+            </article>
+            <article class="card mode-card">
+              <span class="mode-tag">SPECIMEN · Manual</span>
+              <h3 class="card-title">필수 입력 최소화</h3><p class="card-copy">상품명과 실제 결제금액은 필수, 소비기한/유효기간은 선택입니다.</p>
+              <div class="mini-form"><div class="mini-field"><span>상품명</span><strong>필수</strong></div><div class="mini-field"><span>행사 당시 실제 결제금액</span><strong>필수</strong></div><div class="mini-field"><span>소비기한 / 유효기간</span><strong>선택</strong></div></div>
+              <div class="inline-rule">현재 MVP는 판매 수량 1개를 전제로 하므로 수량 선택 UI를 만들지 않습니다.</div>
+            </article>
+          </div>
+        </section>
+
+        <section>
+          <div class="section-head">
+            <div><div class="section-kicker">Selling price</div><h2>비율이 아니라 금액을 직접 입력</h2></div>
+            <p>0~100% 가격 옵션, 추천 가격, 10%p 재제안 UI는 만들지 않습니다. 판매자의 희망금액을 직접 묻습니다.</p>
+          </div>
+          <div class="price-example">
+            <h3>얼마에 판매하고 싶으세요?</h3>
+            <p>원하는 판매 금액을 직접 입력해주세요.</p>
+            <label class="field" for="sell-price"><span style="font-size:14px;font-weight:700">판매 희망금액</span><span class="price-input"><input id="sell-price" inputmode="numeric" value="1,500" /><span class="unit">원</span></span></label>
+            <button class="btn btn-primary" style="width:100%;margin-top:20px">다음 단계로</button>
+          </div>
+        </section>
+
+        <section id="layouts">
+          <div class="section-head">
+            <div><div class="section-kicker">04 · Layouts</div><h2>판매자는 단순하게, 관리자는 빠르게</h2></div>
+            <p>판매자는 mobile-first 한 column 구조를 사용하고, 관리자는 desktop-first로 정보 탐색과 밀도를 우선합니다.</p>
+          </div>
+          <div class="layout-grid">
+            <article class="card">
+              <h3 class="card-title">Seller · Mobile-first</h3><p class="card-copy" style="margin-bottom:22px">Desktop에서도 form 영역은 중앙에 배치합니다.</p>
+              <div class="device">
+                <div class="device-screen">
+                  <div class="mobile-head"><span class="mobile-brand">1+</span><span class="progress">1 / 5</span></div>
+                  <div class="mobile-body"><h3>어디에 보관된 상품인가요?</h3><p>상품이 보관된 편의점을 선택해주세요.</p><div class="mobile-choice"><div class="active">GS25</div><div>CU</div></div></div>
+                  <div class="mobile-cta"><button class="btn btn-primary">다음 단계로</button></div>
+                </div>
+              </div>
+            </article>
+
+            <article class="card">
+              <h3 class="card-title">Admin · Desktop-first</h3><p class="card-copy" style="margin-bottom:22px">과도한 마케팅형 여백보다 숫자 카드와 목록/표 중심으로 구성합니다.</p>
+              <div class="admin-shell">
+                <div class="admin-head"><strong>판매 신청 관리</strong><button class="btn btn-secondary" style="min-height:40px;padding:0 14px;font-size:13px">새로고침</button></div>
+                <div class="admin-body">
+                  <div class="stat-grid"><div class="stat"><small>전체 신청</small><strong>24</strong></div><div class="stat"><small>오늘 접수</small><strong>7</strong></div><div class="stat"><small>구매 진행</small><strong>5</strong></div></div>
+                  <div class="table-card">
+                    <div class="table-row head"><span>상품</span><span>편의점</span><span>희망금액</span><span>상태</span></div>
+                    <div class="table-row"><strong>초코송이</strong><span>GS25</span><span>1,500원</span><span class="status-text">접수 완료</span></div>
+                    <div class="table-row"><strong>탄산음료</strong><span>CU</span><span>1,000원</span><span>확인 중</span></div>
+                    <div class="table-row"><strong>스낵</strong><span>GS25</span><span>800원</span><span>확인 중</span></div>
+                  </div>
+                </div>
+              </div>
+            </article>
+          </div>
+        </section>
+
+        <section id="states">
+          <div class="section-head">
+            <div><div class="section-kicker">05 · States</div><h2>상태 화면도 같은 언어로</h2></div>
+            <p>입력 오류, 제출 오류, Loading, Empty state, 신청 완료, 모집 일시중지와 종료 상태를 일관된 형태로 제공합니다.</p>
+          </div>
+          <div class="state-grid">
+            <article class="state success"><div><span class="state-icon">✓</span><strong>판매 신청 완료</strong><p>입력하신 연락처로 구매 진행 방법을 안내드릴게요.</p></div></article>
+            <article class="state danger"><div><span class="state-icon">!</span><strong>제출 오류</strong><p>신청을 완료하지 못했습니다. 입력 내용을 확인하고 다시 시도해주세요.</p></div></article>
+            <article class="state warning"><div><span class="state-icon">Ⅱ</span><strong>모집 일시중지</strong><p>현재 신규 판매 신청을 잠시 받고 있지 않습니다.</p></div></article>
+            <article class="state neutral"><div><span class="state-icon">0</span><strong>Empty state</strong><p>아직 접수된 판매 신청이 없습니다.</p></div></article>
+            <article class="state neutral"><div class="loader" aria-label="로딩 중"></div><div><strong>Loading</strong><p>정보를 불러오는 동안 단순한 로딩 상태를 제공합니다.</p></div></article>
+            <article class="state neutral"><div><span class="state-icon">—</span><strong>모집 종료</strong><p>판매 신청 모집이 종료되었습니다.</p></div></article>
+          </div>
+        </section>
+
+        <section id="accessibility">
+          <div class="section-head">
+            <div><div class="section-kicker">06 · Quality bar</div><h2>반응형과 접근성 최소 기준</h2></div>
+            <p>최소 360px, 768px, 1280px 너비에서 확인하며 semantic HTML을 커스텀 ARIA보다 우선합니다.</p>
+          </div>
+          <div class="checklist-grid">
+            <article class="card">
+              <h3 class="card-title">Must check</h3><p class="card-copy">작은 화면과 키보드 사용에서도 핵심 흐름이 깨지지 않아야 합니다.</p>
+              <div class="checklist"><div class="check-item"><span class="check-dot">✓</span><span>읽을 수 있는 색 대비</span></div><div class="check-item"><span class="check-dot">✓</span><span>명확한 focus 상태</span></div><div class="check-item"><span class="check-dot">✓</span><span>Label과 Form control 연결</span></div><div class="check-item"><span class="check-dot">✓</span><span>상태를 색상만으로 전달하지 않음</span></div><div class="check-item"><span class="check-dot">✓</span><span>주요 클릭 영역은 가능하면 약 44px 이상</span></div></div>
+            </article>
+            <article class="card avoid">
+              <h3 class="card-title">Avoid</h3><p class="card-copy">현재 제품에 필요성이 검증되지 않은 표현과 작업은 제외합니다.</p>
+              <div class="checklist"><div class="check-item"><span class="check-dot">×</span><span>gradient / glassmorphism 기반 AI Dashboard 느낌</span></div><div class="check-item"><span class="check-dot">×</span><span>과도한 animation과 badge 남용</span></div><div class="check-item"><span class="check-dot">×</span><span>한 화면의 여러 Primary button</span></div><div class="check-item"><span class="check-dot">×</span><span>가짜 후기·거래 건수·긴급성</span></div><div class="check-item"><span class="check-dot">×</span><span>판매자에게 실험/MVP임을 드러내는 문구</span></div><div class="check-item"><span class="check-dot">×</span><span>검증되지 않은 다크모드·Storybook·대형 라이브러리 작업</span></div></div>
+            </article>
+          </div>
+        </section>
+
+        <footer class="footer"><div><strong>1+ Design System</strong><br />판매 신청 서비스 최소 디자인 기준</div><div>Reference direction: clear hierarchy · ample spacing · direct copy · one primary action</div></footer>
+      </div>
+    </main>
+  </div>
+</body>
+</html>

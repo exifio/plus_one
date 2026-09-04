@@ -229,8 +229,26 @@
   color: var(--text);
 }
 
-.cell-final-price {
+.cell-desired-price {
   font-weight: 700;
+  color: var(--primary);
+}
+
+.registration-method {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 8px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background-color: var(--surface-muted);
+  color: var(--text-secondary);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.registration-method-screenshot {
+  border-color: var(--primary);
+  background-color: var(--primary-soft);
   color: var(--primary);
 }
 
@@ -373,6 +391,41 @@
 
 .detail-contact-value {
   word-break: break-all;
+}
+
+.detail-screenshot-preview {
+  display: flex;
+  min-height: 220px;
+  max-width: 480px;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  border: 1px dashed var(--border);
+  border-radius: var(--radius-md);
+  background-color: var(--surface-muted);
+  color: var(--text-secondary);
+}
+
+.detail-screenshot-preview-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 52px;
+  height: 52px;
+  border-radius: var(--radius-md);
+  background-color: var(--surface);
+  color: var(--primary);
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+}
+
+.detail-screenshot-image {
+  max-width: 100%;
+  max-height: 320px;
+  border-radius: var(--radius-md);
+  object-fit: contain;
 }
 
 .detail-hint {

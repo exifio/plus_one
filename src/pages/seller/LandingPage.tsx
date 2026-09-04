@@ -53,22 +53,22 @@ export const LandingPage: React.FC = () => {
           <li className="guide-step-item">
             <span className="step-num">1</span>
             <div className="step-info">
-              <strong>보관상품 정보 입력</strong>
-              <p>편의점(GS25/CU), 행사 유형, 결제금액과 유효기간을 입력해요.</p>
+              <strong>편의점·행사 선택</strong>
+              <p>어떤 편의점에서 어떤 행사로 구입하셨는지 확인해요.</p>
             </div>
           </li>
           <li className="guide-step-item">
             <span className="step-num">2</span>
             <div className="step-info">
-              <strong>희망 판매가격 선택</strong>
-              <p>행사 기준 1개 가격을 확인하고 원하는 판매 가격을 선택해요.</p>
+              <strong>상품 정보 등록</strong>
+              <p>스크린샷을 올리거나 직접 상품 정보를 입력해요.</p>
             </div>
           </li>
           <li className="guide-step-item">
             <span className="step-num">3</span>
             <div className="step-info">
-              <strong>신청 및 개별 안내</strong>
-              <p>신청 내용을 확인한 후 판매 진행이 가능한 경우 입력하신 연락처로 안내드립니다.</p>
+              <strong>연락처 입력</strong>
+              <p>연락처를 남기시면 판매가 진행됩니다</p>
             </div>
           </li>
         </ol>
