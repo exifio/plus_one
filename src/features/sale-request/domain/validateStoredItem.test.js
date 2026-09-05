@@ -1,7 +1,7 @@
 /*
  * 관련 작업: FE-2 — 보관상품 한 개의 입력 검증.
- * 작성 이유: 신청 안에 들어가는 각 상품의 이름·가격·유효기간이 저장 전에 안전해야 하기 때문.
- * 확인 내용: 정상 상품, 상품명·가격·유효기간 오류, 희망가가 원가보다 높은 경우.
+ * 작성 이유: 신청 안에 들어가는 각 상품의 이름·가격이 저장 전에 안전해야 하기 때문.
+ * 확인 내용: 정상 상품, 상품명·가격·유효기간 오류, 선택 유효기간, 희망가가 원가보다 높은 경우.
  */
 import { validateStoredItem } from './validateStoredItem';
 
@@ -24,10 +24,10 @@ test('상품명 없음 → 실패', () => {
   expect(result.errors.productName).toBeDefined();
 });
 
-test('유효기간 없음 → 실패', () => {
+test('유효기간 없음 → 성공 (선택 입력)', () => {
   const result = validateStoredItem({ ...validItem, expirationDate: '' }, today);
-  expect(result.valid).toBe(false);
-  expect(result.errors.expirationDate).toBeDefined();
+  expect(result.valid).toBe(true);
+  expect(result.errors.expirationDate).toBeUndefined();
 });
 
 test('과거 유효기간 → 실패', () => {

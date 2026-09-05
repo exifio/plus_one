@@ -75,7 +75,7 @@ describe('판매자 5단계 신청', () => {
     expect(nextButton).toBeEnabled();
   });
 
-  test('상품 정보가 모두 있어야 보관상품 확인 단계로 이동한다', async () => {
+  test('유효기간 없이도 상품 정보가 유효하면 보관상품 확인 단계로 이동한다', async () => {
     const user = userEvent.setup();
     await openSellPage();
 
@@ -85,7 +85,10 @@ describe('판매자 5단계 신청', () => {
 
     const nextButton = screen.getByRole('button', { name: '보관상품 확인하기' });
     expect(nextButton).toBeDisabled();
-    await fillFirstItem(user);
+    expect(screen.getByText('꼭 입력하지 않으셔도 괜찮아요.')).toBeInTheDocument();
+    await user.type(screen.getByLabelText('상품명', { exact: false }), '코카콜라 제로 500ml');
+    await user.type(screen.getByLabelText('행사 당시 가격', { exact: false }), '2200');
+    await user.type(screen.getByLabelText('판매 희망 가격', { exact: false }), '1000');
     expect(nextButton).toBeEnabled();
 
     await user.click(nextButton);

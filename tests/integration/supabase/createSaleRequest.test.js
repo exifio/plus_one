@@ -135,8 +135,8 @@ describe('create_sale_request RPC', () => {
     expect(error).not.toBeNull();
   });
 
-  test('상품 유효기간이 없으면 등록을 거부한다', async () => {
-    const { error } = await anonClient.rpc('create_sale_request', {
+  test('상품 유효기간은 입력하지 않아도 등록할 수 있다', async () => {
+    const { data, error } = await anonClient.rpc('create_sale_request', {
       p_contact_type: 'phone',
       p_contact_value: '01000000004',
       p_convenience_store: 'cu',
@@ -150,6 +150,7 @@ describe('create_sale_request RPC', () => {
       }],
     });
 
-    expect(error).not.toBeNull();
+    expect(error).toBeNull();
+    expect(data).toHaveProperty('sale_request_id');
   });
 });

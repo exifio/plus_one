@@ -1,7 +1,7 @@
 /*
  * 관련 작업: FE-2·FE-7 — 판매 신청 전체 입력 검증.
  * 작성 이유: 잘못된 편의점·행사·상품·증빙·연락처가 업로드나 RPC까지 도달하면 안 되기 때문.
- * 확인 내용: 허용 값, 필수 증빙·상품 정보·가격·유효기간·연락처 검증.
+ * 확인 내용: 허용 값, 필수 증빙·상품 정보·가격·선택 유효기간·연락처 검증.
  */
 import { validateSaleRequest } from './validateSaleRequest';
 
@@ -46,11 +46,11 @@ test('증빙 이미지가 없으면 실패한다', () => {
   expect(validateSaleRequest({ ...validDraft, evidenceImage: null }, today).valid).toBe(false);
 });
 
-test('유효기간이 없으면 실패한다', () => {
+test('유효기간이 없어도 신청 검증은 성공한다', () => {
   expect(validateSaleRequest({
     ...validDraft,
     items: [{ ...validDraft.items[0], expirationDate: '' }],
-  }, today).valid).toBe(false);
+  }, today).valid).toBe(true);
 });
 
 test('phone과 kakao 연락처는 유효하다', () => {

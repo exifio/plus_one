@@ -1,6 +1,6 @@
 export function validateExpirationDate(value, today) {
-  if (value === null || value === undefined || value === '') {
-    return { valid: false, message: '유효기간을 입력해주세요.' };
+  if (value === null || value === undefined || (typeof value === 'string' && value.trim() === '')) {
+    return { valid: true, message: null };
   }
 
   const valid = typeof value === 'string'
