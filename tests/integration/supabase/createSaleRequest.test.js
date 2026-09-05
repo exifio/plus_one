@@ -3,7 +3,7 @@
 /*
  * 관련 작업: BE-4 — create_sale_request 트랜잭션 RPC.
  * 작성 이유: Seller·신청·상품을 한 번에 저장하고 중간 실패 때 일부 데이터가 남지 않아야 하기 때문.
- * 확인 내용: 정상 생성, Seller 재사용, 입력 거부, rollback, 수동·스크린샷 등록 방식.
+ * 확인 내용: 정상 생성, Seller 재사용, 입력 거부, rollback, 필수 증빙·상품 정보.
  */
 import { createAnonClient, createServiceClient } from './clients';
 
@@ -117,13 +117,12 @@ describe('create_sale_request RPC', () => {
     expect(sellers).toHaveLength(0);
   });
 
-  test('직접 입력은 스크린샷 없이 등록할 수 있다', async () => {
-    const { data, error } = await anonClient.rpc('create_sale_request', {
+  test('증빙 이미지가 없으면 등록을 거부한다', async () => {
+    const { error } = await anonClient.rpc('create_sale_request', {
       p_contact_type: 'phone',
       p_contact_value: '01000000003',
       p_convenience_store: 'gs25',
       p_promotion_type: 'one_plus_one',
-      p_registration_method: 'manual',
       p_evidence_image: null,
       p_items: [{
         product_name: '수박바',
@@ -133,22 +132,24 @@ describe('create_sale_request RPC', () => {
       }],
     });
 
-    expect(error).toBeNull();
-    expect(data.items_count).toBe(1);
+    expect(error).not.toBeNull();
   });
 
-  test('스크린샷 등록은 이미지 기반 stored item 1개를 생성한다', async () => {
-    const { data, error } = await anonClient.rpc('create_sale_request', {
+  test('상품 유효기간이 없으면 등록을 거부한다', async () => {
+    const { error } = await anonClient.rpc('create_sale_request', {
       p_contact_type: 'phone',
       p_contact_value: '01000000004',
       p_convenience_store: 'cu',
       p_promotion_type: 'two_plus_one',
-      p_registration_method: 'screenshot',
       p_evidence_image: 'anonymous/test/screenshot.png',
-      p_items: [],
+      p_items: [{
+        product_name: '수박바',
+        expiration_date: null,
+        original_price: 1200,
+        asking_price: 600,
+      }],
     });
 
-    expect(error).toBeNull();
-    expect(data.items_count).toBe(1);
+    expect(error).not.toBeNull();
   });
 });

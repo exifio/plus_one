@@ -9,7 +9,6 @@ import { assertAdminApiContract } from '../../features/admin/api/adminApiContrac
 const twoItemDraft = {
   convenienceStore: 'cu',
   promotionType: 'two_plus_one',
-  registrationMethod: 'manual',
   items: [
     {
       id: 'item-a',
@@ -26,7 +25,7 @@ const twoItemDraft = {
       askingPrice: 800,
     },
   ],
-  evidenceImage: null,
+  evidenceImage: new File(['image'], 'evidence.png', { type: 'image/png' }),
   contactType: 'phone',
   contactValue: '010-1234-5678',
 };
@@ -215,7 +214,6 @@ describe('Fixture 관리자 API', () => {
       const third = await saleRequestApi.submitSaleRequest({
         convenienceStore: 'gs25',
         promotionType: 'one_plus_one',
-        registrationMethod: 'manual',
         items: [
           {
             id: 'item-c',
@@ -239,7 +237,7 @@ describe('Fixture 관리자 API', () => {
             askingPrice: 3000,
           },
         ],
-        evidenceImage: null,
+        evidenceImage: new File(['image'], 'metrics.png', { type: 'image/png' }),
         contactType: 'kakao',
         contactValue: ' 홍길동 ',
       });

@@ -12,8 +12,7 @@ const SAMPLE_REQUEST = {
   p_contact_value: '01077770001',
   p_convenience_store: 'gs25',
   p_promotion_type: 'one_plus_one',
-  p_registration_method: 'manual',
-  p_evidence_image: null,
+  p_evidence_image: 'anonymous/test/recruitment.png',
   p_items: [
     {
       product_name: '코카콜라 제로 500ml',

@@ -1,7 +1,7 @@
 /*
  * 관련 작업: FE-5 — 프론트엔드 단계의 판매 신청 fixture 어댑터.
  * 작성 이유: 실제 DB 없이도 API 계약, Seller 재사용, 신청 생성, 모집 차단을 검증해야 하기 때문.
- * 확인 내용: 정상·다중 상품·재신청·연락처 정규화·등록 방식·모집 상태 흐름.
+ * 확인 내용: 정상·다중 상품·재신청·연락처 정규화·증빙·모집 상태 흐름.
  */
 import { createFixtureAdapters } from './index';
 import { assertSaleRequestApiContract } from '../../features/sale-request/api/saleRequestApiContract';
@@ -9,7 +9,6 @@ import { assertSaleRequestApiContract } from '../../features/sale-request/api/sa
 const validDraft = {
   convenienceStore: 'gs25',
   promotionType: 'one_plus_one',
-  registrationMethod: 'manual',
   items: [
     {
       id: 'item-a',
@@ -19,7 +18,7 @@ const validDraft = {
       askingPrice: 1000,
     },
   ],
-  evidenceImage: null,
+  evidenceImage: new File(['image'], 'evidence.png', { type: 'image/png' }),
   contactType: 'phone',
   contactValue: '010-1234-5678',
 };
@@ -96,32 +95,26 @@ describe('Fixture 판매 신청 API', () => {
     expect(detail.seller.contact_value).toBe('01012345678');
   });
 
-  test('증빙 이미지가 File이면 파일 이름으로 저장한다', async () => {
+  test('증빙 이미지 파일 이름을 저장한다', async () => {
     const { saleRequestApi, adminApi } = createFixtureAdapters();
 
     const { saleRequestId } = await saleRequestApi.submitSaleRequest({
       ...validDraft,
-      registrationMethod: 'screenshot',
-      items: [],
       evidenceImage: new File(['image'], 'evidence.png', { type: 'image/png' }),
     });
     const detail = await adminApi.getSaleRequest(saleRequestId);
 
-    expect(detail.registration_method).toBe('screenshot');
     expect(detail.evidence_image).toBe('evidence.png');
     expect(detail.items).toHaveLength(1);
-    expect(detail.items[0].product_name).toBeNull();
   });
 
-  test('직접 입력은 이미지 없이 저장한다', async () => {
-    const { saleRequestApi, adminApi } = createFixtureAdapters();
+  test('증빙 이미지가 없으면 제출을 거부한다', async () => {
+    const { saleRequestApi } = createFixtureAdapters();
 
-    const { saleRequestId } = await saleRequestApi.submitSaleRequest(validDraft);
-    const detail = await adminApi.getSaleRequest(saleRequestId);
-
-    expect(detail.registration_method).toBe('manual');
-    expect(detail.evidence_image).toBeNull();
-    expect(detail.items).toHaveLength(1);
+    await expect(saleRequestApi.submitSaleRequest({
+      ...validDraft,
+      evidenceImage: null,
+    })).rejects.toThrow();
   });
 
   test('초기 모집 상태는 open이다', async () => {

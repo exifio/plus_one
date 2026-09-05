@@ -10,7 +10,6 @@ const today = '2026-09-04';
 const validDraft = {
   convenienceStore: 'gs25',
   promotionType: 'one_plus_one',
-  registrationMethod: 'screenshot',
   items: [
     {
       productName: '코카콜라 제로 500ml',
@@ -22,12 +21,6 @@ const validDraft = {
   evidenceImage: new File(['image'], 'evidence.png', { type: 'image/png' }),
   contactType: 'phone',
   contactValue: '010-1234-5678',
-};
-
-const manualDraft = {
-  ...validDraft,
-  registrationMethod: 'manual',
-  evidenceImage: null,
 };
 
 function makeService(overrides = {}) {
@@ -78,7 +71,7 @@ describe('판매 신청 제출 서비스', () => {
     const { service, storageApi, saleRequestApi } = makeService();
 
     const result = await service({
-      ...manualDraft,
+      ...validDraft,
       items: [],
     });
 
@@ -111,16 +104,15 @@ describe('판매 신청 제출 서비스', () => {
     expect(result.error).toBe('submit');
   });
 
-  test('직접 입력은 스크린샷 업로드 없이 RPC를 호출한다', async () => {
+  test('증빙 이미지가 없으면 업로드와 RPC를 호출하지 않는다', async () => {
     const { service, storageApi, saleRequestApi } = makeService();
 
-    const result = await service(manualDraft);
+    const result = await service({ ...validDraft, evidenceImage: null });
 
-    expect(result.ok).toBe(true);
+    expect(result.ok).toBe(false);
+    expect(result.error).toBe('validation');
     expect(storageApi.uploadEvidence).not.toHaveBeenCalled();
-    expect(saleRequestApi.submitSaleRequest).toHaveBeenCalledWith(
-      expect.objectContaining({ evidenceImage: null, registrationMethod: 'manual' }),
-    );
+    expect(saleRequestApi.submitSaleRequest).not.toHaveBeenCalled();
   });
 
   test('RECRUITMENT_NOT_OPEN 오류는 모집 실패로 구분해 반환한다', async () => {

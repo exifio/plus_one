@@ -4,14 +4,10 @@
  * 확인 내용: 빈 목록, 제출된 신청 표시, 접수 상태 필터.
  */
 import { render, screen } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router-dom';
 import { ServerContext } from '../../server/ServerContext';
 import { createFixtureAdapters } from '../../../adapters/fixture';
-import { createFixtureSaleRequestApi } from '../../../adapters/fixture/fixtureSaleRequestApi';
-import { createFixtureStore } from '../../../adapters/fixture/fixtureStore';
 import AdminListPage from './AdminListPage';
-import { STORE_OPTIONS, labelFor } from '../../seller/utils/options';
 
 function renderWithAdapters(ui) {
   return render(
@@ -21,24 +17,13 @@ function renderWithAdapters(ui) {
   );
 }
 
-function seededAdapters(draft) {
-  const store = createFixtureStore();
-  return {
-    saleRequestApi: createFixtureSaleRequestApi(store),
-    adminApi: createFixtureAdapters().adminApi,
-    ...createFixtureAdapters(),
-    saleRequestApiOverride: createFixtureSaleRequestApi(store),
-  };
-}
-
 const validDraft = {
   convenienceStore: 'gs25',
   promotionType: 'one_plus_one',
-  registrationMethod: 'manual',
   items: [
     { productName: '코카콜라 제로 500ml', expirationDate: '2026-09-30', originalPrice: 2200, askingPrice: 1000 },
   ],
-  evidenceImage: null,
+  evidenceImage: new File(['image'], 'evidence.png', { type: 'image/png' }),
   contactType: 'phone',
   contactValue: '010-1234-5678',
 };

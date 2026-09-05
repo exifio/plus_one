@@ -3,13 +3,6 @@ import { SALE_REQUEST_ACTION } from '../../../sale-request/state/saleRequestRedu
 import { validateStoredItem } from '../../../sale-request/domain/validateStoredItem';
 import { parsePriceInput } from '../../utils/format';
 import FormField from '../FormField';
-import SelectionCard from '../SelectionCard';
-import StepEvidence from './StepEvidence';
-
-const REGISTRATION_METHODS = [
-  { value: 'screenshot', label: '스크린샷으로 등록' },
-  { value: 'manual', label: '직접 입력하기' },
-];
 
 export default function StepItems({ draft, dispatch, today }) {
   const [touched, setTouched] = useState({});
@@ -23,36 +16,9 @@ export default function StepItems({ draft, dispatch, today }) {
   return (
     <section className="step">
       <h1 className="step-title">판매할 상품을 등록해주세요</h1>
-      <p className="step-desc">등록 방식을 선택한 후 필요한 정보를 입력해주세요.</p>
+      <p className="step-desc">상품 정보를 입력해주세요.</p>
 
-      <fieldset className="field-group registration-method-group">
-        <legend className="field-label">등록 방식 선택</legend>
-        <div className="selection-row">
-          {REGISTRATION_METHODS.map((method) => (
-            <SelectionCard
-              key={method.value}
-              label={method.label}
-              selected={draft.registrationMethod === method.value}
-              onSelect={() => dispatch({
-                type: SALE_REQUEST_ACTION.SET_REGISTRATION_METHOD,
-                payload: method.value,
-              })}
-            />
-          ))}
-        </div>
-      </fieldset>
-
-      {draft.registrationMethod === 'screenshot' && (
-        <div className="registration-method-panel">
-          <h2 className="registration-method-title">스크린샷으로 등록</h2>
-          <p className="registration-method-desc">
-            보관함에서 상품 정보가 보이는 화면을 첨부해주세요.
-          </p>
-          <StepEvidence draft={draft} dispatch={dispatch} embedded />
-        </div>
-      )}
-
-      {draft.registrationMethod === 'manual' && draft.items.map((item, index) => {
+      {draft.items.map((item) => {
         const validation = validateStoredItem(item, today);
         const isNameTouched = touched[`${item.id}-name`] || Boolean(item.productName);
         const isOrigTouched = touched[`${item.id}-orig`] || item.originalPrice !== null;
@@ -95,8 +61,9 @@ export default function StepItems({ draft, dispatch, today }) {
             </FormField>
 
             <FormField
-              label="유효기간 (선택)"
+              label="유효기간"
               htmlFor={`expiration-${item.id}`}
+              required
               error={expError}
             >
               <input

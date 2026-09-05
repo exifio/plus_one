@@ -1,5 +1,7 @@
 import { assertSaleRequestApiContract } from '../../features/sale-request/api/saleRequestApiContract';
 import { transformSaleRequestPayload } from '../../features/sale-request/domain/transformSaleRequestPayload';
+import { validateSaleRequest } from '../../features/sale-request/domain/validateSaleRequest';
+import { getKoreanTodayString } from '../../features/sale-request/domain/getKoreanTodayString';
 
 function toEvidencePath(evidenceImage) {
   if (typeof evidenceImage === 'string') return evidenceImage;
@@ -35,6 +37,10 @@ export function createFixtureSaleRequestApi(store) {
     async submitSaleRequest(draft) {
       assertRecruitmentOpen(store);
 
+      if (!validateSaleRequest(draft, getKoreanTodayString()).valid) {
+        throw new Error('invalid sale request');
+      }
+
       const payload = transformSaleRequestPayload(draft, toEvidencePath(draft.evidenceImage));
 
       let seller = store.sellers.find(
@@ -58,22 +64,13 @@ export function createFixtureSaleRequestApi(store) {
         seller_id: seller.seller_id,
         convenience_store: payload.convenience_store,
         promotion_type: payload.promotion_type,
-        registration_method: payload.registration_method,
         status: 'received',
         evidence_image: payload.evidence_image,
         created_at: new Date().toISOString(),
       };
       store.saleRequests.push(saleRequest);
 
-      const items = payload.registration_method === 'screenshot'
-        ? [{
-          product_name: null,
-          expiration_date: null,
-          original_price: null,
-          asking_price: null,
-        }]
-        : payload.items;
-      const storedItems = items.map((item) => ({
+      const storedItems = payload.items.map((item) => ({
         stored_item_id: store.nextId('item'),
         sale_request_id: saleRequest.sale_request_id,
         product_name: item.product_name,

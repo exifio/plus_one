@@ -19,8 +19,8 @@ test('내일 만료되는 상품은 허용한다', () => {
   expect(validateExpirationDate('2026-09-05', today).valid).toBe(true);
 });
 
-test('유효기간 미입력(빈 값, null, undefined)은 선택 입력이므로 허용한다', () => {
-  expect(validateExpirationDate('', today).valid).toBe(true);
-  expect(validateExpirationDate(null, today).valid).toBe(true);
-  expect(validateExpirationDate(undefined, today).valid).toBe(true);
+test('유효기간을 입력하지 않으면 거부한다', () => {
+  expect(validateExpirationDate('', today).valid).toBe(false);
+  expect(validateExpirationDate(null, today).valid).toBe(false);
+  expect(validateExpirationDate(undefined, today).valid).toBe(false);
 });

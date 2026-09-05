@@ -23,7 +23,7 @@ create table public.stored_items (
   stored_item_id uuid primary key default gen_random_uuid(),
   sale_request_id uuid not null references public.sale_requests(sale_request_id) on delete cascade,
   product_name text not null check (length(trim(product_name)) > 0),
-  expiration_date date,
+  expiration_date date not null,
   original_price integer not null check (original_price > 0),
   asking_price integer not null check (asking_price > 0),
   result text not null default 'pending' check (result in ('pending', 'purchased', 'rejected')),

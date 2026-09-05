@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { SALE_REQUEST_ACTION } from '../../../sale-request/state/saleRequestReducer';
 
-export default function StepEvidence({ draft, dispatch, embedded = false }) {
+export default function StepEvidence({ draft, dispatch }) {
   const [previewUrl, setPreviewUrl] = useState(null);
   const [error, setError] = useState(null);
 
@@ -40,8 +40,13 @@ export default function StepEvidence({ draft, dispatch, embedded = false }) {
     dispatch({ type: SALE_REQUEST_ACTION.SET_EVIDENCE_IMAGE, payload: file });
   };
 
-  const content = (
-    <>
+  return (
+    <section className="step">
+      <h1 className="step-title">보관 중인 상품을 확인할게요</h1>
+      <p className="step-desc">
+        편의점 앱에서 판매할 상품이 보이는 화면을 캡처해서 올려주세요.
+      </p>
+
       <div className="capture-guide" aria-hidden="true">
         <span className="capture-guide-title">전체 화면 스크린샷이면 돼요</span>
         <span className="capture-guide-box">보관함 화면 그대로 캡처해주세요</span>
@@ -71,18 +76,6 @@ export default function StepEvidence({ draft, dispatch, embedded = false }) {
         )}
       </label>
       {error && <p className="field-error" role="alert">{error}</p>}
-    </>
-  );
-
-  if (embedded) return <div className="embedded-evidence">{content}</div>;
-
-  return (
-    <section className="step">
-      <h1 className="step-title">스크린샷으로 상품을 등록할게요</h1>
-      <p className="step-desc">
-        편의점 앱에서 상품 정보가 보이는 화면을 첨부해주세요.
-      </p>
-      {content}
     </section>
   );
 }

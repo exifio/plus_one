@@ -118,7 +118,6 @@ export default function AdminDetailPage() {
           <AdminItemCard
             key={item.stored_item_id}
             item={item}
-            registrationMethod={detail.registration_method}
             onPurchase={(i) => setModal({ type: 'purchase', item: i })}
             onReject={(i) => setModal({ type: 'reject', item: i })}
           />

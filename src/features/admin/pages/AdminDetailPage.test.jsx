@@ -13,11 +13,10 @@ import AdminDetailPage from './AdminDetailPage';
 const validDraft = {
   convenienceStore: 'gs25',
   promotionType: 'one_plus_one',
-  registrationMethod: 'manual',
   items: [
     { productName: '코카콜라 제로 500ml', expirationDate: '2026-09-30', originalPrice: 2200, askingPrice: 1000 },
   ],
-  evidenceImage: null,
+  evidenceImage: new File(['image'], 'evidence.png', { type: 'image/png' }),
   contactType: 'phone',
   contactValue: '010-1234-5678',
 };
@@ -48,27 +47,15 @@ describe('관리자 신청 상세 페이지', () => {
     expect(screen.getByText('판매자에게 연락 시작')).toBeInTheDocument();
   });
 
-  test('직접 입력 신청에는 상품 정보 스크린샷을 표시하지 않는다', async () => {
+  test('상품 정보와 보관상품 확인 이미지를 보여준다', async () => {
     await seedAndRender();
 
     await screen.findByText(/코카콜라 제로 500ml/);
 
-    expect(screen.queryByAltText('판매 의향 증빙')).not.toBeInTheDocument();
-  });
-
-  test('스크린샷 신청은 이미지와 이미지 기반 상품을 표시한다', async () => {
-    await seedAndRender({
-      ...validDraft,
-      registrationMethod: 'screenshot',
-      items: [],
-      evidenceImage: 'evidence/sale/screenshot.png',
-    });
-
     expect(await screen.findByAltText('상품 정보 스크린샷')).toHaveAttribute(
       'src',
-      'evidence/sale/screenshot.png',
+      'evidence.png',
     );
-    expect(screen.getByText('스크린샷으로 등록한 상품')).toBeInTheDocument();
   });
 
   test('연락 시작 버튼 클릭 시 contacting으로 바뀌고 버튼이 사라진다', async () => {

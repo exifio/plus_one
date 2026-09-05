@@ -13,15 +13,17 @@ import RecruitmentNotice from '../../recruitment/components/RecruitmentNotice';
 import { isValidPhoneNumber } from '../utils/format';
 import StepStore from '../components/sell-flow/StepStore';
 import StepItems from '../components/sell-flow/StepItems';
+import StepEvidence from '../components/sell-flow/StepEvidence';
 import StepContact from '../components/sell-flow/StepContact';
 import StepReview from '../components/sell-flow/StepReview';
-import StepReviewSheet from '../components/sell-flow/StepReviewSheet';
 
-const TOTAL_STEPS = 3;
+const TOTAL_STEPS = 5;
 const NEXT_LABELS = {
   1: '상품 등록하기',
-  2: '연락처 입력하기',
-  3: '신청 내용 확인하기',
+  2: '보관상품 확인하기',
+  3: '연락처 입력하기',
+  4: '신청 내용 확인하기',
+  5: '판매 신청하기',
 };
 
 export default function SellPage() {
@@ -37,14 +39,13 @@ export default function SellPage() {
     createInitialSaleRequestDraft,
   );
   const [step, setStep] = useState(1);
-  const [isReviewOpen, setIsReviewOpen] = useState(false);
   const [submitState, setSubmitState] = useState({ busy: false, error: null });
   const navigate = useNavigate();
   const today = getKoreanTodayString();
 
   const goNext = () => {
     if (step === TOTAL_STEPS) {
-      setIsReviewOpen(true);
+      if (!submitState.busy) handleSubmit();
       return;
     }
     setStep((current) => Math.min(current + 1, TOTAL_STEPS));
@@ -58,19 +59,18 @@ export default function SellPage() {
   };
   const goStep = (target) => {
     setStep(target);
-    setIsReviewOpen(false);
   };
 
   const canGoNext = (() => {
     if (step === 1) return Boolean(draft.convenienceStore && draft.promotionType);
     if (step === 2) {
-      if (draft.registrationMethod === 'screenshot') return Boolean(draft.evidenceImage);
-      if (draft.registrationMethod === 'manual') {
-        return draft.items.every((item) => validateStoredItem(item, today).valid);
-      }
-      return false;
+      return draft.items.length > 0
+        && draft.items.every((item) => validateStoredItem(item, today).valid);
     }
     if (step === 3) {
+      return Boolean(draft.evidenceImage);
+    }
+    if (step === 4) {
       if (!draft.contactType) return false;
       const trimmed = String(draft.contactValue ?? '').trim();
       if (!trimmed) return false;
@@ -79,10 +79,11 @@ export default function SellPage() {
       }
       return Boolean(trimmed);
     }
-    return false;
+    return step === 5;
   })();
 
   const handleSubmit = async () => {
+    if (submitState.busy) return;
     setSubmitState({ busy: true, error: null });
     const service = createSubmitSaleRequestService({ storageApi, saleRequestApi, today });
     const result = await service(draft);
@@ -186,9 +187,9 @@ export default function SellPage() {
       <main className="sell-main">
         {step === 1 && <StepStore draft={draft} dispatch={dispatch} />}
         {step === 2 && <StepItems draft={draft} dispatch={dispatch} today={today} />}
-        {step === 3 && <StepContact draft={draft} dispatch={dispatch} />}
-        {/* 되돌리기 지원: 4단계 단독 페이지 복원 시 TOTAL_STEPS = 4 및 아래 활성화 */}
-        {step === 4 && <StepReview draft={draft} onGoStep={goStep} />}
+        {step === 3 && <StepEvidence draft={draft} dispatch={dispatch} />}
+        {step === 4 && <StepContact draft={draft} dispatch={dispatch} />}
+        {step === 5 && <StepReview draft={draft} onGoStep={goStep} />}
 
         {submitState.error && <p className="submit-error">{submitState.error}</p>}
       </main>
@@ -197,21 +198,12 @@ export default function SellPage() {
         <button
           type="button"
           className="btn-primary"
-          disabled={!canGoNext}
+          disabled={!canGoNext || submitState.busy}
           onClick={goNext}
         >
-          {NEXT_LABELS[step]}
+          {submitState.busy ? '신청 중…' : NEXT_LABELS[step]}
         </button>
       </footer>
-
-      <StepReviewSheet
-        isOpen={isReviewOpen}
-        onClose={() => setIsReviewOpen(false)}
-        draft={draft}
-        onGoStep={goStep}
-        onSubmit={handleSubmit}
-        submitState={submitState}
-      />
     </div>
   );
 }
