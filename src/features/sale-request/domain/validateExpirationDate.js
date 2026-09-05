@@ -1,4 +1,8 @@
 export function validateExpirationDate(value, today) {
+  if (value === null || value === undefined || value === '') {
+    return { valid: true, message: null };
+  }
+
   const valid = typeof value === 'string'
     && /^\d{4}-\d{2}-\d{2}$/.test(value)
     && value >= today;

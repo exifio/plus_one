@@ -11,7 +11,8 @@ export function validateStoredItemResult({ result, purchaseEvidence, rejectionRe
 
   if (result === 'rejected') {
     const valid = Boolean(String(rejectionReason ?? '').trim()) && !purchaseEvidence;
-    return { valid, message: valid ? null : '거절 상품에는 거절 이유만 필요합니다.' } };
+    return { valid, message: valid ? null : '거절 상품에는 거절 이유만 필요합니다.' };
+  }
 
   return { valid: false, message: '알 수 없는 처리 결과입니다.' };
 }

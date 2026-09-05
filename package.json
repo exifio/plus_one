@@ -19,7 +19,7 @@
     "build": "vite build",
     "test": "jest",
     "test:watch": "jest --watch",
-    "test:integration": "jest tests/integration --runInBand"
+    "test:integration": "jest --config jest.integration.config.cjs --runInBand"
   },
   "dependencies": {
     "@supabase/supabase-js": "latest",

@@ -1,7 +1,7 @@
-export function validatePrice(value) {
+export function validatePrice(value, customMessage) {
   const valid = Number.isInteger(value) && value > 0;
   return {
     valid,
-    message: valid ? null : '0보다 큰 원 단위 정수를 입력해주세요.',
+    message: valid ? null : (customMessage || '정확한 금액을 입력해주세요.'),
   };
 }

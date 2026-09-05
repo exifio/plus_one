@@ -13,7 +13,7 @@ export function validateStoredItem(item, today) {
     errors.expirationDate = dateResult.message;
   }
 
-  const origResult = validatePrice(item?.originalPrice);
+  const origResult = validatePrice(item?.originalPrice, '구매하셨을 당시의 금액을 입력해 주세요');
   if (!origResult.valid) {
     errors.originalPrice = origResult.message;
   }

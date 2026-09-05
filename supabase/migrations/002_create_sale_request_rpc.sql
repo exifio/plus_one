@@ -40,7 +40,10 @@ begin
     ) values (
       v_sale_request_id,
       trim(v_item->>'product_name'),
-      (v_item->>'expiration_date')::date,
+      case
+        when nullif(trim(v_item->>'expiration_date'), '') is null then null
+        else (v_item->>'expiration_date')::date
+      end,
       (v_item->>'original_price')::integer,
       (v_item->>'asking_price')::integer
     );
