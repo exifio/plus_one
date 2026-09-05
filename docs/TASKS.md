@@ -31,7 +31,7 @@ TASKS.md
 
 **현재 Task:** LINK-2 — 판매 신청을 실제 Supabase와 연결하기 `[ ]`
 
-**한 줄 요약:** 판매자와 Admin의 모집 상태는 실제 Supabase를 사용한다. 판매 신청·관리자 신청 데이터·실험 현황은 다음 연결 작업에서 전환한다. 판매 신청 계약 교정 migration은 원격 적용 승인 대기 중이다.
+**한 줄 요약:** 판매자와 Admin의 모집 상태는 실제 Supabase를 사용한다. 판매 신청·관리자 신청 데이터·실험 현황은 다음 연결 작업에서 전환한다. 유효기간 선택 입력을 반영한 판매 신청 계약 교정 migration은 원격 적용 승인 대기 중이다.
 
 **완료된 것:**
 
@@ -67,11 +67,11 @@ TASKS.md
 - [x] harness 파서 보강 — 따옴표로 감싼 .env 값 허용하도록 `tests/integration/supabase/clients.js` 최소 수정
   - 이후 `npm run test:integration`이 env 오류 없이 실제 프로젝트에 연결됨을 확인 (실패 원인이 env → 미적용 schema로 변경)
   - Unit Test 회귀 없음 (245 PASS)
-- [!] 과거 계약 migration 적용 기록은 폐기 — strict 6-arg corrective migration 원격 적용 승인 대기
+- [!] 과거 계약 migration 적용 기록은 폐기 — 6-arg corrective migration 원격 적용 승인 대기
 - [x] 테스트 프로젝트 스키마/권한 drift 보정 — 모집 상태 소문자 계약, `update_recruitment_status`, 민감 테이블/RPC anon 접근 차단
 - [x] 과거 계약 기준 `npm run test:integration` PASS — 5 suites / 25 tests
 
-→ Docker 없이 전용 non-production Supabase와 SQL Editor 수동 적용으로 당시 BE-1 harness 검증 완료; strict 계약 migration은 현재 PR에서 교정 중
+→ Docker 없이 전용 non-production Supabase와 SQL Editor 수동 적용으로 당시 BE-1 harness 검증 완료; corrective migration은 현재 PR에서 유효기간 선택 규칙으로 교정 중
 
 ## BE-2 — Core Schema + recruitment_settings `[x]`
 
@@ -131,7 +131,7 @@ TASKS.md
 - [x] recruitment update / experiment metrics 검증
 - [x] Admin Auth no token / invalid token / non-admin / admin token 검증
 - [x] 과거 계약 기준 원격 non-production 전체 Integration Test PASS — 9 suites / 56 tests
-- [!] strict 6-arg 계약 및 신규 필수 필드 제약은 corrective migration 원격 적용 후 재검증 필요
+- [!] 6-arg 계약 및 신규 필수 필드 제약(유효기간 제외)은 corrective migration 원격 적용 후 재검증 필요
 - [x] Phase 2 Backend Gate 통과
 
 ## LINK-1 — 모집 상태 실제 Supabase 연결 (2026-09-05) `[x]`
@@ -148,16 +148,17 @@ TASKS.md
 ## 2026-09-05 (판매 신청 계약 교정)
 
 - [x] PRD/DESIGN 기준 5단계 판매 흐름으로 Seller UI 통일
-- [x] 등록 방식 분기 제거 및 상품명·유효기간·양의 정수 가격·보관 증빙 필수화
-- [x] fixture와 도메인 테스트를 strict 계약으로 교정 — 34 suites / 243 tests PASS
-- [x] strict 6-arg RPC와 기존 원격 데이터 보존용 `NOT VALID` 제약 migration 추가
+- [x] 등록 방식 분기 제거 및 상품명·양의 정수 가격·보관 증빙 필수화, 유효기간 선택 입력
+- [x] fixture와 도메인 테스트를 현재 계약으로 교정 — 34 suites / 243 tests PASS
+- [x] 유효기간 미입력 상태에서 `보관상품 확인하기` 활성화 및 3단계 이동을 실제 브라우저에서 확인
+- [x] 6-arg RPC와 기존 원격 데이터 보존용 `NOT VALID` 제약 migration 추가 (유효기간 선택)
 - [!] 원격 migration 적용 및 교정 후 integration 재검증은 별도 승인 대기
 
 ---
 
 # 3. 현재 Blocker
 
-- [!] 원격 non-production에 이전 7-arg/nullable 계약이 남아 있어 `20260905130051_restore_required_sale_request_contract.sql` 적용 승인이 필요하다. 기존 데이터는 삭제하지 않는다.
+- [!] 원격 non-production에 이전 7-arg/nullable 계약이 남아 있어 유효기간 선택을 반영한 `20260905130051_restore_required_sale_request_contract.sql` 적용 승인이 필요하다. 기존 데이터는 삭제하지 않는다.
 - 다음 작업은 migration 적용 후 판매 신청 실제 연결이다.
 
 ---
@@ -176,7 +177,7 @@ TASKS.md
 
 - [x] 전용 non-production Supabase 프로젝트 연결 확인 (`SUPABASE_TEST_PROJECT=non-production`)
 - [x] SQL Editor에서 당시 판매 신청 RPC와 권한을 검증
-- [!] 당시 RPC는 현재 PRD 계약과 달라 폐기 대상이며, strict corrective migration 적용 전까지 원격 재검증 보류
+- [!] 당시 RPC는 현재 PRD 계약과 달라 폐기 대상이며, corrective migration 적용 전까지 원격 재검증 보류
 - [x] 기존 테스트 프로젝트의 스키마/권한 drift를 데이터 삭제 없이 현재 계약에 맞게 보정
 - [x] 당시 계약 기준 실제 Supabase 통합 테스트 통과 — 5 suites / 25 tests
 - [x] `process_stored_item`의 단일 item 자동 `completed` 규칙을 보존하고, `contacting` 분기는 두 번째 pending item fixture로 검증

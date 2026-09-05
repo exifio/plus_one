@@ -102,6 +102,7 @@ kakao:
 Asia/Seoul 기준:
 
 ```text
+미입력 → true
 과거 → false
 오늘 → true
 미래 → true
@@ -114,9 +115,12 @@ Asia/Seoul 기준:
 필수:
 
 - productName
-- expirationDate
 - originalPrice
 - askingPrice
+
+선택:
+
+- expirationDate
 
 최소 하나라도 invalid이면 실패.
 

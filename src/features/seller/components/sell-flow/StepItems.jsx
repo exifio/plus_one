@@ -63,7 +63,7 @@ export default function StepItems({ draft, dispatch, today }) {
             <FormField
               label="유효기간"
               htmlFor={`expiration-${item.id}`}
-              required
+              hint="꼭 입력하지 않으셔도 괜찮아요."
               error={expError}
             >
               <input

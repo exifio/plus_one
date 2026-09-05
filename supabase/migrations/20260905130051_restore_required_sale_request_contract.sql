@@ -1,6 +1,10 @@
 -- Restore the PRD contract after the non-production registration-method experiment.
 -- Existing legacy rows are preserved; NOT VALID checks enforce the contract for new rows.
 
+-- Expiration date is optional. If supplied, the RPC validates that it is today or later.
+alter table public.stored_items
+  alter column expiration_date drop not null;
+
 alter table public.sale_requests
   drop constraint if exists sale_requests_required_evidence_check;
 
@@ -17,7 +21,6 @@ alter table public.stored_items
   check (
     product_name is not null
     and length(trim(product_name)) > 0
-    and expiration_date is not null
     and original_price is not null
     and original_price > 0
     and asking_price is not null
@@ -94,14 +97,13 @@ begin
     end if;
 
     v_expiration_date := nullif(trim(v_item->>'expiration_date'), '');
-    if v_expiration_date is null then
-      raise exception 'expiration date is required';
-    end if;
-    if v_expiration_date !~ '^[0-9]{4}-[0-9]{2}-[0-9]{2}$' then
-      raise exception 'expiration date is invalid';
-    end if;
-    if v_expiration_date::date < (now() at time zone 'Asia/Seoul')::date then
-      raise exception 'expiration date cannot be in the past';
+    if v_expiration_date is not null then
+      if v_expiration_date !~ '^[0-9]{4}-[0-9]{2}-[0-9]{2}$' then
+        raise exception 'expiration date is invalid';
+      end if;
+      if v_expiration_date::date < (now() at time zone 'Asia/Seoul')::date then
+        raise exception 'expiration date cannot be in the past';
+      end if;
     end if;
 
     v_price := v_item->>'original_price';
@@ -155,7 +157,7 @@ begin
     values (
       v_sale_request_id,
       trim(v_item->>'product_name'),
-      (v_item->>'expiration_date')::date,
+      nullif(trim(v_item->>'expiration_date'), '')::date,
       (v_item->>'original_price')::integer,
       (v_item->>'asking_price')::integer
     );

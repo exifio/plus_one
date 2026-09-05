@@ -26,7 +26,7 @@
 - 행사 유형
 - StoredItem 1개 이상
 - 각 상품의 상품명
-- 유효기간
+- 유효기간(선택 입력)
 - 행사 당시 가격
 - 판매 희망 가격
 - 보관상품 증빙 이미지 1장
@@ -102,7 +102,7 @@
 StoredItem 1개당 다음을 입력한다.
 
 - 상품명
-- 유효기간
+- 유효기간(선택 입력)
 - 행사 당시 가격
 - 판매 희망 가격
 
@@ -164,9 +164,10 @@ Seller는 `contact_type + contact_value` 조합으로 식별한다.
 Asia/Seoul
 ```
 
-- 과거 날짜: 등록 불가
-- 오늘: 등록 가능
-- 미래: 등록 가능
+- 유효기간은 입력하지 않아도 등록 가능
+- 입력한 과거 날짜: 등록 불가
+- 입력한 오늘 날짜: 등록 가능
+- 입력한 미래 날짜: 등록 가능
 
 ---
 
@@ -240,7 +241,7 @@ contact_type + normalized contact_value
 - `stored_item_id` UUID
 - `sale_request_id` FK
 - `product_name`
-- `expiration_date` DATE
+- `expiration_date` DATE NULL
 - `original_price` INTEGER
 - `asking_price` INTEGER
 - `result`: `pending | purchased | rejected`

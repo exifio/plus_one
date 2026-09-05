@@ -65,7 +65,6 @@ describe('핵심 테이블의 데이터 제약', () => {
 
   test.each([
     { product_name: null },
-    { expiration_date: null },
     { original_price: null },
     { asking_price: null },
   ])('새 stored item은 필수 상품 필드 %s를 비워둘 수 없다', async (missingField) => {
@@ -79,6 +78,29 @@ describe('핵심 테이블의 데이터 제약', () => {
     });
 
     expect(error).not.toBeNull();
+  });
+
+  test('stored item의 유효기간은 비워둘 수 있다', async () => {
+    const { data, error } = await serviceClient
+      .from('stored_items')
+      .insert({
+        sale_request_id: saleRequestId,
+        product_name: '선택 유효기간 테스트 상품',
+        expiration_date: null,
+        original_price: 1000,
+        asking_price: 500,
+      })
+      .select('stored_item_id')
+      .single();
+
+    expect(error).toBeNull();
+
+    if (data?.stored_item_id) {
+      await serviceClient
+        .from('stored_items')
+        .delete()
+        .eq('stored_item_id', data.stored_item_id);
+    }
   });
 
   test('동일한 contact_type과 contact_value 조합은 중복될 수 없다', async () => {

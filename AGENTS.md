@@ -123,8 +123,8 @@ Backend 전체 구현
 - `quantity` 금지
 - original/asking price 양의 정수
 - asking > original 허용
-- 오늘 유효기간 허용
-- 과거 유효기간 금지
+- 유효기간은 선택 입력
+- 입력한 유효기간은 오늘 또는 미래만 허용
 
 결과:
 

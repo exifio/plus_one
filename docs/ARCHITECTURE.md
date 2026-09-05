@@ -280,7 +280,7 @@ status IN ('received', 'contacting', 'completed')
 stored_item_id UUID PK
 sale_request_id UUID FK NOT NULL
 product_name TEXT NOT NULL
-expiration_date DATE NOT NULL
+expiration_date DATE NULL
 original_price INTEGER NOT NULL
 asking_price INTEGER NOT NULL
 result TEXT NOT NULL DEFAULT 'pending'
