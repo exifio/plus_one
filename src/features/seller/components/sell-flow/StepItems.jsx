@@ -2,10 +2,13 @@ import { useState } from 'react';
 import { SALE_REQUEST_ACTION } from '../../../sale-request/state/saleRequestReducer';
 import { validateStoredItem } from '../../../sale-request/domain/validateStoredItem';
 import { parsePriceInput } from '../../utils/format';
+import { REGISTRATION_METHOD_OPTIONS } from '../../utils/options';
 import FormField from '../FormField';
+import SelectionCard from '../SelectionCard';
 
 export default function StepItems({ draft, dispatch, today }) {
   const [touched, setTouched] = useState({});
+  const isScreenshot = draft.registrationMethod === 'screenshot';
 
   const markTouched = (key) =>
     setTouched((prev) => (prev[key] ? prev : { ...prev, [key]: true }));
@@ -15,11 +18,28 @@ export default function StepItems({ draft, dispatch, today }) {
 
   return (
     <section className="step">
-      <h1 className="step-title">판매할 상품을 등록해주세요</h1>
-      <p className="step-desc">상품 정보를 입력해주세요.</p>
+      <h1 className="step-title">상품을 어떻게 등록할까요?</h1>
+      <p className="step-desc">스크린샷을 올리거나 상품 정보를 직접 입력해주세요.</p>
 
-      {draft.items.map((item) => {
-        const validation = validateStoredItem(item, today);
+      <fieldset className="field-group">
+        <legend className="field-label">등록 방식</legend>
+        <div className="selection-row">
+          {REGISTRATION_METHOD_OPTIONS.map((option) => (
+            <SelectionCard
+              key={option.value}
+              label={option.label}
+              selected={draft.registrationMethod === option.value}
+              onSelect={() => dispatch({
+                type: SALE_REQUEST_ACTION.SET_REGISTRATION_METHOD,
+                payload: option.value,
+              })}
+            />
+          ))}
+        </div>
+      </fieldset>
+
+      {draft.registrationMethod && draft.items.map((item) => {
+        const validation = validateStoredItem(item, today, draft.registrationMethod);
         const isNameTouched = touched[`${item.id}-name`] || Boolean(item.productName);
         const isOrigTouched = touched[`${item.id}-orig`] || item.originalPrice !== null;
         const isAskTouched = touched[`${item.id}-ask`] || item.askingPrice !== null;
@@ -44,65 +64,69 @@ export default function StepItems({ draft, dispatch, today }) {
               </div>
             )}
 
-            <FormField
-              label="상품명"
-              htmlFor={`product-name-${item.id}`}
-              required
-              error={nameError}
-            >
-              <input
-                id={`product-name-${item.id}`}
-                className={`text-input${nameError ? ' invalid' : ''}`}
-                placeholder="코카콜라 제로 500ml"
-                value={item.productName}
-                onBlur={() => markTouched(`${item.id}-name`)}
-                onChange={(event) => updateItem(item.id, { productName: event.target.value })}
-              />
-            </FormField>
+            {!isScreenshot && (
+              <>
+                <FormField
+                  label="상품명"
+                  htmlFor={`product-name-${item.id}`}
+                  required
+                  error={nameError}
+                >
+                  <input
+                    id={`product-name-${item.id}`}
+                    className={`text-input${nameError ? ' invalid' : ''}`}
+                    placeholder="코카콜라 제로 500ml"
+                    value={item.productName}
+                    onBlur={() => markTouched(`${item.id}-name`)}
+                    onChange={(event) => updateItem(item.id, { productName: event.target.value })}
+                  />
+                </FormField>
 
-            <FormField
-              label="유효기간"
-              htmlFor={`expiration-${item.id}`}
-              hint="꼭 입력하지 않으셔도 괜찮아요."
-              error={expError}
-            >
-              <input
-                id={`expiration-${item.id}`}
-                className={`text-input${expError ? ' invalid' : ''}`}
-                type="date"
-                min={today}
-                value={item.expirationDate}
-                onBlur={() => markTouched(`${item.id}-exp`)}
-                onChange={(event) =>
-                  updateItem(item.id, { expirationDate: event.target.value })
-                }
-              />
-            </FormField>
+                <FormField
+                  label="유효기간"
+                  htmlFor={`expiration-${item.id}`}
+                  hint="꼭 입력하지 않으셔도 괜찮아요."
+                  error={expError}
+                >
+                  <input
+                    id={`expiration-${item.id}`}
+                    className={`text-input${expError ? ' invalid' : ''}`}
+                    type="date"
+                    min={today}
+                    value={item.expirationDate}
+                    onBlur={() => markTouched(`${item.id}-exp`)}
+                    onChange={(event) =>
+                      updateItem(item.id, { expirationDate: event.target.value })
+                    }
+                  />
+                </FormField>
 
-            <FormField
-              label="행사 당시 가격"
-              htmlFor={`original-price-${item.id}`}
-              required
-              error={origError}
-            >
-              <div
-                className={`input-with-unit${origError ? ' invalid' : ''}`}
-              >
-                <input
-                  id={`original-price-${item.id}`}
-                  className="text-input"
-                  type="text"
-                  inputMode="numeric"
-                  placeholder="2,200"
-                  value={item.originalPrice ?? ''}
-                  onBlur={() => markTouched(`${item.id}-orig`)}
-                  onChange={(event) =>
-                    updateItem(item.id, { originalPrice: parsePriceInput(event.target.value) })
-                  }
-                />
-                <span className="input-unit">원</span>
-              </div>
-            </FormField>
+                <FormField
+                  label="행사 당시 가격"
+                  htmlFor={`original-price-${item.id}`}
+                  required
+                  error={origError}
+                >
+                  <div
+                    className={`input-with-unit${origError ? ' invalid' : ''}`}
+                  >
+                    <input
+                      id={`original-price-${item.id}`}
+                      className="text-input"
+                      type="text"
+                      inputMode="numeric"
+                      placeholder="2,200"
+                      value={item.originalPrice ?? ''}
+                      onBlur={() => markTouched(`${item.id}-orig`)}
+                      onChange={(event) =>
+                        updateItem(item.id, { originalPrice: parsePriceInput(event.target.value) })
+                      }
+                    />
+                    <span className="input-unit">원</span>
+                  </div>
+                </FormField>
+              </>
+            )}
 
             <FormField
               label="판매 희망 가격"

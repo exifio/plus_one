@@ -160,6 +160,7 @@ src/features/sale-request/state/initialSaleRequestDraft.js
 ```text
 convenienceStore
 promotionType
+registrationMethod
 items[]
 evidenceImage
 contactType
@@ -263,7 +264,9 @@ src/adapters/fixture/
 **Steps:**
 
 - [ ] 1단계 편의점/행사 선택
-- [ ] 2단계 상품 등록 및 보관 증빙
+- [ ] 2단계 `스크린샷으로 등록 / 직접 입력하기` 중 하나 선택
+- [ ] 선택한 방식에 필요한 입력만 노출
+- [ ] 스크린샷 방식은 이미지 업로드, 직접 입력 방식은 상품 정보 입력
 - [ ] item add/remove
 - [ ] 가격/date validation 연결
 - [ ] 3단계 연락처 및 신청

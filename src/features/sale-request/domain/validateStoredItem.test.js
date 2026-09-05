@@ -49,3 +49,12 @@ test('판매 희망 가격 <= 0 → 실패', () => {
 test('판매 희망 가격 > 행사 당시 가격 → 성공 (정상)', () => {
   expect(validateStoredItem({ ...validItem, askingPrice: 3000 }, today).valid).toBe(true);
 });
+
+test('스크린샷 등록은 판매 희망 가격만 있으면 유효하다', () => {
+  expect(validateStoredItem({
+    productName: '',
+    expirationDate: '',
+    originalPrice: null,
+    askingPrice: 1000,
+  }, today, 'screenshot').valid).toBe(true);
+});

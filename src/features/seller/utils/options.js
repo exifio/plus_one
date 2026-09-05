@@ -8,6 +8,11 @@ export const PROMOTION_OPTIONS = [
   { value: 'two_plus_one', label: '2+1' },
 ];
 
+export const REGISTRATION_METHOD_OPTIONS = [
+  { value: 'screenshot', label: '스크린샷으로 등록' },
+  { value: 'manual', label: '직접 입력하기' },
+];
+
 export const CONTACT_OPTIONS = [
   { value: 'phone', label: '휴대폰' },
   { value: 'kakao', label: '카카오톡' },

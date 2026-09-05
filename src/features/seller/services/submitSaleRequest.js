@@ -9,7 +9,7 @@ import { getKoreanTodayString } from '../../sale-request/domain/getKoreanTodaySt
  * ```text
  * Validation
  * ↓
- * 보관상품 확인 이미지 Storage Upload
+ * 스크린샷 방식일 때만 보관상품 확인 이미지 Storage Upload
  * ↓
  * create_sale_request (saleRequestApi)
  * ↓
@@ -33,11 +33,13 @@ export function createSubmitSaleRequestService({ storageApi, saleRequestApi, tod
       return { ok: false, error: 'validation', fieldErrors: validation.errors };
     }
 
-    let evidencePath;
-    try {
-      evidencePath = await storageApi.uploadEvidence(draft.evidenceImage);
-    } catch {
-      return { ok: false, error: 'upload' };
+    let evidencePath = null;
+    if (draft.registrationMethod === 'screenshot') {
+      try {
+        evidencePath = await storageApi.uploadEvidence(draft.evidenceImage);
+      } catch {
+        return { ok: false, error: 'upload' };
+      }
     }
 
     try {

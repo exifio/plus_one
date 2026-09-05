@@ -28,6 +28,7 @@ test('DB 저장 형식으로 변환한다', () => {
     contact_value: '01012345678',
     convenience_store: 'gs25',
     promotion_type: 'one_plus_one',
+    registration_method: 'manual',
     evidence_image: 'sale-evidence/evidence.png',
     items: [
       {
@@ -65,10 +66,33 @@ test('여러 상품을 모두 변환한다', () => {
   expect(payload.items[1].product_name).toBe('딸기우유 200ml');
 });
 
-test('quantity와 등록 방식 필드를 만들지 않는다', () => {
+test('quantity 필드를 만들지 않는다', () => {
   const payload = transformSaleRequestPayload(draft, 'sale-evidence/evidence.png');
 
   expect(payload).not.toHaveProperty('quantity');
-  expect(payload).not.toHaveProperty('registration_method');
   expect(payload.items[0]).not.toHaveProperty('quantity');
+});
+
+test('스크린샷 등록 payload는 직접 입력 필드를 비워서 전달한다', () => {
+  const payload = transformSaleRequestPayload({
+    ...draft,
+    registrationMethod: 'screenshot',
+    items: [{
+      productName: '',
+      expirationDate: '',
+      originalPrice: null,
+      askingPrice: 1000,
+    }],
+  }, 'sale-evidence/evidence.png');
+
+  expect(payload).toEqual(expect.objectContaining({
+    registration_method: 'screenshot',
+    evidence_image: 'sale-evidence/evidence.png',
+  }));
+  expect(payload.items).toEqual([{
+    product_name: null,
+    expiration_date: null,
+    original_price: null,
+    asking_price: 1000,
+  }]);
 });

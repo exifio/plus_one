@@ -2,6 +2,7 @@ import { validateStoredItem } from './validateStoredItem';
 
 const VALID_STORES = ['gs25', 'cu'];
 const VALID_PROMOTIONS = ['one_plus_one', 'two_plus_one'];
+const VALID_REGISTRATION_METHODS = ['screenshot', 'manual'];
 const VALID_CONTACT_TYPES = ['phone', 'kakao'];
 
 export function validateSaleRequest(draft, today) {
@@ -19,7 +20,15 @@ export function validateSaleRequest(draft, today) {
     errors.promotionType = '1+1 또는 2+1만 선택해주세요.';
   }
 
-  if (!draft.evidenceImage) {
+  const registrationMethod = draft.registrationMethod === undefined
+    ? 'manual'
+    : draft.registrationMethod;
+
+  if (!VALID_REGISTRATION_METHODS.includes(registrationMethod)) {
+    errors.registrationMethod = '등록 방식을 선택해주세요.';
+  }
+
+  if (registrationMethod === 'screenshot' && !draft.evidenceImage) {
     errors.evidenceImage = '상품 정보 스크린샷을 첨부해주세요.';
   }
 
@@ -43,7 +52,7 @@ export function validateSaleRequest(draft, today) {
 
   if (Array.isArray(draft.items) && draft.items.length > 0) {
     draft.items.forEach((item, i) => {
-      const itemResult = validateStoredItem(item, today);
+      const itemResult = validateStoredItem(item, today, registrationMethod);
       if (!itemResult.valid) {
         errors[`item_${i}`] = itemResult.errors;
       }

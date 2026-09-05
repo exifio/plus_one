@@ -52,15 +52,59 @@ async function moveToItems(user) {
 
 async function moveToContact(user) {
   await moveToItems(user);
+  await user.click(screen.getByRole('button', { name: '직접 입력하기' }));
   await fillFirstItem(user);
-  const file = new File(['image'], 'stored-item.png', { type: 'image/png' });
-  await user.upload(screen.getByLabelText('보관상품 확인 이미지'), file);
   await user.click(screen.getByRole('button', { name: '연락처 입력하기' }));
   await user.click(screen.getByRole('button', { name: '휴대폰' }));
   await user.type(screen.getByLabelText('휴대폰 번호', { exact: false }), '01012345678');
 }
 
 describe('판매자 3단계 신청', () => {
+  test('2단계에서 스크린샷 등록과 직접 입력 중 하나를 선택한다', async () => {
+    const user = userEvent.setup();
+    await moveToItems(user);
+
+    expect(screen.getByRole('button', { name: '스크린샷으로 등록' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: '직접 입력하기' })).toBeInTheDocument();
+    expect(screen.queryByLabelText('상품명', { exact: false })).not.toBeInTheDocument();
+    expect(screen.queryByLabelText('보관상품 확인 이미지')).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: '스크린샷으로 등록' }));
+    expect(screen.getByLabelText('보관상품 확인 이미지')).toBeInTheDocument();
+    expect(screen.queryByLabelText('상품명', { exact: false })).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: '직접 입력하기' }));
+    expect(screen.getByLabelText('상품명', { exact: false })).toBeInTheDocument();
+    expect(screen.queryByLabelText('보관상품 확인 이미지')).not.toBeInTheDocument();
+  });
+
+  test('스크린샷 등록은 이미지와 판매 희망 가격만으로 다음 단계로 이동한다', async () => {
+    const user = userEvent.setup();
+    await moveToItems(user);
+    await user.click(screen.getByRole('button', { name: '스크린샷으로 등록' }));
+    await user.type(screen.getByLabelText('판매 희망 가격', { exact: false }), '1000');
+    await user.upload(
+      screen.getByLabelText('보관상품 확인 이미지'),
+      new File(['image'], 'stored-item.png', { type: 'image/png' }),
+    );
+
+    const nextButton = screen.getByRole('button', { name: '연락처 입력하기' });
+    expect(nextButton).toBeEnabled();
+    await user.click(nextButton);
+    expect(screen.getByText('3 / 3')).toBeInTheDocument();
+  });
+
+  test('직접 입력은 상품 정보만으로 다음 단계로 이동한다', async () => {
+    const user = userEvent.setup();
+    await moveToItems(user);
+    await user.click(screen.getByRole('button', { name: '직접 입력하기' }));
+    await fillFirstItem(user);
+
+    const nextButton = screen.getByRole('button', { name: '연락처 입력하기' });
+    expect(nextButton).toBeEnabled();
+    expect(screen.queryByLabelText('보관상품 확인 이미지')).not.toBeInTheDocument();
+  });
+
   test('편의점과 행사 유형을 모두 선택해야 상품 등록하기가 활성화된다', async () => {
     const user = userEvent.setup();
     const nextButton = await openSellPage();
@@ -73,37 +117,35 @@ describe('판매자 3단계 신청', () => {
     expect(nextButton).toBeEnabled();
   });
 
-  test('유효기간 없이도 상품 정보 단계로 이동하고 증빙 입력을 함께 보여준다', async () => {
+  test('직접 입력 방식을 고르면 상품 정보만 보여준다', async () => {
     const user = userEvent.setup();
     await openSellPage();
 
     await user.click(screen.getByRole('button', { name: 'GS25' }));
     await user.click(screen.getByRole('button', { name: '1+1' }));
     await user.click(screen.getByRole('button', { name: '상품 등록하기' }));
+    await user.click(screen.getByRole('button', { name: '직접 입력하기' }));
 
     const nextButton = screen.getByRole('button', { name: '연락처 입력하기' });
     expect(nextButton).toBeDisabled();
     expect(screen.getByText('꼭 입력하지 않으셔도 괜찮아요.')).toBeInTheDocument();
+    expect(screen.queryByLabelText('보관상품 확인 이미지')).not.toBeInTheDocument();
     await user.type(screen.getByLabelText('상품명', { exact: false }), '코카콜라 제로 500ml');
     await user.type(screen.getByLabelText('행사 당시 가격', { exact: false }), '2200');
     await user.type(screen.getByLabelText('판매 희망 가격', { exact: false }), '1000');
-    expect(nextButton).toBeDisabled();
-    expect(screen.getByText('보관 중인 상품을 확인할게요')).toBeInTheDocument();
+    expect(nextButton).toBeEnabled();
     expect(screen.getByText('2 / 3')).toBeInTheDocument();
   });
 
-  test('상품 정보와 증빙 이미지가 있어야 연락처 단계로 이동한다', async () => {
+  test('직접 입력 정보가 있으면 이미지 없이 연락처 단계로 이동한다', async () => {
     const user = userEvent.setup();
     await moveToItems(user);
+    await user.click(screen.getByRole('button', { name: '직접 입력하기' }));
     await fillFirstItem(user);
 
     const nextButton = screen.getByRole('button', { name: '연락처 입력하기' });
-    expect(nextButton).toBeDisabled();
-    await user.upload(
-      screen.getByLabelText('보관상품 확인 이미지'),
-      new File(['image'], 'stored-item.png', { type: 'image/png' }),
-    );
     expect(nextButton).toBeEnabled();
+    expect(screen.queryByLabelText('보관상품 확인 이미지')).not.toBeInTheDocument();
 
     await user.click(nextButton);
     expect(screen.getByText('3 / 3')).toBeInTheDocument();

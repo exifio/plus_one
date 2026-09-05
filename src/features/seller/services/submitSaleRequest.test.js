@@ -10,6 +10,7 @@ const today = '2026-09-04';
 const validDraft = {
   convenienceStore: 'gs25',
   promotionType: 'one_plus_one',
+  registrationMethod: 'screenshot',
   items: [
     {
       productName: '코카콜라 제로 500ml',
@@ -113,6 +114,25 @@ describe('판매 신청 제출 서비스', () => {
     expect(result.error).toBe('validation');
     expect(storageApi.uploadEvidence).not.toHaveBeenCalled();
     expect(saleRequestApi.submitSaleRequest).not.toHaveBeenCalled();
+  });
+
+  test('직접 입력 제출은 이미지 업로드 없이 RPC를 호출한다', async () => {
+    const { service, storageApi, saleRequestApi } = makeService();
+
+    const result = await service({
+      ...validDraft,
+      registrationMethod: 'manual',
+      evidenceImage: null,
+    });
+
+    expect(result.ok).toBe(true);
+    expect(storageApi.uploadEvidence).not.toHaveBeenCalled();
+    expect(saleRequestApi.submitSaleRequest).toHaveBeenCalledWith(
+      expect.objectContaining({
+        registrationMethod: 'manual',
+        evidenceImage: null,
+      }),
+    );
   });
 
   test('RECRUITMENT_NOT_OPEN 오류는 모집 실패로 구분해 반환한다', async () => {

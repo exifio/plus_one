@@ -113,8 +113,47 @@ describe('Fixture 판매 신청 API', () => {
 
     await expect(saleRequestApi.submitSaleRequest({
       ...validDraft,
+      registrationMethod: 'screenshot',
       evidenceImage: null,
     })).rejects.toThrow();
+  });
+
+  test('스크린샷 등록은 상품 정보 없이 제출할 수 있다', async () => {
+    const { saleRequestApi, adminApi } = createFixtureAdapters();
+
+    const { saleRequestId } = await saleRequestApi.submitSaleRequest({
+      ...validDraft,
+      registrationMethod: 'screenshot',
+      items: [{
+        id: 'item-screenshot',
+        productName: '',
+        expirationDate: '',
+        originalPrice: null,
+        askingPrice: 1000,
+      }],
+    });
+    const detail = await adminApi.getSaleRequest(saleRequestId);
+
+    expect(detail.registration_method).toBe('screenshot');
+    expect(detail.items[0]).toMatchObject({
+      product_name: null,
+      original_price: null,
+      asking_price: 1000,
+    });
+  });
+
+  test('직접 입력은 증빙 이미지 없이 제출할 수 있다', async () => {
+    const { saleRequestApi, adminApi } = createFixtureAdapters();
+
+    const { saleRequestId } = await saleRequestApi.submitSaleRequest({
+      ...validDraft,
+      registrationMethod: 'manual',
+      evidenceImage: null,
+    });
+    const detail = await adminApi.getSaleRequest(saleRequestId);
+
+    expect(detail.registration_method).toBe('manual');
+    expect(detail.evidence_image).toBeNull();
   });
 
   test('초기 모집 상태는 open이다', async () => {

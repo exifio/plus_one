@@ -8,6 +8,8 @@ import { assertApiContract } from '../../api/apiContract';
  *
  * - submitSaleRequest(draft)
  *   - draft: 판매 등록 Draft (reducer 상태)
+ *   - registrationMethod가 screenshot이면 evidenceImage가 필요하고,
+ *     manual이면 상품 정보를 입력하며 evidenceImage는 선택 사항이다.
  *   - 반환: 성공 시 { saleRequestId, sellerId, itemsCount }
  *   - 모집 상태가 open이 아니면 RECRUITMENT_NOT_OPEN 계열 오류를 반환한다 (Backend 강제 규칙)
  * - getRecruitmentStatus()

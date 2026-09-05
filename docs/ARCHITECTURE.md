@@ -140,6 +140,7 @@ saleRequestDraft
 
 convenienceStore
 promotionType
+registrationMethod
 items[]
   productName
   expirationDate
@@ -261,8 +262,9 @@ sale_request_id UUID PK
 seller_id UUID FK NOT NULL
 convenience_store TEXT NOT NULL
 promotion_type TEXT NOT NULL
+registration_method TEXT NOT NULL DEFAULT 'manual'
 status TEXT NOT NULL DEFAULT 'received'
-evidence_image TEXT NOT NULL
+evidence_image TEXT NULL
 created_at TIMESTAMPTZ NOT NULL
 ```
 
@@ -271,6 +273,7 @@ Constraint:
 ```text
 convenience_store IN ('gs25', 'cu')
 promotion_type IN ('one_plus_one', 'two_plus_one')
+registration_method IN ('screenshot', 'manual')
 status IN ('received', 'contacting', 'completed')
 ```
 
@@ -279,9 +282,9 @@ status IN ('received', 'contacting', 'completed')
 ```text
 stored_item_id UUID PK
 sale_request_id UUID FK NOT NULL
-product_name TEXT NOT NULL
+product_name TEXT NULL
 expiration_date DATE NULL
-original_price INTEGER NOT NULL
+original_price INTEGER NULL
 asking_price INTEGER NOT NULL
 result TEXT NOT NULL DEFAULT 'pending'
 rejection_reason TEXT NULL
@@ -292,7 +295,7 @@ created_at TIMESTAMPTZ NOT NULL
 Constraint:
 
 ```text
-original_price > 0
+original_price IS NULL OR original_price > 0
 asking_price > 0
 result IN ('pending', 'purchased', 'rejected')
 ```
@@ -380,6 +383,8 @@ set_recruitment_status(p_status)
 create_sale_request(...)
 ```
 
+`registration_method = 'screenshot'`이면 `evidence_image`와 `asking_price`를 필수로 하고 상품명·행사 당시 가격은 NULL로 저장한다. `manual`이면 상품명·행사 당시 가격·판매 희망 가격을 필수로 하고 스크린샷 업로드는 하지 않는다.
+
 순서:
 
 ```text
@@ -419,6 +424,8 @@ purchase-evidence
 DB에는 Public URL이 아니라 object path를 저장한다.
 
 ## sale-evidence
+
+스크린샷 등록 방식을 선택한 판매자가 제출하는 보관상품 확인 스크린샷.
 
 판매자 anon:
 
@@ -652,9 +659,9 @@ open이면 /sell 허용
 ↓
 Domain Validation
 ↓
-sale-evidence upload
+스크린샷 방식이면 sale-evidence upload
 ↓
-object path
+스크린샷 방식이면 object path, 직접 입력이면 NULL
 ↓
 create_sale_request RPC
 ↓

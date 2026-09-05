@@ -5,7 +5,13 @@ import StatusBadge from '../components/StatusBadge';
 import AdminItemCard from '../components/AdminItemCard';
 import ActionModal from '../components/ActionModal';
 import { formatDateTime } from '../../seller/utils/format';
-import { CONTACT_OPTIONS, PROMOTION_OPTIONS, STORE_OPTIONS, labelFor } from '../../seller/utils/options';
+import {
+  CONTACT_OPTIONS,
+  PROMOTION_OPTIONS,
+  REGISTRATION_METHOD_OPTIONS,
+  STORE_OPTIONS,
+  labelFor,
+} from '../../seller/utils/options';
 
 export default function AdminDetailPage() {
   const { saleRequestId } = useParams();
@@ -101,6 +107,8 @@ export default function AdminDetailPage() {
         <section className="review-section">
           <h3 className="review-label">판매자 연락처</h3>
           <dl className="review-grid">
+            <dt>등록 방식</dt>
+            <dd>{labelFor(REGISTRATION_METHOD_OPTIONS, detail.registration_method)}</dd>
             <dt>연락 방법</dt><dd>{labelFor(CONTACT_OPTIONS, detail.seller.contact_type)}</dd>
             <dt>연락처</dt><dd>{detail.seller.contact_value}</dd>
           </dl>

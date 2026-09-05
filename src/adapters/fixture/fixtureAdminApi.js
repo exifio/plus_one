@@ -138,6 +138,8 @@ export function createFixtureAdminApi(store) {
 
         priceCounts.set(item.asking_price, (priceCounts.get(item.asking_price) || 0) + 1);
 
+        if (!item.original_price) continue;
+
         const ratio = (item.asking_price / item.original_price) * 100;
         if (ratio <= 25) ratioDistribution.lte_25 += 1;
         else if (ratio <= 50) ratioDistribution.mid_26_50 += 1;

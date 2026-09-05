@@ -1,14 +1,16 @@
 # Backend 핸드오프 (2026-09-05)
 
+> 2026-09-06 갱신: Seller 2단계는 `screenshot` 또는 `manual` 중 하나를 선택한다. 아래의 기존 필수 증빙 계약은 LINK-2에서 조건부 등록 방식 계약으로 교체해야 한다.
+
 ## 현재 위치
 
 - Docker/Local Supabase 없이 사용자가 관리하는 non-production Supabase 프로젝트를 사용한다.
-- 프론트엔드와 migration 파일은 PRD의 3단계 판매 신청 흐름과 동일한 계약(상품 정보·가격·증빙 이미지 필수, 유효기간 선택)을 기준으로 정리되어 있다.
+- 당시 프론트엔드와 migration 파일은 상품 정보·가격·증빙 이미지 필수 계약을 기준으로 정리되어 있었다.
 - `supabase/migrations/20260905130051_restore_required_sale_request_contract.sql`이 6-arg `create_sale_request` RPC와 신규 데이터용 필수 필드 제약을 정의한다.
 - 원격 non-production에는 이전 실험의 7-arg RPC와 nullable legacy 행이 남아 있다. 기존 행은 삭제하지 않으며, corrective migration의 `NOT VALID` 제약으로 신규 행부터 계약을 강제한다.
 - corrective migration의 원격 적용은 별도 승인 후 진행한다.
 
-## 최종 판매 신청 계약
+## 기존 판매 신청 계약 (LINK-2에서 교체 필요)
 
 ```text
 create_sale_request(
@@ -22,17 +24,18 @@ create_sale_request(
 ```
 
 - `phone`은 숫자만, `kakao`는 trim한 값을 저장한다.
-- `p_evidence_image`는 비어 있을 수 없다.
-- `p_items`는 하나 이상의 object이며 상품명·양의 정수 가격을 포함해야 한다.
+- `p_evidence_image`는 당시 계약에서 비어 있을 수 없었다.
+- `p_items`는 당시 계약에서 하나 이상의 object이며 상품명·양의 정수 가격을 포함해야 했다.
 - 유효기간은 선택이며, 입력한 경우 `Asia/Seoul` 기준 오늘 또는 미래만 허용한다.
 - 모집 상태가 `open`이 아니거나 singleton row가 없으면 `RECRUITMENT_NOT_OPEN`으로 fail-closed 한다.
 
 ## 적용 및 검증 순서
 
-1. 원격 non-production에 `20260905130051_restore_required_sale_request_contract.sql`을 승인된 방식으로 적용한다.
-2. 실제 값을 Git에 저장하지 않은 `.env.test.local`을 준비한다.
-3. `npm run test:integration`을 실행한다.
-4. `npm test -- --runInBand`와 `npm run build`를 실행한다.
+1. `registration_method`를 추가하고 `screenshot`/`manual`별 필수값을 검증하는 후속 migration을 작성·승인한다.
+2. 원격 non-production에 후속 migration을 승인된 방식으로 적용한다.
+3. 실제 값을 Git에 저장하지 않은 `.env.test.local`을 준비한다.
+4. `npm run test:integration`을 실행한다.
+5. `npm test -- --runInBand`와 `npm run build`를 실행한다.
 
 ## 보안 경계
 

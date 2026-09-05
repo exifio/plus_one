@@ -21,6 +21,7 @@ describe('판매 신청 상태 reducer', () => {
     expect(state.items[0].expirationDate).toBe('');
     expect(state.items[0].originalPrice).toBeNull();
     expect(state.items[0].askingPrice).toBeNull();
+    expect(state.registrationMethod).toBe('');
     expect(state.evidenceImage).toBeNull();
     expect(state.contactType).toBe('');
     expect(state.contactValue).toBe('');
@@ -43,6 +44,15 @@ describe('판매 신청 상태 reducer', () => {
     });
 
     expect(state.promotionType).toBe('two_plus_one');
+  });
+
+  test('등록 방식을 선택한다', () => {
+    const state = saleRequestReducer(createInitialSaleRequestDraft(), {
+      type: SALE_REQUEST_ACTION.SET_REGISTRATION_METHOD,
+      payload: 'screenshot',
+    });
+
+    expect(state.registrationMethod).toBe('screenshot');
   });
 
   test('보관상품을 추가한다', () => {

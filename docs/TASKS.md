@@ -162,6 +162,16 @@ TASKS.md
 - [x] 전체 Unit Test 및 Production Build 재검증 — 34 suites / 243 tests PASS
 - [x] 실제 브라우저에서 3단계 이동·신청 CTA 확인 — 완료 화면까지 PASS
 
+## 2026-09-06 (2단계 등록 방식 분기 복원)
+
+- [x] 2단계에서 `스크린샷으로 등록`과 `직접 입력하기` 중 하나를 선택하도록 복원
+- [x] 스크린샷 방식은 상품명·행사 당시 가격 없이 이미지와 판매 희망 가격만 입력
+- [x] 직접 입력 방식은 상품 정보만 입력하고 이미지 업로드 없이 진행
+- [x] 방식별 Domain validation / payload / fixture 제출 분기 추가
+- [x] 관리자 상세에서 등록 방식과 스크린샷 등록 상품을 구분해 표시
+- [x] 관련 Unit/React Test — 7 suites / 75 tests PASS
+- [!] 실제 Supabase 신청 RPC는 LINK-2에서 등록 방식 조건부 계약 migration 적용 후 재검증 필요
+
 ---
 
 # 3. 현재 Blocker

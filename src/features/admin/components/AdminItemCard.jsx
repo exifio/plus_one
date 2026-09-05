@@ -6,7 +6,7 @@ export default function AdminItemCard({ item, onPurchase, onReject }) {
     <article className="item-card admin-item">
       <div className="admin-item-head">
         <strong className="review-item-name">
-          {item.product_name}
+          {item.product_name || '스크린샷으로 확인하는 상품'}
         </strong>
         <StatusBadge status={item.result} />
       </div>
@@ -14,7 +14,7 @@ export default function AdminItemCard({ item, onPurchase, onReject }) {
         <dt>유효기간</dt>
         <dd>{formatDate(item.expiration_date)}</dd>
         <dt>행사가</dt>
-        <dd>{formatPrice(item.original_price)}</dd>
+        <dd>{formatPrice(item.original_price) || '스크린샷에서 확인'}</dd>
         <dt>희망가</dt>
         <dd>{formatPrice(item.asking_price)}</dd>
       </dl>

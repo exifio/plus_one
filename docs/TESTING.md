@@ -112,7 +112,7 @@ Asia/Seoul 기준:
 
 ## validateStoredItem
 
-필수:
+직접 입력 방식 필수:
 
 - productName
 - originalPrice
@@ -124,16 +124,20 @@ Asia/Seoul 기준:
 
 최소 하나라도 invalid이면 실패.
 
+스크린샷 등록 방식은 productName/originalPrice/expirationDate 없이 askingPrice만 검증한다.
+
 ## validateSaleRequest
 
 필수:
 
 - convenienceStore
 - promotionType
+- registrationMethod
 - items.length >= 1
-- evidenceImage
 - contactType
 - contactValue
+
+`screenshot` 방식은 evidenceImage가 필수이고, `manual` 방식은 evidenceImage 없이도 유효하다.
 
 허용 값:
 
@@ -214,7 +218,7 @@ submitSaleRequest()
 
 ```text
 Validation
-→ sale-evidence upload
+→ screenshot 방식이면 sale-evidence upload
 → create_sale_request RPC
 → success
 ```
@@ -225,6 +229,11 @@ Validation
 
 - Storage 호출 X
 - RPC 호출 X
+
+## 방식별 호출
+
+- screenshot: 이미지 업로드 후 RPC 호출
+- manual: 이미지 업로드 없이 RPC 호출
 
 ## Upload 실패
 

@@ -6,7 +6,7 @@ import { getKoreanTodayString } from '../../features/sale-request/domain/getKore
 function toEvidencePath(evidenceImage) {
   if (typeof evidenceImage === 'string') return evidenceImage;
   if (evidenceImage && typeof evidenceImage.name === 'string') return evidenceImage.name;
-  return 'fixture-evidence';
+  return null;
 }
 
 /**
@@ -64,6 +64,7 @@ export function createFixtureSaleRequestApi(store) {
         seller_id: seller.seller_id,
         convenience_store: payload.convenience_store,
         promotion_type: payload.promotion_type,
+        registration_method: payload.registration_method,
         status: 'received',
         evidence_image: payload.evidence_image,
         created_at: new Date().toISOString(),

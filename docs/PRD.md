@@ -6,7 +6,7 @@
 
 현재 목표는 완성된 C2C 거래 플랫폼을 만드는 것이 아니다.
 
-> 실제 보관상품을 가진 사용자가 상품 정보, 판매 희망 가격, 보관 증빙, 연락처를 남기고 판매 신청까지 완료하는가?
+> 실제 보관상품을 가진 사용자가 스크린샷 또는 직접 입력으로 상품을 등록하고, 판매 희망 가격과 연락처를 남겨 판매 신청까지 완료하는가?
 
 이 질문에 답할 수 있는 최소한의 판매자 흐름과 운영자 도구만 만든다.
 
@@ -25,11 +25,10 @@
 - 편의점
 - 행사 유형
 - StoredItem 1개 이상
-- 각 상품의 상품명
-- 유효기간(선택 입력)
-- 행사 당시 가격
 - 판매 희망 가격
-- 보관상품 증빙 이미지 1장
+- `screenshot` 방식이면 보관상품 증빙 이미지 1장
+- `manual` 방식이면 상품명과 행사 당시 가격
+- 직접 입력하는 유효기간은 선택
 - 연락 방법과 연락처
 
 ## Level 2 — 강한 신호
@@ -50,8 +49,8 @@
 
 - 회원가입/로그인 없음
 - 편의점 앱에 남아 있는 보관상품을 판매하려는 사용자
-- 상품 정보와 판매 희망 가격을 직접 입력
-- 보관상품 화면 스크린샷 1장을 제출
+- 스크린샷 또는 직접 입력 중 편한 방식으로 상품을 등록
+- 선택한 방식에 필요한 정보만 제출
 - 연락 방법은 휴대폰 또는 카카오톡 중 하나만 선택
 
 ## 운영자
@@ -95,6 +94,16 @@
 
 ## 3.2 상품 및 보관 증빙
 
+먼저 등록 방식을 하나 선택한다.
+
+### 스크린샷으로 등록
+
+- 보관상품 화면 스크린샷 1장을 제출한다.
+- 상품명, 행사 당시 가격, 유효기간은 입력하지 않아도 된다.
+- 판매 희망 가격은 입력한다.
+
+### 직접 입력하기
+
 StoredItem 1개당 다음을 입력한다.
 
 - 상품명
@@ -104,11 +113,13 @@ StoredItem 1개당 다음을 입력한다.
 
 한 SaleRequest에는 StoredItem이 최소 1개 존재해야 한다.
 
-상품은 제출 전 여러 개 추가/삭제할 수 있다.
+직접 입력 방식에서는 상품을 제출 전 여러 개 추가/삭제할 수 있다.
 
 StoredItem 하나는 보관상품 1개이며 `quantity` 필드를 만들지 않는다.
 
-SaleRequest당 스크린샷 1장을 필수로 제출한다.
+두 방식의 입력 폼을 동시에 노출하지 않는다.
+
+`screenshot` 방식은 스크린샷 1장을 필수로 제출하고, `manual` 방식은 스크린샷을 요구하지 않는다.
 
 이미지 OCR, QR 판독, 자동 상품 추출은 하지 않는다.
 
@@ -210,8 +221,9 @@ contact_type + normalized contact_value
 - `seller_id` FK
 - `convenience_store`: `gs25 | cu`
 - `promotion_type`: `one_plus_one | two_plus_one`
+- `registration_method`: `screenshot | manual`
 - `status`: `received | contacting | completed`
-- `evidence_image`
+- `evidence_image`: `screenshot` 방식에서 필수, `manual` 방식에서 선택
 - `created_at`
 
 상태 의미:
@@ -230,9 +242,9 @@ contact_type + normalized contact_value
 
 - `stored_item_id` UUID
 - `sale_request_id` FK
-- `product_name`
+- `product_name`: `manual` 방식에서 필수, `screenshot` 방식에서는 NULL
 - `expiration_date` DATE NULL
-- `original_price` INTEGER
+- `original_price` INTEGER: `manual` 방식에서 필수, `screenshot` 방식에서는 NULL
 - `asking_price` INTEGER
 - `result`: `pending | purchased | rejected`
 - `rejection_reason`
@@ -515,7 +527,7 @@ SaleRequest가 2개 이상인 Seller 수를 표시한다.
 
 - `무상 양도(0원)` — asking_price가 양의 정수이므로 존재하지 않음
 - `유상 판매 의향` — 모든 유효 StoredItem이 유상 판매이므로 독립 지표 가치가 낮음
-- `등록 방식별 신청 수` — 현재 등록 방식 필드가 없음
+- `등록 방식별 신청 수` — 이번 MVP의 핵심 지표가 아니므로 별도 집계하지 않음
 - 방문자 수 — Vercel Web Analytics에서 확인하며 Admin 실험 현황에 별도 연동하지 않음
 
 ## 13.5 Empty State
@@ -558,7 +570,7 @@ SaleRequest가 2개 이상인 Seller 수를 표시한다.
 판매자:
 
 - 입력 오류 → 필드 근처 표시
-- 이미지 업로드 실패 → 현재 단계 유지 + 재시도
+- 스크린샷 업로드 실패 → 현재 단계 유지 + 재시도
 - 모집 상태 조회 실패 → 신규 신청을 허용하지 않고 안전한 오류 안내
 - RPC 실패 → 완료 화면 이동 금지
 - 중복 제출 방지

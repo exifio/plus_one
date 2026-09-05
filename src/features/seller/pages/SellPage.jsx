@@ -57,9 +57,12 @@ export default function SellPage() {
   const canGoNext = (() => {
     if (step === 1) return Boolean(draft.convenienceStore && draft.promotionType);
     if (step === 2) {
+      if (!['screenshot', 'manual'].includes(draft.registrationMethod)) return false;
       return draft.items.length > 0
-        && draft.items.every((item) => validateStoredItem(item, today).valid)
-        && Boolean(draft.evidenceImage);
+        && draft.items.every((item) => (
+          validateStoredItem(item, today, draft.registrationMethod).valid
+        ))
+        && (draft.registrationMethod !== 'screenshot' || Boolean(draft.evidenceImage));
     }
     if (step === 3) {
       if (!draft.contactType) return false;
@@ -180,7 +183,9 @@ export default function SellPage() {
         {step === 2 && (
           <>
             <StepItems draft={draft} dispatch={dispatch} today={today} />
-            <StepEvidence draft={draft} dispatch={dispatch} />
+            {draft.registrationMethod === 'screenshot' && (
+              <StepEvidence draft={draft} dispatch={dispatch} />
+            )}
           </>
         )}
         {step === 3 && <StepContact draft={draft} dispatch={dispatch} />}
