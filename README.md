@@ -1,275 +1,228 @@
 # +1
 
-편의점 앱에 남아 있는 **1+1 / 2+1 보관상품을 실제로 판매하려는 사람이 존재하는지 검증하기 위한 MVP 서비스**입니다.
+편의점 앱에 남아 있는 1+1 / 2+1 보관상품을 **실제로 판매하려는 사람이 존재하는지** 검증하기 위한 MVP입니다.
 
-이 프로젝트의 목적은 완성된 중고거래 플랫폼을 만드는 것이 아니라, 사용자가 실제 상품 정보·판매 희망 가격·증빙·연락처를 입력하고 **판매 신청까지 완료하는 행동이 발생하는지 검증하는 것**입니다.
+완성된 중고거래 플랫폼이 아니라, 판매자가 상품 정보·희망 가격·보관 증빙·연락처를 입력하고 **판매 신청까지 완료하는 행동**을 검증하는 것이 목표입니다.
 
-## 핵심 검증
+## 검증 신호
 
-1차 핵심 행동:
+| 단계 | 신호 |
+|------|------|
+| Level 1 | 유효한 `SaleRequest` 제출 |
+| Level 2 | 운영자 연락 후 `StoredItem`이 `purchased` 처리 |
+| Level 3 | 동일 Seller의 재신청 |
 
-> 실제 보관상품 정보를 포함한 판매 신청 완료
+## 주요 화면
 
-더 강한 검증 신호:
-
-> 운영자 연락 후 StoredItem이 실제 `purchased` 처리됨
-
-반복 가능성 참고 신호:
-
-> 동일 Seller가 새로운 SaleRequest를 다시 제출함
-
-## MVP 범위
-
-판매자는 다음 행동만 수행합니다.
+### 판매자
 
 ```text
-홈
-↓
-판매 조건 선택
-↓
-보관상품 등록
-↓
-보관상품 증빙 업로드
-↓
-연락처 입력
-↓
-신청 내용 확인
-↓
-판매 신청 완료
+홈 → 판매 조건 → 상품 등록 → 보관상품 확인 → 연락처 → 신청 확인 → 완료
 ```
 
-운영자는 다음 행동만 수행합니다.
+- 회원가입/로그인 없음
+- 편의점(`GS25` / `CU`)과 행사 유형(`1+1` / `2+1`) 선택
+- StoredItem 1개 이상, 보관 증빙 이미지 1장 필수
+
+### 운영자
 
 ```text
-신청 확인
-↓
-판매자 연락 시작
-↓
-상품별 구매 또는 거절 처리
-↓
-모든 상품 처리 시 신청 자동 완료
+판매 신청    신청 목록 / 상세, 연락 시작, 구매·거절
+모집 관리    open / paused / closed
+실험 현황    MVP 핵심 검증 지표 (read-only)
 ```
 
-## 지원 범위
+Supabase Auth 관리자 계정 1개로 Admin 접근을 보호합니다.
 
-편의점:
+## Routes
 
-- GS25
-- CU
-
-행사:
-
-- 1+1
-- 2+1
-
-한 판매 신청 안에서는 편의점과 행사 유형을 하나로 고정합니다.
+```text
+/                         판매자 홈
+/sell                     판매 신청
+/sell/complete            신청 완료
+/admin                    신청 목록
+/admin/:saleRequestId     신청 상세
+/admin/recruitment        모집 관리
+/admin/experiment         실험 현황
+```
 
 ## 기술 스택
 
-### Frontend
+| 영역 | 스택 |
+|------|------|
+| Frontend | React, Vite, JavaScript, React Router |
+| Backend | Supabase PostgreSQL, Storage, RPC, RLS, Edge Functions |
+| Test | Jest, React Testing Library, Supabase Integration Test |
+| Deploy | Vercel, Vercel Web Analytics |
 
-- React
-- Vite
-- JavaScript
-- React Router
+프론트엔드와 일반 애플리케이션 코드는 JavaScript를 사용합니다.  
+`supabase/functions/admin-api/index.ts`만 TypeScript 예외입니다.
 
-### Backend / Data
+## 시작하기
 
-- Supabase PostgreSQL
-- Supabase Storage
-- PostgreSQL RPC
-- RLS
-- Supabase Edge Functions
+### 요구 사항
 
-### Testing
+- Node.js 18+
+- npm
 
-- Jest
-- React Testing Library
-- Local Supabase Integration Test
+### 설치
 
-### Deployment / Measurement
+```bash
+npm install
+```
 
-- Vercel
-- Vercel Web Analytics
+### 개발 서버
 
-> 프론트엔드와 일반 애플리케이션 코드는 JavaScript를 사용합니다. Supabase Edge Functions는 플랫폼 요구에 따라 `admin-api`에 한해 TypeScript를 허용합니다.
+```bash
+npm run dev
+```
 
-## 핵심 데이터 모델
+`VITE_SUPABASE_URL`과 `VITE_SUPABASE_ANON_KEY`가 없으면 fixture adapter로 동작합니다.  
+모집 상태만 실제 Supabase에 연결하려면 루트에 `.env.local`을 만들고 아래 값을 설정합니다.
+
+```bash
+VITE_SUPABASE_URL=https://<project-ref>.supabase.co
+VITE_SUPABASE_ANON_KEY=<anon-or-publishable-key>
+```
+
+### 테스트
+
+```bash
+# Unit / Service / React test
+npm test
+
+# Supabase integration test (non-production 프로젝트 필요)
+npm run test:integration
+```
+
+Integration test는 Docker 없이 **전용 non-production Supabase 프로젝트**를 사용합니다.
+
+```bash
+cp .env.test.example .env.test.local
+# .env.test.local 값 입력 후
+npm run test:integration
+```
+
+필수 변수:
+
+```text
+SUPABASE_TEST_URL
+SUPABASE_TEST_ANON_KEY
+SUPABASE_TEST_SERVICE_ROLE_KEY
+SUPABASE_TEST_PROJECT=non-production
+```
+
+harness는 로컬/프로덕션 URL로 fallback하지 않습니다.  
+migration은 `supabase/migrations/`를 non-production DB에 적용해야 합니다.
+
+### 빌드
+
+```bash
+npm run build
+```
+
+## 프로젝트 구조
+
+```text
+src/
+├─ adapters/           fixture / Supabase adapter
+├─ features/
+│  ├─ seller/          판매자 UI·서비스
+│  ├─ admin/           운영자 UI·서비스
+│  ├─ sale-request/    신청 도메인·계약
+│  └─ recruitment/     모집 상태
+└─ test/               Jest setup
+
+supabase/
+├─ migrations/         PostgreSQL schema / RPC / RLS
+└─ functions/
+   └─ admin-api/       Admin Edge Function (Auth 보호)
+
+tests/integration/       Supabase integration test
+docs/                  제품·설계·아키텍처·테스트·계획 문서
+```
+
+### 데이터 모델
 
 ```text
 Seller
-  │ 1:N
-  ▼
-SaleRequest
-  │ 1:N
-  ▼
-StoredItem
+  └─ SaleRequest
+       └─ StoredItem
+
+RecruitmentSettings (singleton)
 ```
 
-### Seller
+실험 지표는 별도 metrics table 없이 DB 집계 RPC로 조회합니다.
 
-동일 판매자 식별 기준:
+### 아키텍처
 
 ```text
-contact_type + contact_value
+React UI
+  ↓
+Service
+  ↓
+Domain / API Contract
+  ↓
+Adapter (fixture | Supabase)
+  ↓
+RPC / Edge Function / Storage
 ```
 
-회원가입이나 로그인은 사용하지 않습니다.
+민감 데이터는 anon direct CRUD를 열지 않습니다.  
+판매 신청은 transaction RPC, Admin 민감 작업은 Edge Function으로 처리합니다.
 
-### SaleRequest
-
-한 번에 제출하는 판매 신청 묶음입니다.
-
-상태:
+## 현재 진행 상태
 
 ```text
-received
-contacting
-completed
+Phase 1  Frontend 전체 구현          완료
+Phase 2  Backend 전체 구현            완료
+Phase 3  실제 연결                    진행 중
+Phase 4  통합 검증 및 배포 준비       대기
 ```
 
-### StoredItem
+현재 연결 상태:
 
-실제로 판매하려는 보관상품 1개입니다.
+- 모집 상태 조회/변경 → 실제 Supabase 연결 완료
+- 판매 신청 제출, Admin 신청 처리, 실험 현황 → 다음 연결 작업 예정
 
-결과:
+상세 현황은 `docs/TASKS.md`를 확인합니다.
+
+## 문서
+
+| 문서 | 내용 |
+|------|------|
+| [`docs/PRD.md`](docs/PRD.md) | 제품 요구사항·검증 가설 |
+| [`docs/DESIGN.md`](docs/DESIGN.md) | 화면·UX·디자인 시스템 |
+| [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) | 코드·DB·API 책임 |
+| [`docs/TESTING.md`](docs/TESTING.md) | 테스트 전략 |
+| [`docs/PLAN.md`](docs/PLAN.md) | 전체 구현 순서 |
+| [`docs/TASKS.md`](docs/TASKS.md) | 현재 작업·완료·Blocker |
+| [`AGENTS.md`](AGENTS.md) | 작업 AI 필수 규칙 |
+
+문서 우선순위:
 
 ```text
-pending
-purchased
-rejected
+PRD > DESIGN > ARCHITECTURE > TESTING > PLAN > TASKS
 ```
 
-핵심 규칙:
+## 범위 밖
 
-- `purchased` → 구매 증빙 필수
-- `rejected` → 거절 이유 필수
-- 최종 처리된 결과는 다시 변경하지 않음
-- 모든 StoredItem이 최종 처리되면 SaleRequest는 자동 `completed`
+이 MVP에 포함하지 않습니다.
 
-## 문서 구조
+- 판매자 회원가입/로그인, 마이페이지
+- 구매자 기능, 결제/정산, 채팅, 검색
+- 상품 마스터, 가격 추천
+- 여러 관리자, 연락 이력, 모집 예약
+- Realtime/polling, PostHog, 별도 Analytics DB
 
-```text
-.
-├─ README.md
-├─ AGENTS.md
-│
-├─ docs/
-│  ├─ PRD.md
-│  ├─ DESIGN.md
-│  ├─ ARCHITECTURE.md
-│  ├─ TESTING.md
-│  ├─ PLAN.md
-│  └─ TASKS.md
-│
-├─ src/
-├─ supabase/
-└─ tests/
-```
+검증용 `/admin/experiment` 화면은 명시적 MVP 범위입니다.
 
-문서 역할:
+## 보안
 
-| 문서 | 역할 |
-|---|---|
-| `PRD.md` | 무엇을 만들고 무엇을 검증하는지 정의 |
-| `DESIGN.md` | 화면, UX, 디자인 시스템 정의 |
-| `ARCHITECTURE.md` | 애플리케이션 구조와 데이터 책임 정의 |
-| `TESTING.md` | Jest 및 Integration Test 전략 정의 |
-| `PLAN.md` | 실제 구현 순서와 Task별 구현 방법 정의 |
-| `TASKS.md` | 현재 진행 상태 기록 |
-| `AGENTS.md` | 작업 AI가 반드시 따라야 할 개발 규칙 |
+Git에 커밋하지 않습니다.
 
-문서 간 요구사항이 충돌할 경우 다음 우선순위를 따릅니다.
+- `.env`, `.env.local`, `.env.test.local` 등 secret 값
+- `service_role` key
+- Admin Auth 비밀번호/토큰
 
-```text
-PRD
-↓
-DESIGN
-↓
-ARCHITECTURE
-↓
-TESTING
-↓
-PLAN
-↓
-TASKS
-```
-
-`AGENTS.md`는 위 문서를 구현할 때 따라야 하는 작업 규칙입니다.
-
-## 개발 원칙
-
-- 기존 프로젝트 구현을 참고하지 않고 새 프로젝트로 구축합니다.
-- 검증에 필요하지 않은 기능을 추가하지 않습니다.
-- React UI와 핵심 비즈니스 로직을 분리합니다.
-- 핵심 데이터 규칙은 PostgreSQL에서도 보장합니다.
-- 테스트 커버리지 100%를 목표로 하지 않습니다.
-- 잘못됐을 때 핵심 사용자 행동이나 데이터가 깨질 가능성이 높은 로직만 적극 테스트합니다.
-- 모바일 퍼스트로 구현합니다.
-- 운영자는 한 명으로 제한합니다.
-
-## 구현 시작 방법
-
-작업을 시작하기 전에 반드시 다음 순서로 문서를 확인합니다.
-
-```text
-AGENTS.md
-↓
-docs/PRD.md
-↓
-docs/DESIGN.md
-↓
-docs/ARCHITECTURE.md
-↓
-docs/TESTING.md
-↓
-docs/PLAN.md
-↓
-docs/TASKS.md
-```
-
-실제 구현은 `docs/PLAN.md`의 **Task 1부터 순서대로** 진행합니다.
-
-각 Task는 다음 원칙을 따릅니다.
-
-```text
-테스트 작성
-↓
-실패 확인
-↓
-최소 구현
-↓
-테스트 통과 확인
-↓
-전체 관련 테스트 확인
-↓
-TASKS.md 업데이트
-```
-
-한 Task가 검증되기 전에 다음 Task로 넘어가지 않습니다.
-
-## 명시적 제외 범위
-
-이번 MVP에는 다음을 만들지 않습니다.
-
-- 판매자 회원가입 / 로그인
-- 마이페이지
-- 판매 신청 조회 / 취소
-- 구매자 회원
-- 채팅
-- 결제 / 정산
-- 상품 마스터
-- 가격 추천
-- 알림센터
-- 상태 변경 이력
-- 연락 이력
-- 여러 관리자
-- 관리자 권한 시스템
-- PostHog
-- 복잡한 통계 대시보드
-
-## 현재 상태
-
-설계 문서 작성은 완료되었으며, 실제 구현은 아직 시작하지 않은 상태입니다.
-
-구현 진행 상황은 `docs/TASKS.md`를 기준으로 확인합니다.
+브라우저 bundle에 `service_role`을 넣지 않습니다.
