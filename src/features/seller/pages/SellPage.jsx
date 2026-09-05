@@ -15,15 +15,12 @@ import StepStore from '../components/sell-flow/StepStore';
 import StepItems from '../components/sell-flow/StepItems';
 import StepEvidence from '../components/sell-flow/StepEvidence';
 import StepContact from '../components/sell-flow/StepContact';
-import StepReview from '../components/sell-flow/StepReview';
 
-const TOTAL_STEPS = 5;
+const TOTAL_STEPS = 3;
 const NEXT_LABELS = {
   1: '상품 등록하기',
-  2: '보관상품 확인하기',
-  3: '연락처 입력하기',
-  4: '신청 내용 확인하기',
-  5: '판매 신청하기',
+  2: '연락처 입력하기',
+  3: '판매 신청하기',
 };
 
 export default function SellPage() {
@@ -57,20 +54,14 @@ export default function SellPage() {
     }
     setStep((current) => Math.max(current - 1, 1));
   };
-  const goStep = (target) => {
-    setStep(target);
-  };
-
   const canGoNext = (() => {
     if (step === 1) return Boolean(draft.convenienceStore && draft.promotionType);
     if (step === 2) {
       return draft.items.length > 0
-        && draft.items.every((item) => validateStoredItem(item, today).valid);
+        && draft.items.every((item) => validateStoredItem(item, today).valid)
+        && Boolean(draft.evidenceImage);
     }
     if (step === 3) {
-      return Boolean(draft.evidenceImage);
-    }
-    if (step === 4) {
       if (!draft.contactType) return false;
       const trimmed = String(draft.contactValue ?? '').trim();
       if (!trimmed) return false;
@@ -79,7 +70,7 @@ export default function SellPage() {
       }
       return Boolean(trimmed);
     }
-    return step === 5;
+    return false;
   })();
 
   const handleSubmit = async () => {
@@ -186,10 +177,13 @@ export default function SellPage() {
 
       <main className="sell-main">
         {step === 1 && <StepStore draft={draft} dispatch={dispatch} />}
-        {step === 2 && <StepItems draft={draft} dispatch={dispatch} today={today} />}
-        {step === 3 && <StepEvidence draft={draft} dispatch={dispatch} />}
-        {step === 4 && <StepContact draft={draft} dispatch={dispatch} />}
-        {step === 5 && <StepReview draft={draft} onGoStep={goStep} />}
+        {step === 2 && (
+          <>
+            <StepItems draft={draft} dispatch={dispatch} today={today} />
+            <StepEvidence draft={draft} dispatch={dispatch} />
+          </>
+        )}
+        {step === 3 && <StepContact draft={draft} dispatch={dispatch} />}
 
         {submitState.error && <p className="submit-error">{submitState.error}</p>}
       </main>

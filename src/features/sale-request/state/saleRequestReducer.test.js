@@ -1,5 +1,5 @@
 /*
- * 관련 작업: FE-3 — 5단계 판매 신청 초안 상태.
+ * 관련 작업: FE-3 — 3단계 판매 신청 초안 상태.
  * 작성 이유: 단계가 바뀌어도 사용자가 입력한 조건·상품·증빙·연락처가 사라지면 안 되기 때문.
  * 확인 내용: 초기값, 각 입력 액션, 상품 추가·수정·삭제, 최소 1개 보호, 불변성, 알 수 없는 액션.
  */
@@ -169,19 +169,19 @@ describe('판매 신청 상태 reducer', () => {
       payload: 'one_plus_one',
     });
 
-    // 2단계 — 상품 등록
+    // 2단계 — 상품 및 보관 증빙
     state = saleRequestReducer(state, {
       type: SALE_REQUEST_ACTION.UPDATE_ITEM,
       payload: { id: firstItemId, changes: { productName: '딸기우유', originalPrice: 1500, askingPrice: 800 } },
     });
 
-    // 3단계 — 증빙
+    // 2단계 — 증빙
     state = saleRequestReducer(state, {
       type: SALE_REQUEST_ACTION.SET_EVIDENCE_IMAGE,
       payload: 'evidence/sale/pic.png',
     });
 
-    // 4단계 — 연락처
+    // 3단계 — 연락처
     state = saleRequestReducer(state, {
       type: SALE_REQUEST_ACTION.SET_CONTACT_TYPE,
       payload: 'kakao',
@@ -191,7 +191,7 @@ describe('판매 신청 상태 reducer', () => {
       payload: 'seller-id',
     });
 
-    // 1단계로 돌아온 뒤에도 2~4단계 값이 유지되어야 한다
+    // 1단계로 돌아온 뒤에도 2~3단계 값이 유지되어야 한다
     expect(state.convenienceStore).toBe('cu');
     expect(state.promotionType).toBe('one_plus_one');
     expect(state.items[0].productName).toBe('딸기우유');

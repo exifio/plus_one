@@ -646,7 +646,7 @@ getRecruitmentStatus()
 ↓
 open이면 /sell 허용
 ↓
-5단계 Draft 작성
+3단계 Draft 작성
 ↓
 최종 submit
 ↓

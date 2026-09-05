@@ -147,12 +147,20 @@ TASKS.md
 
 ## 2026-09-05 (판매 신청 계약 교정)
 
-- [x] PRD/DESIGN 기준 5단계 판매 흐름으로 Seller UI 통일
+- [x] PRD/DESIGN 기준 판매 신청 계약으로 Seller UI 통일
 - [x] 등록 방식 분기 제거 및 상품명·양의 정수 가격·보관 증빙 필수화, 유효기간 선택 입력
 - [x] fixture와 도메인 테스트를 현재 계약으로 교정 — 34 suites / 243 tests PASS
-- [x] 유효기간 미입력 상태에서 `보관상품 확인하기` 활성화 및 3단계 이동을 실제 브라우저에서 확인
+- [x] 유효기간 미입력 상태에서 보관 증빙 입력 단계로 이동하는 것을 실제 브라우저에서 확인
 - [x] 6-arg RPC와 기존 원격 데이터 보존용 `NOT VALID` 제약 migration 추가 (유효기간 선택)
 - [!] 원격 migration 적용 및 교정 후 integration 재검증은 별도 승인 대기
+
+## 2026-09-06 (판매자 흐름 3단계 복원)
+
+- [x] 1단계 판매 조건, 2단계 상품·보관 증빙, 3단계 연락처·신청으로 Seller UI 축약
+- [x] 유효기간 선택 입력을 유지하면서 2단계 증빙 필수 검증 연결
+- [x] 3단계 직접 신청 CTA와 중복 제출 방지 동작 확인
+- [x] 전체 Unit Test 및 Production Build 재검증 — 34 suites / 243 tests PASS
+- [x] 실제 브라우저에서 3단계 이동·신청 CTA 확인 — 완료 화면까지 PASS
 
 ---
 
@@ -267,7 +275,7 @@ TASKS.md
 ## 2026-09-04
 
 - [x] Seller / SaleRequest / StoredItem 핵심 데이터 모델 확정
-- [x] 5단계 판매자 Flow 확정
+- [x] 초기 V3 판매자 Flow 확정 (이후 3단계로 복원)
 - [x] JavaScript + React + Vite + Supabase + Jest 기술 방향 확정
 - [x] 모바일 퍼스트 +1 디자인 방향 확정
 
