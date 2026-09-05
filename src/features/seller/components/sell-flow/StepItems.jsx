@@ -6,7 +6,7 @@ import { REGISTRATION_METHOD_OPTIONS } from '../../utils/options';
 import FormField from '../FormField';
 import SelectionCard from '../SelectionCard';
 
-export default function StepItems({ draft, dispatch, today }) {
+export default function StepItems({ draft, dispatch, today, children }) {
   const [touched, setTouched] = useState({});
   const isScreenshot = draft.registrationMethod === 'screenshot';
 
@@ -37,6 +37,8 @@ export default function StepItems({ draft, dispatch, today }) {
           ))}
         </div>
       </fieldset>
+
+      {isScreenshot && children}
 
       {draft.registrationMethod && draft.items.map((item) => {
         const validation = validateStoredItem(item, today, draft.registrationMethod);

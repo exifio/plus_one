@@ -94,6 +94,19 @@ describe('판매자 3단계 신청', () => {
     expect(screen.getByText('3 / 3')).toBeInTheDocument();
   });
 
+  test('스크린샷 등록에서는 스크린샷이 판매 희망 가격보다 먼저 보인다', async () => {
+    const user = userEvent.setup();
+    await moveToItems(user);
+    await user.click(screen.getByRole('button', { name: '스크린샷으로 등록' }));
+
+    const evidenceTitle = screen.getByText('보관 중인 상품을 확인할게요');
+    const askingPrice = screen.getByLabelText('판매 희망 가격', { exact: false });
+
+    expect(evidenceTitle.compareDocumentPosition(askingPrice)).toBe(
+      Node.DOCUMENT_POSITION_FOLLOWING,
+    );
+  });
+
   test('직접 입력은 상품 정보만으로 다음 단계로 이동한다', async () => {
     const user = userEvent.setup();
     await moveToItems(user);

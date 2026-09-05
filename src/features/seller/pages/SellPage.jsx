@@ -181,12 +181,11 @@ export default function SellPage() {
       <main className="sell-main">
         {step === 1 && <StepStore draft={draft} dispatch={dispatch} />}
         {step === 2 && (
-          <>
-            <StepItems draft={draft} dispatch={dispatch} today={today} />
+          <StepItems draft={draft} dispatch={dispatch} today={today}>
             {draft.registrationMethod === 'screenshot' && (
               <StepEvidence draft={draft} dispatch={dispatch} />
             )}
-          </>
+          </StepItems>
         )}
         {step === 3 && <StepContact draft={draft} dispatch={dispatch} />}
 
