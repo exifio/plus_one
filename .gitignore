@@ -22,3 +22,7 @@ graphify-out/
 .DS_Store
 .vercel
 .env*
+
+# Supabase Local
+.env.test.local
+supabase/.temp/
