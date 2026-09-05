@@ -3,7 +3,7 @@
 ## 현재 위치
 
 - Docker/Local Supabase 없이 사용자가 관리하는 non-production Supabase 프로젝트를 사용한다.
-- 프론트엔드와 migration 파일은 PRD의 5단계 판매 신청 계약(상품 정보·가격·증빙 이미지 필수, 유효기간 선택)을 기준으로 정리되어 있다.
+- 프론트엔드와 migration 파일은 PRD의 3단계 판매 신청 흐름과 동일한 계약(상품 정보·가격·증빙 이미지 필수, 유효기간 선택)을 기준으로 정리되어 있다.
 - `supabase/migrations/20260905130051_restore_required_sale_request_contract.sql`이 6-arg `create_sale_request` RPC와 신규 데이터용 필수 필드 제약을 정의한다.
 - 원격 non-production에는 이전 실험의 7-arg RPC와 nullable legacy 행이 남아 있다. 기존 행은 삭제하지 않으며, corrective migration의 `NOT VALID` 제약으로 신규 행부터 계약을 강제한다.
 - corrective migration의 원격 적용은 별도 승인 후 진행한다.

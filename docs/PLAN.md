@@ -146,7 +146,7 @@ transformSaleRequestPayload(draft)
 
 ## FE-3 — SaleRequest Draft State
 
-**목표:** 5단계 입력 상태를 `useReducer`로 유지.
+**목표:** 3단계 입력 상태를 `useReducer`로 유지.
 
 **권장 파일:**
 
@@ -254,7 +254,7 @@ src/adapters/fixture/
 
 ---
 
-## FE-7 — Seller 5단계 UI
+## FE-7 — Seller 3단계 UI
 
 **목표:** DESIGN 기준 전체 판매 신청 flow 구현.
 
@@ -263,12 +263,10 @@ src/adapters/fixture/
 **Steps:**
 
 - [ ] 1단계 편의점/행사 선택
-- [ ] 2단계 상품 등록
+- [ ] 2단계 상품 등록 및 보관 증빙
 - [ ] item add/remove
 - [ ] 가격/date validation 연결
-- [ ] 3단계 증빙 이미지 local preview
-- [ ] 4단계 연락처
-- [ ] 5단계 신청 확인
+- [ ] 3단계 연락처 및 신청
 - [ ] fixture submit
 - [ ] 중복 제출 방지
 - [ ] `/sell/complete`
@@ -695,7 +693,7 @@ npm run build
 ## VERIFY-2 — Seller Flow
 
 - [ ] Home open
-- [ ] 5단계
+- [ ] 3단계
 - [ ] multi item
 - [ ] image upload
 - [ ] phone/kakao

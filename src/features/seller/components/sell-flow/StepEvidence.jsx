@@ -42,7 +42,7 @@ export default function StepEvidence({ draft, dispatch }) {
 
   return (
     <section className="step">
-      <h1 className="step-title">보관 중인 상품을 확인할게요</h1>
+      <h2 className="step-title">보관 중인 상품을 확인할게요</h2>
       <p className="step-desc">
         편의점 앱에서 판매할 상품이 보이는 화면을 캡처해서 올려주세요.
       </p>

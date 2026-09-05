@@ -29,6 +29,6 @@ describe('App 라우팅', () => {
     expect(
       await screen.findByRole('heading', { name: '어떤 상품을 판매하시나요?' }),
     ).toBeInTheDocument();
-    expect(screen.getByText('1 / 5')).toBeInTheDocument();
+    expect(screen.getByText('1 / 3')).toBeInTheDocument();
   });
 });
