@@ -136,6 +136,36 @@ button:disabled {
   min-height: 100dvh;
 }
 
+.admin-auth-page {
+  display: flex;
+  align-items: center;
+}
+
+.admin-auth-card {
+  width: 100%;
+  padding: 24px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-card);
+  background: var(--surface);
+}
+
+.admin-auth-card .brand-logo {
+  margin-bottom: 32px;
+}
+
+.admin-auth-form {
+  display: grid;
+  gap: 10px;
+}
+
+.admin-auth-form .field-label:not(:first-child) {
+  margin-top: 8px;
+}
+
+.admin-auth-form .btn-primary {
+  margin-top: 10px;
+}
+
 .admin-header {
   display: flex;
   align-items: center;
@@ -512,6 +542,12 @@ button:disabled {
   z-index: 50;
 }
 
+@media (max-width: 767px) {
+  .home-cta-bar {
+    bottom: max(0px, calc(100vh - 100dvh));
+  }
+}
+
 .home-cta-bar .btn-primary {
   max-width: 520px;
 }
@@ -617,6 +653,20 @@ button:disabled {
   padding: 16px 20px calc(16px + env(safe-area-inset-bottom));
   background: var(--surface);
   border-top: 1px solid var(--border);
+}
+
+@media (max-width: 767px) {
+  .sell-main {
+    padding-bottom: calc(104px + env(safe-area-inset-bottom));
+  }
+
+  .cta-bar {
+    position: fixed;
+    bottom: max(0px, calc(100vh - 100dvh));
+    left: 0;
+    right: 0;
+    z-index: 50;
+  }
 }
 
 /* ---------- Step common ---------- */
@@ -762,6 +812,10 @@ input[type="date"].text-input::-webkit-calendar-picker-indicator {
   border-radius: var(--radius-card);
   background: var(--surface);
   border: 1px solid var(--border);
+}
+
+.screenshot-price-card {
+  margin-top: 24px;
 }
 
 .form-field {

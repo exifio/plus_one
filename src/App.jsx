@@ -7,6 +7,8 @@ import AdminListPage from './features/admin/pages/AdminListPage';
 import AdminDetailPage from './features/admin/pages/AdminDetailPage';
 import AdminRecruitmentPage from './features/admin/pages/AdminRecruitmentPage';
 import AdminExperimentPage from './features/admin/pages/AdminExperimentPage';
+import AdminLoginPage from './features/admin/pages/AdminLoginPage';
+import AdminAuthGate from './features/admin/components/AdminAuthGate';
 
 /**
  * 라우팅과 어댑터 주입만 담당한다.
@@ -21,10 +23,13 @@ export default function App({ adapters }) {
         <Route path="/" element={<HomePage />} />
         <Route path="/sell" element={<SellPage />} />
         <Route path="/sell/complete" element={<SellCompletePage />} />
-        <Route path="/admin" element={<AdminListPage />} />
-        <Route path="/admin/recruitment" element={<AdminRecruitmentPage />} />
-        <Route path="/admin/experiment" element={<AdminExperimentPage />} />
-        <Route path="/admin/:saleRequestId" element={<AdminDetailPage />} />
+        <Route path="/admin/login" element={<AdminLoginPage />} />
+        <Route element={<AdminAuthGate />}>
+          <Route path="/admin" element={<AdminListPage />} />
+          <Route path="/admin/recruitment" element={<AdminRecruitmentPage />} />
+          <Route path="/admin/experiment" element={<AdminExperimentPage />} />
+          <Route path="/admin/:saleRequestId" element={<AdminDetailPage />} />
+        </Route>
       </Routes>
     </ServerContext.Provider>
   );

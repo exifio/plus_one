@@ -27,29 +27,33 @@ TASKS.md
 
 # 1. 현재 상태
 
-**현재 단계:** 모집 상태 실제 Supabase 연결 완료 → 판매 신청 연결 전
+**현재 단계:** Phase 3 Gate 완료 → Phase 4. 로컬 확인은 사람, 복잡한 검증만 AI
 
-**현재 Task:** LINK-2 — 판매 신청을 실제 Supabase와 연결하기 `[ ]`
+**현재 Task:** 없음. 사람이 로컬에서 남은 UX/흐름 이슈를 찾고, AI는 그 이슈만 고친다.
 
-**한 줄 요약:** 판매자와 Admin의 모집 상태는 실제 Supabase를 사용한다. 판매 신청·관리자 신청 데이터·실험 현황은 다음 연결 작업에서 전환한다. 유효기간 선택 입력을 반영한 판매 신청 계약 교정 migration은 원격 적용 승인 대기 중이다.
+**한 줄 요약:** Seller와 Admin 신청·처리·모집·실험 현황을 실제 non-production Supabase에 연결하고 Phase 3 Gate를 통과했다. 남은 클릭 검증과 `npm` 명령은 사람이 로컬에서 한다.
 
 **완료된 것:**
 
 - 판매자 화면과 관리자 화면 구현
 - Supabase DB/RPC/RLS/Storage 구현
 - 관리자 Auth 계정 방식 구현
-- 이전 계약 기준 non-production Supabase Backend 테스트 통과 기록 보유
+- 등록 방식 조건부 7인자 `create_sale_request` 원격 적용 및 판매 신청 실제 연결
+- Admin 신청 목록/상세·signed URL·연락·구매·거절 실제 연결
+- Admin Auth gate/login·실험 현황·모집 상태 실제 연결
+- Phase 3 Gate 실제 end-to-end 검증 및 non-production 데이터 정리
+- Phase 4 검증 역할을 사람과 AI로 분리
 
 **남은 것:**
 
-- 판매 신청이 실제 Supabase에 저장되도록 연결
-- 관리자 화면이 실제 신청 데이터를 읽고 처리하도록 연결
-- 실험 현황이 실제 DB 데이터를 보여주도록 연결
-- 실제 연결 후 전체 화면을 다시 검증
+- 사람이 로컬에서 Seller/Admin/UI와 `npm test` / `test:integration` / `build`를 확인
+- 로컬에서 발견한 버그 수정
+- 사용자가 요청할 때만 `VERIFY-HARD` / `VERIFY-SCOPE`
+- 배포 환경 값·Admin 계정·Vercel 설정 (사람)
 
-**사용자님이 할 일:** corrective migration을 원격 non-production에 적용할지 승인한다.
+**사용자님이 할 일:** 로컬에서 화면을 직접 확인하고, 고칠 이슈를 넘긴다. 자동 명령도 로컬에서 실행한다.
 
-**제가 할 일:** 위 순서대로 실제 연결을 진행하고, 각 단계마다 테스트와 화면 검증을 실행한다.
+**제가 할 일:** VERIFY-1부터 화면을 순서대로 다시 클릭하지 않는다. 넘어온 버그만 고친다. 복잡한 검증은 요청이 있을 때만 `VERIFY-HARD` / `VERIFY-SCOPE`를 한다.
 
 ---
 
@@ -59,19 +63,19 @@ TASKS.md
 
 - [x] Docker/Podman 미사용 확정 (사용자 결정) → B안(전용 non-production 테스트 프로젝트)로 진행
 - [x] Supabase CLI 확인 — `node_modules` 내 CLI v2.116.0 (`./node_modules/.bin/supabase`), `config.toml` 존재
-- [x] migration 디렉터리 확인 — 001~004 + 신규 2개, 정렬 순서 정상 (001→004 → 2026...)
-- [x] `jest.integration.config.cjs` 확인 — `tests/integration/**/*.test.js` 전용 config, 5 suites 존재
+- [x] migration 디렉터리 확인 — 001~004 + 날짜 기반 전진 migration, 정렬 순서 정상
+- [x] `jest.integration.config.cjs` 확인 — `tests/integration/**/*.test.js` 전용 config, 현재 12 suites
 - [x] harness 요구 환경변수 확인 — `SUPABASE_TEST_URL`, `SUPABASE_TEST_ANON_KEY|PUBLISHABLE_KEY`, `SUPABASE_TEST_SERVICE_ROLE_KEY|SECRET_KEY`, `SUPABASE_TEST_PROJECT=non-production`
 - [x] 설정 템플릿 작성 — `.env.test.example` (로컬 전용, Git 미추적)
 - [x] `.env.test.local` 구성 — 사용자가 non-production 프로젝트 생성 후 4개 값 입력 완료 (2026-09-05)
 - [x] harness 파서 보강 — 따옴표로 감싼 .env 값 허용하도록 `tests/integration/supabase/clients.js` 최소 수정
   - 이후 `npm run test:integration`이 env 오류 없이 실제 프로젝트에 연결됨을 확인 (실패 원인이 env → 미적용 schema로 변경)
   - Unit Test 회귀 없음 (245 PASS)
-- [!] 과거 계약 migration 적용 기록은 폐기 — 6-arg corrective migration 원격 적용 승인 대기
+- [x] `20260905130051_restore_required_sale_request_contract.sql` 원격 적용 확인 및 당시 6인자 계약 통합 검증
 - [x] 테스트 프로젝트 스키마/권한 drift 보정 — 모집 상태 소문자 계약, `update_recruitment_status`, 민감 테이블/RPC anon 접근 차단
 - [x] 과거 계약 기준 `npm run test:integration` PASS — 5 suites / 25 tests
 
-→ Docker 없이 전용 non-production Supabase와 SQL Editor 수동 적용으로 당시 BE-1 harness 검증 완료; corrective migration은 현재 PR에서 유효기간 선택 규칙으로 교정 중
+→ Docker 없이 전용 non-production Supabase와 원격 migration 적용으로 BE-1 harness 검증 완료
 
 ## BE-2 — Core Schema + recruitment_settings `[x]`
 
@@ -131,7 +135,7 @@ TASKS.md
 - [x] recruitment update / experiment metrics 검증
 - [x] Admin Auth no token / invalid token / non-admin / admin token 검증
 - [x] 과거 계약 기준 원격 non-production 전체 Integration Test PASS — 9 suites / 56 tests
-- [!] 6-arg 계약 및 신규 필수 필드 제약(유효기간 제외)은 corrective migration 원격 적용 후 재검증 필요
+- [x] 등록 방식 조건부 7인자 계약으로 원격 Backend 전체 재검증 — 11 suites / 65 tests PASS
 - [x] Phase 2 Backend Gate 통과
 
 ## LINK-1 — 모집 상태 실제 Supabase 연결 (2026-09-05) `[x]`
@@ -142,7 +146,7 @@ TASKS.md
 - [x] VITE Supabase 설정이 있을 때 실제 adapter를 주입하고, 미설정 로컬에서는 기존 fixture 유지
 - [x] adapter Unit Test PASS — 34 suites / 243 tests
 - [x] migration 적용 전 원격 non-production adapter 검증 PASS — 10 suites / 58 tests
-- [!] 계약 교정 후 원격 integration 재검증은 corrective migration 승인 대기
+- [x] 계약 교정 후 원격 integration 재검증 PASS
 - [x] Production Build PASS
 
 ## 2026-09-05 (판매 신청 계약 교정)
@@ -152,7 +156,7 @@ TASKS.md
 - [x] fixture와 도메인 테스트를 현재 계약으로 교정 — 34 suites / 243 tests PASS
 - [x] 유효기간 미입력 상태에서 보관 증빙 입력 단계로 이동하는 것을 실제 브라우저에서 확인
 - [x] 6-arg RPC와 기존 원격 데이터 보존용 `NOT VALID` 제약 migration 추가 (유효기간 선택)
-- [!] 원격 migration 적용 및 교정 후 integration 재검증은 별도 승인 대기
+- [x] `20260905130051_restore_required_sale_request_contract.sql` 원격 적용 및 당시 계약 integration 재검증
 
 ## 2026-09-06 (판매자 흐름 3단계 복원)
 
@@ -170,18 +174,77 @@ TASKS.md
 - [x] 방식별 Domain validation / payload / fixture 제출 분기 추가
 - [x] 관리자 상세에서 등록 방식과 스크린샷 등록 상품을 구분해 표시
 - [x] 관련 Unit/React Test — 7 suites / 75 tests PASS
-- [!] 실제 Supabase 신청 RPC는 LINK-2에서 등록 방식 조건부 계약 migration 적용 후 재검증 필요
+- [x] 등록 방식 조건부 7인자 RPC migration 적용 및 실제 Supabase 재검증
+
+## LINK-2 — 판매 신청 실제 Supabase 연결 (2026-09-06) `[x]`
+
+- [x] `20260905231609_registration_method_submission_contract.sql` 전진 migration 추가·원격 non-production 적용
+- [x] 직접 입력은 증빙 없이 구조화 상품을 저장하고, 스크린샷은 증빙·희망 가격만 저장하도록 RPC/제약 교정
+- [x] `sale-evidence` private bucket 업로드 adapter와 7인자 RPC adapter 연결
+- [x] validation/upload/RPC 실패 분기와 모집 상태 재검증 경로 유지
+- [x] RED 확인 — 원격 7인자 호출 `PGRST202`, 실제 adapter 모듈 없음
+- [x] Unit/React Test PASS — 35 suites / 259 tests
+- [x] non-production Supabase Integration Test PASS — 11 suites / 65 tests
+- [x] Production Build PASS
+- [x] 실제 브라우저 스크린샷 등록 → Storage upload → RPC → `/sell/complete` 확인
+- [x] 브라우저/통합 테스트 신청·Seller·Storage 데이터 정리 및 모집 상태 `open` 복원
+
+## LINK-3 — Admin 신청 실제 Supabase 연결 (2026-09-06) `[x]`
+
+- [x] Admin 목록/상세/연락 시작/구매/거절 adapter를 Auth `admin-api` Edge Function에 연결
+- [x] 판매 증빙과 구매 증빙을 private bucket signed URL로만 Admin 화면에 전달
+- [x] 구매 증빙은 multipart `admin-api` 업로드 후 `process_stored_item` RPC로 처리
+- [x] 마지막 상품 처리 후 `completed` 상태가 Admin 상세에 반영되는 실제 흐름 검증
+- [x] Admin 목록 조회 실패를 빈 목록으로 위장하지 않고 안전한 오류 상태로 표시
+- [x] Unit/React Test PASS — 39 suites / 270 tests
+
+## LINK-4 — Experiment Metrics 실제 Supabase 연결 (2026-09-06) `[x]`
+
+- [x] `/admin/experiment`를 Auth `admin-api`의 `getExperimentMetrics` 응답에 연결
+- [x] 모집 상태·요약·가격/비율/편의점/행사/상태/결과 집계와 empty/error 분기 확인
+- [x] metrics 응답에 연락처·증빙 path가 포함되지 않는 실제 응답 검증
+
+## LINK-5 — Error/Secret/Build Safety (2026-09-06) `[x]`
+
+- [x] duplicate submit/upload/RPC/Edge/Auth 실패 시 성공 화면·가짜 0 데이터로 전환하지 않는 경로 확인
+- [x] `/admin/login` Auth gate와 실패 시 원본 Auth 오류 비노출 구현
+- [x] browser bundle에서 `service_role`·Admin credential 검색 결과 없음
+- [x] `.env.test.local` Git 미추적 및 `git diff --check` 통과
+- [x] Admin Edge Function CORS 보강 후 non-production version 6 / `verify_jwt=true` 재배포
+- [x] Production Build PASS — 119 modules
+
+### Phase 3 Gate (2026-09-06) `[x]`
+
+- [x] 실제 non-production 통합 Gate PASS — 12 suites / 66 tests
+- [x] `open → Seller 제출 → Admin 목록/상세 → 연락 시작 → 구매/거절 → 자동 completed` PASS
+- [x] Admin 모집 상태 `paused/closed`에서 Seller 신규 제출이 Backend RPC에서 차단됨을 확인
+- [x] 실험 현황 집계가 새 신청/구매/완료 상태를 반영함을 확인
+- [x] 실제 브라우저에서 Admin Auth → 목록/상세/signed evidence/연락/실험 현황/paused 차단 UI 확인
+- [x] 검증용 SaleRequest·Seller·Storage 정리 및 모집 상태 `open` 복원 확인
 
 ---
 
 # 3. 현재 Blocker
 
-- [!] 원격 non-production에 이전 7-arg/nullable 계약이 남아 있어 유효기간 선택을 반영한 `20260905130051_restore_required_sale_request_contract.sql` 적용 승인이 필요하다. 기존 데이터는 삭제하지 않는다.
-- 다음 작업은 migration 적용 후 판매 신청 실제 연결이다.
+- 없음.
+- 바로 다음 작업은 사람의 로컬 확인이다. AI는 VERIFY-1을 시작하지 않는다.
 
 ---
 
 # 4. 완료된 작업
+
+## 2026-09-06 (Admin 목록 401을 빈/오류 화면으로 오인하던 문제)
+
+- [x] 로컬 세션만 있고 Auth `getUser`가 거부되면 `/admin`이 로그인으로 돌아가게 수정
+- [x] Admin Edge Function 호출에 현재 access token을 명시적으로 첨부
+- [x] 관련 Auth/Admin adapter·Gate 테스트 PASS — 18 suites / 106 tests
+
+## 2026-09-06 (Phase 4 검증 역할 분리)
+
+- [x] 로컬 클릭·`npm` 명령·배포 환경 설정은 사람 확인으로 옮김
+- [x] AI 검증은 `VERIFY-HARD`(교차 계층 보안)와 `VERIFY-SCOPE`(PRD 범위/secret 정적 검사)만 남김
+- [x] Phase 3 Gate가 이미 통과한 Seller/Admin happy path를 AI 재클릭 대상으로 두지 않음
+- [x] `docs/PLAN.md` Phase 4, `docs/TESTING.md` §21, 이 문서 현재 상태를 맞춤
 
 ## 2026-09-05 (테스트 코드 한글 설명 보강)
 
@@ -195,7 +258,7 @@ TASKS.md
 
 - [x] 전용 non-production Supabase 프로젝트 연결 확인 (`SUPABASE_TEST_PROJECT=non-production`)
 - [x] SQL Editor에서 당시 판매 신청 RPC와 권한을 검증
-- [!] 당시 RPC는 현재 PRD 계약과 달라 폐기 대상이며, corrective migration 적용 전까지 원격 재검증 보류
+- [x] 당시 RPC 폐기 후 등록 방식 조건부 7인자 계약으로 교체·원격 재검증
 - [x] 기존 테스트 프로젝트의 스키마/권한 drift를 데이터 삭제 없이 현재 계약에 맞게 보정
 - [x] 당시 계약 기준 실제 Supabase 통합 테스트 통과 — 5 suites / 25 tests
 - [x] `process_stored_item`의 단일 item 자동 `completed` 규칙을 보존하고, `contacting` 분기는 두 번째 pending item fixture로 검증
@@ -294,10 +357,8 @@ TASKS.md
 # 5. 다음 작업
 
 ```text
-1. 판매 신청 연결 — 이미지 업로드 / 신청 저장
-2. 관리자 기능 연결 — 목록 / 상세 / 연락 시작 / 구매 / 거절
-3. 실험 현황 연결 — 실제 DB 집계 표시
-4. 전체 화면 검증 — 실제 Supabase에서 판매자·관리자 흐름 확인
+사람: 로컬에서 Seller/Admin/UI 확인. 이슈를 넘긴다.
+AI: 넘어온 버그 수정. 요청 시에만 VERIFY-HARD / VERIFY-SCOPE.
 ```
 
 ---

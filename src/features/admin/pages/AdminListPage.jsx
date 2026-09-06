@@ -16,6 +16,7 @@ const FILTERS = [
 export default function AdminListPage() {
   const { adminApi } = useServer();
   const [requests, setRequests] = useState(null);
+  const [loadError, setLoadError] = useState(false);
   const [filter, setFilter] = useState('all');
 
   useEffect(() => {
@@ -27,7 +28,7 @@ export default function AdminListPage() {
         if (!cancelled) setRequests(data);
       })
       .catch(() => {
-        if (!cancelled) setRequests([]);
+        if (!cancelled) setLoadError(true);
       });
 
     return () => {
@@ -66,7 +67,9 @@ export default function AdminListPage() {
           ))}
         </div>
 
-        {requests === null ? (
+        {loadError ? (
+          <p className="admin-empty">신청을 불러오지 못했어요. 잠시 후 다시 시도해주세요.</p>
+        ) : requests === null ? (
           <p className="admin-loading">불러오는 중…</p>
         ) : visible.length === 0 ? (
           <p className="admin-empty">아직 접수된 판매 신청이 없습니다.</p>

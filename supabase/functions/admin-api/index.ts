@@ -2,7 +2,7 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import { isAllowedAdminUser } from './adminAuthorization.js';
 
 const corsHeaders = {
-  'Access-Control-Allow-Headers': 'authorization, content-type, apikey',
+  'Access-Control-Allow-Headers': 'authorization, content-type, apikey, x-client-info',
   'Access-Control-Allow-Methods': 'POST, OPTIONS',
   'Access-Control-Allow-Origin': '*',
   'Content-Type': 'application/json',
@@ -111,11 +111,43 @@ async function getSaleRequest(supabase, body) {
     const { data, error: signedUrlError } = await supabase.storage
       .from('sale-evidence')
       .createSignedUrl(request.evidence_image, 3600);
-    if (signedUrlError) return failed();
-    saleEvidenceUrl = data.signedUrl;
+    if (!signedUrlError) saleEvidenceUrl = data.signedUrl;
   }
 
-  return json({ ...request, seller, items, sale_evidence_url: saleEvidenceUrl });
+  const resolvedItems = [];
+  for (const item of items) {
+    let purchaseEvidenceUrl = null;
+    if (item.purchase_evidence) {
+      const { data, error: signedUrlError } = await supabase.storage
+        .from('purchase-evidence')
+        .createSignedUrl(item.purchase_evidence, 3600);
+      if (!signedUrlError) purchaseEvidenceUrl = data.signedUrl;
+    }
+
+    const { purchase_evidence: _purchaseEvidence, ...safeItem } = item;
+    resolvedItems.push({
+      ...safeItem,
+      purchase_evidence_url: purchaseEvidenceUrl,
+    });
+  }
+
+  const { evidence_image: _evidenceImage, ...safeRequest } = request;
+  return json({
+    ...safeRequest,
+    seller,
+    items: resolvedItems,
+    sale_evidence_url: saleEvidenceUrl,
+  });
+}
+
+function isImageFile(file) {
+  return file
+    && typeof file.arrayBuffer === 'function'
+    && typeof file.type === 'string'
+    && file.type.startsWith('image/')
+    && Number.isFinite(file.size)
+    && file.size > 0
+    && file.size <= 10 * 1024 * 1024;
 }
 
 async function handleAction(supabase, body) {
@@ -141,6 +173,19 @@ async function handleAction(supabase, body) {
         p_rejection_reason: null,
       });
       return error ? failed() : json({ status: data });
+    }
+    case 'uploadPurchaseEvidence': {
+      if (!isImageFile(body.file)) return failed('purchase evidence is invalid');
+
+      const extension = String(body.file.name ?? '').match(/\.[a-z0-9]{1,10}$/i)?.[0] ?? '';
+      const path = `admin/${crypto.randomUUID()}${extension.toLowerCase()}`;
+      const { data, error } = await supabase.storage
+        .from('purchase-evidence')
+        .upload(path, body.file, {
+          contentType: body.file.type,
+          upsert: false,
+        });
+      return error || !data?.path ? failed() : json({ path: data.path });
     }
     case 'rejectItem': {
       const reason = String(body.rejectionReason ?? '').trim();
@@ -187,7 +232,16 @@ export async function handleRequest(request) {
 
   let body;
   try {
-    body = await request.json();
+    const contentType = request.headers.get('content-type') ?? '';
+    if (contentType.toLowerCase().includes('multipart/form-data')) {
+      const formData = await request.formData();
+      body = {
+        action: formData.get('action'),
+        file: formData.get('file'),
+      };
+    } else {
+      body = await request.json();
+    }
   } catch {
     return failed('invalid request', 400);
   }

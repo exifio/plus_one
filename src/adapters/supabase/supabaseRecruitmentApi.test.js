@@ -2,6 +2,12 @@ import { createSupabaseRecruitmentApis } from './supabaseRecruitmentApi';
 
 function createClient({ rpcResult, invokeResult }) {
   return {
+    auth: {
+      getSession: jest.fn(async () => ({
+        data: { session: { access_token: 'admin-access-token' } },
+        error: null,
+      })),
+    },
     rpc: jest.fn(async () => rpcResult),
     functions: {
       invoke: jest.fn(async () => invokeResult),
@@ -23,6 +29,12 @@ describe('Supabase 모집 상태 API', () => {
       .mockResolvedValueOnce({ data: null, error: new Error('network') })
       .mockResolvedValueOnce({ data: null, error: null });
     const client = {
+      auth: {
+        getSession: jest.fn(async () => ({
+          data: { session: { access_token: 'admin-access-token' } },
+          error: null,
+        })),
+      },
       rpc,
       functions: { invoke: jest.fn() },
     };
@@ -39,6 +51,7 @@ describe('Supabase 모집 상태 API', () => {
     await expect(adminRecruitmentApi.getRecruitmentStatus()).resolves.toEqual({ status: 'closed' });
     expect(client.functions.invoke).toHaveBeenCalledWith('admin-api', {
       body: { action: 'getRecruitmentStatus' },
+      headers: { Authorization: 'Bearer admin-access-token' },
     });
   });
 
@@ -49,6 +62,7 @@ describe('Supabase 모집 상태 API', () => {
     await expect(adminRecruitmentApi.updateRecruitmentStatus('paused')).resolves.toBe('paused');
     expect(client.functions.invoke).toHaveBeenCalledWith('admin-api', {
       body: { action: 'updateRecruitmentStatus', status: 'paused' },
+      headers: { Authorization: 'Bearer admin-access-token' },
     });
   });
 
@@ -56,7 +70,16 @@ describe('Supabase 모집 상태 API', () => {
     const invoke = jest.fn()
       .mockResolvedValueOnce({ data: null, error: new Error('unauthorized') })
       .mockResolvedValueOnce({ data: { status: 'unknown' }, error: null });
-    const client = { rpc: jest.fn(), functions: { invoke } };
+    const client = {
+      auth: {
+        getSession: jest.fn(async () => ({
+          data: { session: { access_token: 'admin-access-token' } },
+          error: null,
+        })),
+      },
+      rpc: jest.fn(),
+      functions: { invoke },
+    };
     const { adminRecruitmentApi } = createSupabaseRecruitmentApis(client);
 
     await expect(adminRecruitmentApi.getRecruitmentStatus()).rejects.toThrow();

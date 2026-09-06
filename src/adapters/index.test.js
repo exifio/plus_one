@@ -9,9 +9,29 @@ describe('앱 adapter composition root', () => {
     expect(adapters.saleRequestApi.getRecruitmentStatus).toBeDefined();
   });
 
-  test('Supabase 설정이 있으면 모집 조회·변경만 실제 adapter로 교체한다', async () => {
+  test('Supabase 설정이 있으면 모집과 판매 신청 adapter를 실제 구현으로 교체한다', async () => {
+    const upload = jest.fn(async () => ({
+      data: { path: 'anonymous/evidence-id' },
+      error: null,
+    }));
     const client = {
-      rpc: jest.fn(async () => ({ data: 'paused', error: null })),
+      auth: {
+        getSession: jest.fn(async () => ({
+          data: { session: { access_token: 'admin-access-token' } },
+          error: null,
+        })),
+      },
+      rpc: jest.fn(async (name) => name === 'get_recruitment_status'
+        ? { data: 'paused', error: null }
+        : {
+            data: {
+              sale_request_id: 'sale-request-id',
+              seller_id: 'seller-id',
+              items_count: 1,
+            },
+            error: null,
+          }),
+      storage: { from: jest.fn(() => ({ upload })) },
       functions: {
         invoke: jest.fn(async () => ({ data: { status: 'closed' }, error: null })),
       },
@@ -26,7 +46,24 @@ describe('앱 adapter composition root', () => {
     await expect(adapters.saleRequestApi.getRecruitmentStatus()).resolves.toEqual({ status: 'paused' });
     await expect(adapters.adminApi.getRecruitmentStatus()).resolves.toEqual({ status: 'closed' });
     await expect(adapters.adminApi.updateRecruitmentStatus('closed')).resolves.toBe('closed');
-    expect(adapters.saleRequestApi.submitSaleRequest).toBeDefined();
+    await expect(adapters.saleRequestApi.submitSaleRequest({
+      registrationMethod: 'manual',
+      convenienceStore: 'gs25',
+      promotionType: 'one_plus_one',
+      items: [{
+        productName: '콜라',
+        expirationDate: '',
+        originalPrice: 2000,
+        askingPrice: 1000,
+      }],
+      contactType: 'phone',
+      contactValue: '010-1234-5678',
+      evidenceImage: null,
+    })).resolves.toEqual({
+      saleRequestId: 'sale-request-id',
+      sellerId: 'seller-id',
+      itemsCount: 1,
+    });
     expect(adapters.adminApi.getSaleRequests).toBeDefined();
   });
 });

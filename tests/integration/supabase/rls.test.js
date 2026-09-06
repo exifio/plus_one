@@ -6,6 +6,7 @@
  * 확인 내용: anon 직접 조회·변경 차단과 관리자용 service role 조회 허용.
  */
 import { createAnonClient, createServiceClient } from './clients';
+import { TEST_CONTACT } from './testFixtures';
 
 describe('RLS — 비로그인 직접 접근 차단', () => {
   let anonClient;
@@ -37,7 +38,7 @@ describe('RLS — 비로그인 직접 접근 차단', () => {
   test('anon은 sellers에 insert할 수 없다', async () => {
     const { error } = await anonClient.from('sellers').insert({
       contact_type: 'phone',
-      contact_value: '01099990000',
+      contact_value: TEST_CONTACT.RLS_BLOCKED_SELLER,
     });
     expect(error).not.toBeNull();
   });
@@ -47,7 +48,7 @@ describe('RLS — 비로그인 직접 접근 차단', () => {
       'sellers update',
       () => anonClient
         .from('sellers')
-        .update({ contact_value: '01099990001' })
+        .update({ contact_value: TEST_CONTACT.RLS_BLOCKED_UPDATE })
         .eq('seller_id', '00000000-0000-0000-0000-000000000001'),
     ],
     [

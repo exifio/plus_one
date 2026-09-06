@@ -6,6 +6,7 @@
  * 확인 내용: 구매·거절 필수값, 최종 결과 재처리 차단, 마지막 상품 처리 후 completed 전환.
  */
 import { createAnonClient, createServiceClient } from './clients';
+import { TEST_CONTACT } from './testFixtures';
 
 describe('보관상품 처리 RPC', () => {
   let serviceClient;
@@ -20,10 +21,11 @@ describe('보관상품 처리 RPC', () => {
   beforeAll(async () => {
     const { data } = await serviceClient.rpc('create_sale_request', {
       p_contact_type: 'phone',
-      p_contact_value: '01033334444',
+      p_contact_value: TEST_CONTACT.PROCESS_STORED_ITEM_PRIMARY,
       p_convenience_store: 'cu',
       p_promotion_type: 'two_plus_one',
       p_evidence_image: 'anonymous/test/uuid-psi.png',
+      p_registration_method: 'manual',
       p_items: [
         {
           product_name: '블라썸오리지널 350ml',
@@ -97,10 +99,11 @@ describe('보관상품 처리 RPC', () => {
     // 거절 테스트용 stored item을 새로 만든다
     const { data } = await serviceClient.rpc('create_sale_request', {
       p_contact_type: 'phone',
-      p_contact_value: '01055556666',
+      p_contact_value: TEST_CONTACT.PROCESS_STORED_ITEM_REJECT,
       p_convenience_store: 'gs25',
       p_promotion_type: 'one_plus_one',
       p_evidence_image: 'anonymous/test/uuid-rej.png',
+      p_registration_method: 'manual',
       p_items: [
         {
           product_name: '비타500 100ml',
@@ -130,10 +133,11 @@ describe('보관상품 처리 RPC', () => {
   test('거절 이유가 있으면 거절 처리에 성공한다', async () => {
     const { data: newSr } = await serviceClient.rpc('create_sale_request', {
       p_contact_type: 'phone',
-      p_contact_value: '01077778888',
+      p_contact_value: TEST_CONTACT.PROCESS_STORED_ITEM_REJECT_SUCCESS,
       p_convenience_store: 'cu',
       p_promotion_type: 'two_plus_one',
       p_evidence_image: 'anonymous/test/uuid-rej2.png',
+      p_registration_method: 'manual',
       p_items: [
         {
           product_name: '트레비 250ml',

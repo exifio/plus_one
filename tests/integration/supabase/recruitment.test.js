@@ -6,13 +6,15 @@
  * 확인 내용: 공개 조회 RPC, 관리자 전용 변경, open 허용, paused/closed·row 누락 fail-closed.
  */
 import { createAnonClient, createServiceClient } from './clients';
+import { TEST_CONTACT } from './testFixtures';
 
 const SAMPLE_REQUEST = {
   p_contact_type: 'phone',
-  p_contact_value: '01077770001',
+  p_contact_value: TEST_CONTACT.RECRUITMENT_OPEN,
   p_convenience_store: 'gs25',
   p_promotion_type: 'one_plus_one',
   p_evidence_image: 'anonymous/test/recruitment.png',
+  p_registration_method: 'manual',
   p_items: [
     {
       product_name: '코카콜라 제로 500ml',
@@ -121,7 +123,7 @@ describe('모집 설정', () => {
 
       const { error } = await anonClient.rpc('create_sale_request', {
         ...SAMPLE_REQUEST,
-        p_contact_value: '01077770002',
+        p_contact_value: TEST_CONTACT.RECRUITMENT_PAUSED,
       });
 
       expect(error).not.toBeNull();
@@ -136,7 +138,7 @@ describe('모집 설정', () => {
   );
 
   test('모집 설정 row가 없으면 create_sale_request는 실패하고 데이터를 남기지 않는다', async () => {
-    const contactValue = '01077770003';
+    const contactValue = TEST_CONTACT.RECRUITMENT_MISSING_ROW;
     const { error: deleteError } = await serviceClient
       .from('recruitment_settings')
       .delete()

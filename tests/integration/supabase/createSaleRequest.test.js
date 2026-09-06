@@ -3,9 +3,12 @@
 /*
  * 관련 작업: BE-4 — create_sale_request 트랜잭션 RPC.
  * 작성 이유: Seller·신청·상품을 한 번에 저장하고 중간 실패 때 일부 데이터가 남지 않아야 하기 때문.
- * 확인 내용: 정상 생성, Seller 재사용, 입력 거부, rollback, 필수 증빙·상품 정보.
+ * 확인 내용: 등록 방식별 정상 생성, Seller 재사용, 입력 거부, rollback, 조건부 증빙·상품 정보.
  */
 import { createAnonClient, createServiceClient } from './clients';
+import {
+  TEST_CONTACT,
+} from './testFixtures';
 
 describe('create_sale_request RPC', () => {
   let anonClient;
@@ -19,10 +22,10 @@ describe('create_sale_request RPC', () => {
   test('한 번의 호출로 seller, sale_request, stored_items를 생성한다', async () => {
     const { data, error } = await anonClient.rpc('create_sale_request', {
       p_contact_type: 'phone',
-      p_contact_value: '01012345678',
+      p_contact_value: TEST_CONTACT.CREATE_SALE_PRIMARY,
       p_convenience_store: 'gs25',
       p_promotion_type: 'one_plus_one',
-      p_evidence_image: 'anonymous/test-user/uuid.png',
+      p_evidence_image: null,
       p_items: [
         {
           product_name: '코카콜라 500ml',
@@ -31,21 +34,82 @@ describe('create_sale_request RPC', () => {
           asking_price: 1000,
         },
       ],
+      p_registration_method: 'manual',
     });
 
     expect(error).toBeNull();
     expect(data).toHaveProperty('sale_request_id');
     expect(data).toHaveProperty('seller_id');
     expect(data.items_count).toBe(1);
+
+    const [{ data: request }, { data: items }] = await Promise.all([
+      serviceClient
+        .from('sale_requests')
+        .select('registration_method, evidence_image')
+        .eq('sale_request_id', data.sale_request_id)
+        .single(),
+      serviceClient
+        .from('stored_items')
+        .select('product_name, original_price, asking_price')
+        .eq('sale_request_id', data.sale_request_id),
+    ]);
+    expect(request).toEqual({ registration_method: 'manual', evidence_image: null });
+    expect(items).toEqual([{
+      product_name: '코카콜라 500ml',
+      original_price: 2200,
+      asking_price: 1000,
+    }]);
+  });
+
+  test('스크린샷 방식은 증빙과 희망 가격만 저장한다', async () => {
+    const evidenceImage = 'anonymous/test-user/screenshot.png';
+    const { data, error } = await anonClient.rpc('create_sale_request', {
+      p_contact_type: 'phone',
+      p_contact_value: TEST_CONTACT.CREATE_SALE_PRIMARY,
+      p_convenience_store: 'cu',
+      p_promotion_type: 'two_plus_one',
+      p_evidence_image: evidenceImage,
+      p_items: [{
+        product_name: null,
+        expiration_date: null,
+        original_price: null,
+        asking_price: 700,
+      }],
+      p_registration_method: 'screenshot',
+    });
+
+    expect(error).toBeNull();
+
+    const [{ data: request }, { data: items }] = await Promise.all([
+      serviceClient
+        .from('sale_requests')
+        .select('registration_method, evidence_image')
+        .eq('sale_request_id', data.sale_request_id)
+        .single(),
+      serviceClient
+        .from('stored_items')
+        .select('product_name, expiration_date, original_price, asking_price')
+        .eq('sale_request_id', data.sale_request_id),
+    ]);
+    expect(request).toEqual({
+      registration_method: 'screenshot',
+      evidence_image: evidenceImage,
+    });
+    expect(items).toEqual([{
+      product_name: null,
+      expiration_date: null,
+      original_price: null,
+      asking_price: 700,
+    }]);
   });
 
   test('같은 연락처면 기존 seller를 재사용한다', async () => {
     const payload = {
       p_contact_type: 'phone',
-      p_contact_value: '01012345678',
+      p_contact_value: TEST_CONTACT.CREATE_SALE_PRIMARY,
       p_convenience_store: 'cu',
       p_promotion_type: 'two_plus_one',
-      p_evidence_image: 'anonymous/test-user2/uuid2.png',
+      p_evidence_image: null,
       p_items: [
         {
           product_name: '박카스 240ml',
@@ -54,6 +118,7 @@ describe('create_sale_request RPC', () => {
           asking_price: 500,
         },
       ],
+      p_registration_method: 'manual',
     };
 
     const { data: first } = await anonClient.rpc('create_sale_request', payload);
@@ -66,11 +131,12 @@ describe('create_sale_request RPC', () => {
   test('잘못된 convenience_store는 거부한다', async () => {
     const { error } = await anonClient.rpc('create_sale_request', {
       p_contact_type: 'phone',
-      p_contact_value: '01000000001',
+      p_contact_value: TEST_CONTACT.CREATE_SALE_INVALID_STORE,
       p_convenience_store: 'seven11',
       p_promotion_type: 'one_plus_one',
       p_evidence_image: 'anonymous/test/uuid.png',
       p_items: [],
+      p_registration_method: 'manual',
     });
 
     expect(error).not.toBeNull();
@@ -79,18 +145,19 @@ describe('create_sale_request RPC', () => {
   test('빈 items 배열은 거부한다', async () => {
     const { error } = await anonClient.rpc('create_sale_request', {
       p_contact_type: 'phone',
-      p_contact_value: '01000000002',
+      p_contact_value: TEST_CONTACT.CREATE_SALE_EMPTY_ITEMS,
       p_convenience_store: 'gs25',
       p_promotion_type: 'one_plus_one',
       p_evidence_image: 'anonymous/test/uuid.png',
       p_items: [],
+      p_registration_method: 'manual',
     });
 
     expect(error).not.toBeNull();
   });
 
   test('StoredItem 검증 실패 시 seller와 sale_request를 함께 rollback한다', async () => {
-    const contactValue = '01000000005';
+    const contactValue = TEST_CONTACT.CREATE_SALE_ROLLBACK;
 
     const { error } = await anonClient.rpc('create_sale_request', {
       p_contact_type: 'phone',
@@ -104,6 +171,7 @@ describe('create_sale_request RPC', () => {
         original_price: 1200,
         asking_price: 600,
       }],
+      p_registration_method: 'manual',
     });
 
     expect(error).not.toBeNull();
@@ -117,19 +185,20 @@ describe('create_sale_request RPC', () => {
     expect(sellers).toHaveLength(0);
   });
 
-  test('증빙 이미지가 없으면 등록을 거부한다', async () => {
+  test('스크린샷 방식은 증빙 이미지가 없으면 등록을 거부한다', async () => {
     const { error } = await anonClient.rpc('create_sale_request', {
       p_contact_type: 'phone',
-      p_contact_value: '01000000003',
+      p_contact_value: TEST_CONTACT.CREATE_SALE_NO_EVIDENCE,
       p_convenience_store: 'gs25',
       p_promotion_type: 'one_plus_one',
       p_evidence_image: null,
       p_items: [{
-        product_name: '수박바',
-        expiration_date: '2026-09-30',
-        original_price: 1200,
+        product_name: null,
+        expiration_date: null,
+        original_price: null,
         asking_price: 600,
       }],
+      p_registration_method: 'screenshot',
     });
 
     expect(error).not.toBeNull();
@@ -138,7 +207,7 @@ describe('create_sale_request RPC', () => {
   test('상품 유효기간은 입력하지 않아도 등록할 수 있다', async () => {
     const { data, error } = await anonClient.rpc('create_sale_request', {
       p_contact_type: 'phone',
-      p_contact_value: '01000000004',
+      p_contact_value: TEST_CONTACT.CREATE_SALE_NO_EXPIRATION,
       p_convenience_store: 'cu',
       p_promotion_type: 'two_plus_one',
       p_evidence_image: 'anonymous/test/screenshot.png',
@@ -148,9 +217,29 @@ describe('create_sale_request RPC', () => {
         original_price: 1200,
         asking_price: 600,
       }],
+      p_registration_method: 'manual',
     });
 
     expect(error).toBeNull();
     expect(data).toHaveProperty('sale_request_id');
+  });
+
+  test('알 수 없는 등록 방식은 거부한다', async () => {
+    const { error } = await anonClient.rpc('create_sale_request', {
+      p_contact_type: 'phone',
+      p_contact_value: TEST_CONTACT.CREATE_SALE_NO_EVIDENCE,
+      p_convenience_store: 'gs25',
+      p_promotion_type: 'one_plus_one',
+      p_evidence_image: null,
+      p_items: [{
+        product_name: '수박바',
+        expiration_date: null,
+        original_price: 1200,
+        asking_price: 600,
+      }],
+      p_registration_method: 'unknown',
+    });
+
+    expect(error).not.toBeNull();
   });
 });

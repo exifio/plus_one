@@ -649,3 +649,22 @@ npm run build
 환경 문제로 Integration을 실행하지 못하면 성공으로 기록하지 않는다.
 
 `[!] Blocked`로 기록하고 실제 오류를 남긴다.
+
+이 명령은 사람이 로컬에서 실행하는 최종 Gate이다. AI가 독립 Task로 처음부터 다시 돌리지 않는다.
+
+---
+
+# 21. Phase 4 검증 역할
+
+Seller/Admin happy path, 화면 레이아웃, 실험 현황 숫자 확인은 사람이 로컬에서 한다.
+
+AI 검증은 다음만 남긴다.
+
+```text
+VERIFY-HARD — 교차 계층 보안
+VERIFY-SCOPE — PRD 제외 기능·secret 정적 검사
+```
+
+이미 Phase 3 Gate와 Integration Test가 통과한 항목을 다시 클릭하지 않는다.
+
+상세는 `docs/PLAN.md` Phase 4를 따른다.

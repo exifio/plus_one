@@ -6,9 +6,10 @@
  * 확인 내용: 업로드 범위, 읽기·수정·목록·삭제 차단, 관리자 signed URL.
  */
 import { createAnonClient, createServiceClient } from './clients';
+import { TEST_STORAGE_FILES } from './testFixtures';
 
-const SALE_PATH = 'anonymous/be5-integration.png';
-const PURCHASE_PATH = 'admin/be5-integration.png';
+const SALE_PATH = TEST_STORAGE_FILES['sale-evidence'][0];
+const PURCHASE_PATH = TEST_STORAGE_FILES['purchase-evidence'][0];
 const IMAGE_BYTES = new Uint8Array([137, 80, 78, 71]);
 
 describe('비공개 증빙 저장소 접근 권한', () => {

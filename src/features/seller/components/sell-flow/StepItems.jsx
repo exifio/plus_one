@@ -53,7 +53,10 @@ export default function StepItems({ draft, dispatch, today, children }) {
         const expError = isExpTouched ? validation.errors?.expirationDate : null;
 
         return (
-          <article key={item.id} className="item-card">
+          <article
+            key={item.id}
+            className={`item-card${isScreenshot ? ' screenshot-price-card' : ''}`}
+          >
             {draft.items.length > 1 && (
               <div className="item-card-head">
                 <button

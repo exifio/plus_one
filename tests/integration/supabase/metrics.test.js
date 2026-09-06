@@ -6,24 +6,25 @@
  * 확인 내용: 신청·Seller·구매·완료·재신청·가격 구간·상태별 집계와 anon 호출 차단.
  */
 import { createAnonClient, createServiceClient } from './clients';
+import { TEST_CONTACT } from './testFixtures';
 
 const SEEDED_REQUESTS = [
   {
-    contact: '01088880001',
+    contact: TEST_CONTACT.METRICS_REPEAT,
     convenienceStore: 'gs25',
     promotionType: 'one_plus_one',
     askingPrice: 200,
     result: 'purchased',
   },
   {
-    contact: '01088880001',
+    contact: TEST_CONTACT.METRICS_REPEAT,
     convenienceStore: 'cu',
     promotionType: 'two_plus_one',
     askingPrice: 500,
     result: 'pending',
   },
   {
-    contact: '01088880002',
+    contact: TEST_CONTACT.METRICS_SINGLE,
     convenienceStore: 'cu',
     promotionType: 'one_plus_one',
     askingPrice: 1200,
@@ -106,6 +107,7 @@ describe('실험 현황 집계 RPC', () => {
         p_convenience_store: seed.convenienceStore,
         p_promotion_type: seed.promotionType,
         p_evidence_image: `anonymous/metrics/${seed.contact}.png`,
+        p_registration_method: 'manual',
         p_items: [{
           product_name: `metrics-${seed.askingPrice}`,
           expiration_date: '2026-12-31',
@@ -130,15 +132,6 @@ describe('실험 현황 집계 RPC', () => {
       p_rejection_reason: null,
     });
     if (processError) throw processError;
-  });
-
-  afterAll(async () => {
-    if (saleRequestIds.length > 0) {
-      await serviceClient
-        .from('sale_requests')
-        .delete()
-        .in('sale_request_id', saleRequestIds);
-    }
   });
 
   test('service role은 개인정보 없는 실험 현황 집계를 반환한다', async () => {

@@ -6,6 +6,7 @@
  * 확인 내용: Seller 중복, 신청 enum, 상품 가격·결과 보조 필드, 모집 singleton 제약.
  */
 import { createServiceClient } from './clients';
+import { TEST_CONTACT } from './testFixtures';
 
 describe('핵심 테이블의 데이터 제약', () => {
   let serviceClient;
@@ -21,10 +22,11 @@ describe('핵심 테이블의 데이터 제약', () => {
 
     const { data, error } = await serviceClient.rpc('create_sale_request', {
       p_contact_type: 'phone',
-      p_contact_value: '01099998881',
+      p_contact_value: TEST_CONTACT.SCHEMA_CONSTRAINT,
       p_convenience_store: 'gs25',
       p_promotion_type: 'one_plus_one',
       p_evidence_image: 'anonymous/schema/invalid-result.png',
+      p_registration_method: 'manual',
       p_items: [
         {
           product_name: '스키마 제약 테스트 상품',
@@ -37,15 +39,6 @@ describe('핵심 테이블의 데이터 제약', () => {
     if (error) throw error;
     saleRequestId = data.sale_request_id;
     sellerId = data.seller_id;
-  });
-
-  afterAll(async () => {
-    if (saleRequestId) {
-      await serviceClient
-        .from('sale_requests')
-        .delete()
-        .eq('sale_request_id', saleRequestId);
-    }
   });
 
   test('pending item은 purchase_evidence를 가질 수 없다', async () => {
@@ -106,7 +99,7 @@ describe('핵심 테이블의 데이터 제약', () => {
   test('동일한 contact_type과 contact_value 조합은 중복될 수 없다', async () => {
     const { error } = await serviceClient.from('sellers').insert({
       contact_type: 'phone',
-      contact_value: '01099998881',
+      contact_value: TEST_CONTACT.SCHEMA_CONSTRAINT,
     });
 
     expect(error).not.toBeNull();

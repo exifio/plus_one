@@ -60,4 +60,22 @@ describe('관리자 신청 목록 페이지', () => {
     expect(screen.getByRole('button', { name: '연락중' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: '처리완료' })).toBeInTheDocument();
   });
+
+  test('목록 조회 실패를 빈 목록으로 표시하지 않는다', async () => {
+    const adapters = createFixtureAdapters();
+    adapters.adminApi.getSaleRequests = jest.fn(async () => {
+      throw new Error('admin api failed');
+    });
+
+    render(
+      <MemoryRouter>
+        <ServerContext.Provider value={adapters}><AdminListPage /></ServerContext.Provider>
+      </MemoryRouter>,
+    );
+
+    expect(
+      await screen.findByText('신청을 불러오지 못했어요. 잠시 후 다시 시도해주세요.'),
+    ).toBeInTheDocument();
+    expect(screen.queryByText('아직 접수된 판매 신청이 없습니다.')).not.toBeInTheDocument();
+  });
 });

@@ -77,8 +77,9 @@ npm install
 npm run dev
 ```
 
-`VITE_SUPABASE_URL`과 `VITE_SUPABASE_ANON_KEY`가 없으면 fixture adapter로 동작합니다.  
-모집 상태만 실제 Supabase에 연결하려면 루트에 `.env.local`을 만들고 아래 값을 설정합니다.
+`VITE_SUPABASE_URL`과 `VITE_SUPABASE_ANON_KEY`가 없으면 메모리 fixture로만 동작하고 DB에 저장되지 않습니다.  
+실제 non-production Supabase에 신청을 저장하려면 루트에 `.env.local`을 만들고 아래 값을 설정한 뒤 `npm run dev`를 다시 시작합니다.  
+`.env.test.local`은 통합 테스트 전용이라 Vite가 읽지 않습니다.
 
 ```bash
 VITE_SUPABASE_URL=https://<project-ref>.supabase.co

@@ -6,6 +6,7 @@
  * 확인 내용: anon 차단, received → contacting 성공, 중복 전환 실패.
  */
 import { createAnonClient, createServiceClient } from './clients';
+import { TEST_CONTACT } from './testFixtures';
 
 describe('연락 시작 RPC', () => {
   let anonClient;
@@ -27,10 +28,11 @@ describe('연락 시작 RPC', () => {
     // RPC로 sale request를 먼저 생성한다
     const { data: sr } = await serviceClient.rpc('create_sale_request', {
       p_contact_type: 'phone',
-      p_contact_value: '01011112222',
+      p_contact_value: TEST_CONTACT.START_CONTACT,
       p_convenience_store: 'gs25',
       p_promotion_type: 'one_plus_one',
       p_evidence_image: 'anonymous/test/uuid-sc.png',
+      p_registration_method: 'manual',
       p_items: [
         {
           product_name: '웰치스 500ml',
@@ -52,10 +54,11 @@ describe('연락 시작 RPC', () => {
   test('이미 contacting인 신청은 다시 연락 시작 처리할 수 없다', async () => {
     const { data: sr, error: createError } = await serviceClient.rpc('create_sale_request', {
       p_contact_type: 'phone',
-      p_contact_value: '01011112223',
+      p_contact_value: TEST_CONTACT.START_CONTACT_DUPLICATE,
       p_convenience_store: 'cu',
       p_promotion_type: 'two_plus_one',
       p_evidence_image: 'anonymous/test/uuid-sc-duplicate.png',
+      p_registration_method: 'manual',
       p_items: [
         {
           product_name: '중복 연락 시작 테스트 상품',

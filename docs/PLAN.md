@@ -1,6 +1,6 @@
 # +1 Frontend-First Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **For agentic workers:** Phase 1–3 구현은 subagent-driven-development 또는 executing-plans를 사용한다. Phase 4는 예외다. Seller/Admin 화면을 순서대로 재클릭하거나 VERIFY-1~8을 독립 Task로 돌리지 않는다. 사람이 넘긴 로컬 이슈를 고치고, 요청이 있을 때만 VERIFY-HARD / VERIFY-SCOPE를 수행한다.
 
 **Goal:** 판매자 신청, 모집 관리, 실험 현황을 포함한 `+1` MVP를 프론트엔드 전체 구현 → 백엔드 전체 구현 → 실제 연결 → 통합 검증 순서로 완성한다.
 
@@ -28,6 +28,7 @@
 - Realtime/polling/PostHog/별도 Backend server 추가 금지.
 - 핵심 로직과 서비스는 TDD.
 - 검증하지 않은 Task를 완료 처리하지 않음.
+- Phase 4에서 AI는 로컬 클릭·`npm` 명령 재실행을 Task로 만들지 않는다. `VERIFY-HARD` / `VERIFY-SCOPE`만 AI 검증이다.
 
 ---
 
@@ -681,7 +682,61 @@ paused/closed 신규 제출 차단
 
 # Phase 4 — 통합 검증 및 배포 준비
 
-## VERIFY-1 — 자동 검증
+Phase 3 Gate와 기존 Unit/Integration Test가 이미 통과한 흐름을 AI가 다시 클릭하거나, 같은 명령을 독립 Task로 처음부터 다시 돌리지 않는다.
+
+로컬에서 보이는 UX/흐름 버그를 고치는 일이 Phase 4의 기본 작업이다. 복잡한 검증보다 우선한다.
+
+## 역할 분리
+
+사람이 로컬에서 한다:
+
+```text
+npm test / npm run test:integration / npm run build
+Seller·Admin 화면 클릭
+레이아웃·CTA·키보드
+Vercel/Production 환경 값과 Admin 계정
+```
+
+AI만 한다:
+
+```text
+VERIFY-HARD — 클릭으로 증명하기 어려운 교차 계층 보안
+VERIFY-SCOPE — PRD 제외 기능·secret이 코드에 들어왔는지 정적 검사
+```
+
+AI Task가 아니다. 시작하지 않는다:
+
+```text
+VERIFY-1 자동 명령 전체를 독립 Task로 재실행
+Seller 3단계·이미지·연락처 happy path 재클릭
+Admin 로그인·목록·상세·연락·구매·거절 재클릭
+모집 상태 버튼을 순서대로 눌러보는 확인
+실험 현황 숫자가 맞아 보이는지 화면 확인
+375 / 768 / 1280 시각 확인
+이미 통과한 integration suite 전체 재실행
+```
+
+이미 있는 테스트가 커버하는 항목을 “다시 확인”하려고 브라우저를 켜지 않는다.
+
+## 이미 Phase 3에서 끝난 것
+
+아래는 재검증 대상이 아니다.
+
+```text
+open → Seller 제출 → Admin 목록/상세 → 연락 → 구매/거절 → 자동 completed
+paused/closed에서 create_sale_request 차단
+실험 현황이 새 신청/구매/완료를 반영
+Admin Auth · signed evidence · 모집 차단 UI
+Unit / Integration / Production Build Gate
+```
+
+---
+
+## HUMAN — 로컬 확인 (AI Task 아님)
+
+사람이 로컬에서 직접 실행하고 클릭한다. 여기서 나온 이슈를 AI에 넘긴다.
+
+명령:
 
 ```bash
 npm test
@@ -689,117 +744,97 @@ npm run test:integration
 npm run build
 ```
 
-전부 PASS.
+Seller:
 
----
-
-## VERIFY-2 — Seller Flow
-
-- [ ] Home open
-- [ ] 3단계
-- [ ] multi item
-- [ ] image upload
-- [ ] phone/kakao
-- [ ] submit
-- [ ] DB 저장
-- [ ] paused/closed direct `/sell` block
-- [ ] mid-flow 모집 변경 submit block
-
----
-
-## VERIFY-3 — Admin Request Flow
-
-- [ ] Admin Auth login
-- [ ] unauthorized/non-admin access blocked
-- [ ] list
-- [ ] detail
-- [ ] evidence view
-- [ ] contacting
-- [ ] purchased
-- [ ] rejected
-- [ ] completed
-
----
-
-## VERIFY-4 — Recruitment Flow
-
-- [ ] open → paused
-- [ ] paused → open
-- [ ] open → closed
-- [ ] closed → open
-- [ ] Seller Home 반영
-- [ ] Backend create 차단
-
----
-
-## VERIFY-5 — Experiment Flow
-
-Seed/실제 테스트 데이터 기준:
-
-- [ ] total requests
-- [ ] unique sellers
-- [ ] purchased items
-- [ ] completed requests
-- [ ] repeat sellers
-- [ ] price distribution
-- [ ] ratio distribution
-- [ ] store/promo/status/result counts
-- [ ] empty state
-
----
-
-## VERIFY-6 — Security
-
-- [ ] anon sellers SELECT 실패
-- [ ] anon sale_requests SELECT 실패
-- [ ] anon stored_items SELECT 실패
-- [ ] anon recruitment table 직접 SELECT 실패
-- [ ] public recruitment RPC 성공
-- [ ] private storage direct read 실패
-- [ ] signed URL 성공
-- [ ] service role/secret bundle 없음
-
----
-
-## VERIFY-7 — UI
-
-모바일 판매자:
-
-- [ ] 375px
-- [ ] keyboard/CTA
-- [ ] long product name
-- [ ] multiple items
-- [ ] image preview
-- [ ] paused/closed/error
+```text
+Home open
+3단계 이동
+스크린샷 / 직접 입력
+여러 상품
+이미지 업로드
+phone / kakao
+제출과 완료 화면
+paused/closed에서 /sell 직접 진입
+신청 직전 모집이 바뀌면 완료 화면으로 가지 않는지
+```
 
 Admin:
 
-- [ ] 768px
-- [ ] 1280px
-- [ ] top nav
-- [ ] request list/detail
-- [ ] recruitment cards
-- [ ] experiment summary/analysis grid
+```text
+로그인
+비로그인·non-admin 접근 차단
+목록 / 상세 / 증빙
+연락 시작
+구매 / 거절
+모집 상태 변경이 Seller Home에 보이는지
+실험 현황 empty / 데이터 / 오류
+```
+
+UI:
+
+```text
+판매자 375px, 키보드와 하단 CTA
+긴 상품명, 여러 상품, 이미지 preview
+Admin 768px / 1280px
+상단 nav, 목록/상세, 모집, 실험 현황
+```
+
+배포 환경은 사람만 할 수 있다:
+
+```text
+Vercel Frontend env
+Production Supabase migration
+Storage bucket/policy
+Edge Function deploy
+Admin Auth 계정 / ADMIN_USER_ID
+Vercel Web Analytics
+```
 
 ---
 
-## VERIFY-8 — Vercel 배포 준비
+## VERIFY-HARD — 교차 계층 보안 (AI)
 
-- [ ] SPA rewrite
-- [ ] Frontend env
-- [ ] Production Supabase migration
-- [ ] Storage bucket/policy
-- [ ] Edge Function deploy
-- [ ] Admin Auth account / `ADMIN_USER_ID` env
-- [ ] Vercel Web Analytics
-- [ ] Production Build
-- [ ] PRD 제외 기능이 추가되지 않았는지 확인
+클릭 성공만으로는 부족한 보안 표면만 본다. 기존 테스트가 있으면 그 테스트를 근거로 삼고, 없는 구멍만 추가로 확인한다.
+
+확인:
+
+- [ ] 판매자 화면/adapter가 `purchase-evidence` signed URL을 받거나 요청하지 않는지
+- [ ] anon과 비관리자 Auth user가 admin RPC·Edge action을 직접 호출하지 못하는지
+- [ ] metrics/list/detail 응답에 판매자 화면으로 새지 말아야 할 연락처·증빙 path가 없는지
+- [ ] 객체 path를 알아도 private bucket 직접 read가 실패하는지
+- [ ] browser bundle과 Vite env에 `service_role` / Admin credential이 없는지
+
+하지 않는다:
+
+```text
+Seller/Admin happy path 재클릭
+전체 integration suite를 이 Task의 본작업으로 재실행
+레이아웃·카피 확인
+```
+
+---
+
+## VERIFY-SCOPE — 범위/secret 정적 검사 (AI)
+
+코드만 본다. 배포 대시보드를 대신 설정하지 않는다.
+
+확인:
+
+- [ ] `vercel.json` SPA rewrite가 `/admin/:id` 포함 클라이언트 라우트를 커버하는지
+- [ ] Frontend 코드가 `service_role` 또는 Admin 비밀번호/토큰을 참조하지 않는지
+- [ ] PRD가 금지한 기능이 코드에 들어왔는지
+  - 판매자 로그인/회원가입
+  - 여러 관리자 / role system
+  - 마이페이지, 구매자, 결제/정산, 채팅, 검색, 알림
+  - 상품 Master, 가격 추천
+  - Redux/Zustand, Express/Nest, ORM
+  - PostHog, Realtime/polling, Metrics 저장 table
 
 ---
 
 # Task 운영 규칙
 
-각 Task:
+구현 Task:
 
 ```text
 TASKS 현재 작업 변경
@@ -817,6 +852,16 @@ test PASS
 필요 시 build
 ↓
 TASKS 완료 기록
+```
+
+Phase 4:
+
+```text
+사람이 로컬에서 이슈를 찾는다
+↓
+AI는 그 이슈만 고친다
+↓
+사용자가 요청하면 VERIFY-HARD / VERIFY-SCOPE만 한다
 ```
 
 `TASKS.md`에는 미래 전체 PLAN을 복사하지 않는다.

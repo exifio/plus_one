@@ -1,6 +1,8 @@
 import { createClient } from '@supabase/supabase-js';
 import { createFixtureAdapters } from './fixture';
+import { createSupabaseAuthApi } from './supabase/supabaseAuthApi';
 import { createSupabaseRecruitmentApis } from './supabase/supabaseRecruitmentApi';
+import { createSupabaseSubmissionApis } from './supabase/supabaseSubmissionApi';
 
 function envValue(env, ...names) {
   for (const name of names) {
@@ -10,8 +12,9 @@ function envValue(env, ...names) {
 }
 
 /**
- * VITE Supabase 설정이 있으면 모집 상태만 실제 API로 연결한다.
- * 아직 연결하지 않은 제출/Admin 기능은 다음 LINK Task까지 fixture를 유지한다.
+ * VITE Supabase 설정이 있으면 Seller/Admin을 실제 API로 연결한다.
+ * Supabase client가 Auth 세션을 보관하므로 Admin Edge Function 호출에도 같은
+ * access token이 전달된다.
  */
 export function createAppAdapters(env = {}, clientFactory = createClient) {
   const fixtureAdapters = createFixtureAdapters();
@@ -20,17 +23,26 @@ export function createAppAdapters(env = {}, clientFactory = createClient) {
 
   if (!url || !key) return fixtureAdapters;
 
-  const supabaseApis = createSupabaseRecruitmentApis(clientFactory(url, key));
+  const client = clientFactory(url, key);
+  const supabaseApis = createSupabaseRecruitmentApis(client);
+  const submissionApis = createSupabaseSubmissionApis(client);
 
   return {
     ...fixtureAdapters,
     saleRequestApi: {
       ...fixtureAdapters.saleRequestApi,
       getRecruitmentStatus: supabaseApis.saleRequestApi.getRecruitmentStatus,
+      submitSaleRequest: submissionApis.submitSaleRequest,
     },
     adminApi: {
       ...fixtureAdapters.adminApi,
       ...supabaseApis.adminRecruitmentApi,
     },
+    storageApi: {
+      ...fixtureAdapters.storageApi,
+      uploadEvidence: submissionApis.uploadEvidence,
+      uploadPurchaseEvidence: supabaseApis.adminStorageApi.uploadPurchaseEvidence,
+    },
+    authApi: createSupabaseAuthApi(client),
   };
 }
