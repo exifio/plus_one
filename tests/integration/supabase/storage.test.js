@@ -12,7 +12,7 @@ const SALE_PATH = TEST_STORAGE_FILES['sale-evidence'][0];
 const PURCHASE_PATH = TEST_STORAGE_FILES['purchase-evidence'][0];
 const IMAGE_BYTES = new Uint8Array([137, 80, 78, 71]);
 
-describe('비공개 증빙 저장소 접근 권한', () => {
+describe('판매 사진과 구매 증빙이 함부로 보이지 않는지', () => {
   let anonClient;
   let serviceClient;
 
@@ -28,7 +28,7 @@ describe('비공개 증빙 저장소 접근 권한', () => {
     await serviceClient.storage.from('purchase-evidence').remove([PURCHASE_PATH]);
   });
 
-  test('anon은 sale-evidence의 anonymous 경로에만 업로드할 수 있다', async () => {
+  test('로그인하지 않은 사용자는 판매 사진을 정해진 경로에만 올릴 수 있다', async () => {
     const { data, error } = await anonClient.storage
       .from('sale-evidence')
       .upload(SALE_PATH, IMAGE_BYTES, { contentType: 'image/png' });
@@ -43,12 +43,12 @@ describe('비공개 증빙 저장소 접근 권한', () => {
       '수정',
       () => anonClient.storage.from('sale-evidence').update(SALE_PATH, IMAGE_BYTES),
     ],
-  ])('anon은 sale-evidence %s를 할 수 없다', async (_action, request) => {
+  ])('로그인하지 않은 사용자는 판매 사진을 %s할 수 없다', async (_action, request) => {
     const { error } = await request();
     expect(error).not.toBeNull();
   });
 
-  test('anon 목록에는 sale-evidence object가 노출되지 않는다', async () => {
+  test('로그인하지 않은 사용자는 판매 사진 목록을 볼 수 없다', async () => {
     const { data, error } = await anonClient.storage
       .from('sale-evidence')
       .list('anonymous');
@@ -61,7 +61,7 @@ describe('비공개 증빙 저장소 접근 권한', () => {
     );
   });
 
-  test('anon 삭제 요청은 sale-evidence object를 제거하지 않는다', async () => {
+  test('로그인하지 않은 사용자는 판매 사진을 지울 수 없다', async () => {
     const { error } = await anonClient.storage.from('sale-evidence').remove([SALE_PATH]);
     expect(error).toBeNull();
 
@@ -71,7 +71,7 @@ describe('비공개 증빙 저장소 접근 권한', () => {
     expect(serviceDownloadError).toBeNull();
   });
 
-  test('anon은 purchase-evidence에 업로드할 수 없다', async () => {
+  test('로그인하지 않은 사용자는 구매 증빙을 올릴 수 없다', async () => {
     const { error } = await anonClient.storage
       .from('purchase-evidence')
       .upload(PURCHASE_PATH, IMAGE_BYTES, { contentType: 'image/png' });
@@ -79,7 +79,7 @@ describe('비공개 증빙 저장소 접근 권한', () => {
     expect(error).not.toBeNull();
   });
 
-  test('service role은 private sale-evidence signed URL을 만들 수 있다', async () => {
+  test('운영자 권한은 비공개 판매 사진을 잠시 열어 볼 주소를 만들 수 있다', async () => {
     const { data, error } = await serviceClient.storage
       .from('sale-evidence')
       .createSignedUrl(SALE_PATH, 60);

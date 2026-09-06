@@ -1,7 +1,7 @@
 /** @jest-environment node */
 
 /*
- * 관련 작업: BE-6 — 실험 현황 집계 RPC.
+ * 관련 작업: BE-6 — 실험 현황 숫자에 개인정보가 없고 판매자는 호출할 수 없는지.
  * 작성 이유: 운영 데이터를 지표로 바꾸되 연락처와 증빙 경로 같은 개인정보는 응답에 섞이면 안 되기 때문.
  * 확인 내용: 신청·Seller·구매·완료·재신청·가격 구간·상태별 집계와 anon 호출 차단.
  */
@@ -76,7 +76,7 @@ function summarize(requests, items) {
   };
 }
 
-describe('실험 현황 집계 RPC', () => {
+describe('실험 현황 숫자에 개인정보가 없고 판매자는 호출할 수 없는지', () => {
   let anonClient;
   let serviceClient;
   let baseline;
@@ -134,7 +134,7 @@ describe('실험 현황 집계 RPC', () => {
     if (processError) throw processError;
   });
 
-  test('service role은 개인정보 없는 실험 현황 집계를 반환한다', async () => {
+  test('운영자 권한은 연락처 없는 실험 현황 숫자를 받을 수 있다', async () => {
     const { data, error } = await serviceClient.rpc('get_experiment_metrics');
 
     expect(error).toBeNull();
@@ -172,7 +172,7 @@ describe('실험 현황 집계 RPC', () => {
     );
   });
 
-  test('anon은 실험 현황 집계 RPC를 호출할 수 없다', async () => {
+  test('로그인하지 않은 사용자는 실험 현황 숫자를 직접 받을 수 없다', async () => {
     const { error } = await anonClient.rpc('get_experiment_metrics');
     expect(error).not.toBeNull();
   });

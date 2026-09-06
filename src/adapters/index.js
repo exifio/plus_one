@@ -23,26 +23,28 @@ export function createAppAdapters(env = {}, clientFactory = createClient) {
 
   if (!url || !key) return fixtureAdapters;
 
-  const client = clientFactory(url, key);
-  const supabaseApis = createSupabaseRecruitmentApis(client);
-  const submissionApis = createSupabaseSubmissionApis(client);
+  const publicClient = clientFactory(url, key, { auth: { persistSession: false } });
+  const adminClient = clientFactory(url, key);
+  const publicApis = createSupabaseRecruitmentApis(publicClient);
+  const adminApis = createSupabaseRecruitmentApis(adminClient);
+  const submissionApis = createSupabaseSubmissionApis(publicClient);
 
   return {
     ...fixtureAdapters,
     saleRequestApi: {
       ...fixtureAdapters.saleRequestApi,
-      getRecruitmentStatus: supabaseApis.saleRequestApi.getRecruitmentStatus,
+      getRecruitmentStatus: publicApis.saleRequestApi.getRecruitmentStatus,
       submitSaleRequest: submissionApis.submitSaleRequest,
     },
     adminApi: {
       ...fixtureAdapters.adminApi,
-      ...supabaseApis.adminRecruitmentApi,
+      ...adminApis.adminRecruitmentApi,
     },
     storageApi: {
       ...fixtureAdapters.storageApi,
       uploadEvidence: submissionApis.uploadEvidence,
-      uploadPurchaseEvidence: supabaseApis.adminStorageApi.uploadPurchaseEvidence,
+      uploadPurchaseEvidence: adminApis.adminStorageApi.uploadPurchaseEvidence,
     },
-    authApi: createSupabaseAuthApi(client),
+    authApi: createSupabaseAuthApi(adminClient),
   };
 }

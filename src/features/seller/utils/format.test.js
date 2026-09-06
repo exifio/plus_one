@@ -12,65 +12,65 @@ import {
   parsePriceInput,
 } from './format';
 
-describe('가격 포맷', () => {
+describe('가격을 사람이 읽기 쉽게 보여주는지', () => {
   test.each([
     [2200, '2,200원'],
     [1, '1원'],
     [1000000, '1,000,000원'],
-  ])('%p를 %p로 포맷한다', (value, expected) => {
+  ])('가격 %p를 %p로 보여준다', (value, expected) => {
     expect(formatPrice(value)).toBe(expected);
   });
 
-  test('빈 값은 빈 문자열을 반환한다', () => {
+  test('값이 없으면 빈 칸으로 보여준다', () => {
     expect(formatPrice(null)).toBe('');
     expect(formatPrice(undefined)).toBe('');
     expect(formatPrice('')).toBe('');
   });
 });
 
-describe('날짜 포맷', () => {
-  test('YYYY-MM-DD를 2026. 09. 30 형태로 변환한다', () => {
+describe('날짜를 사람이 읽기 쉽게 보여주는지', () => {
+  test('저장용 날짜를 화면에 보기 좋은 형태로 바꾼다', () => {
     expect(formatDate('2026-09-30')).toBe('2026. 09. 30');
   });
 
-  test('빈 값은 빈 문자열을 반환한다', () => {
+  test('값이 없으면 빈 칸으로 보여준다', () => {
     expect(formatDate('')).toBe('');
   });
 });
 
-describe('날짜·시간 포맷', () => {
-  test('ISO 날짜를 09.04 15:21 형태로 변환한다', () => {
+describe('신청 시각을 한국 기준으로 보여주는지', () => {
+  test('서버 시각을 한국 시간 월.일 시:분으로 보여준다', () => {
     expect(formatDateTime('2026-09-04T15:21:30.000Z')).toBe('09.05 00:21');
   });
 
-  test('한 자리 월/일/시/분은 앞에 0을 붙인다', () => {
+  test('한 자리 월·일·시·분도 자리를 맞춰 보여준다', () => {
     expect(formatDateTime('2026-01-05T03:05:00.000Z')).toBe('01.05 12:05');
   });
 
-  test('빈 값은 빈 문자열을 반환한다', () => {
+  test('값이 없으면 빈 칸으로 보여준다', () => {
     expect(formatDateTime('')).toBe('');
     expect(formatDateTime('invalid')).toBe('');
   });
 });
 
-describe('가격 입력 파싱', () => {
+describe('가격 칸에 쉼표나 원을 넣어도 숫자로 읽는지', () => {
   test.each([
     ['2,200', 2200],
     ['1000원', 1000],
     [' 1500 ', 1500],
     ['12a34', 1234],
-  ])('%s를 %d로 파싱한다', (input, expected) => {
+  ])('가격 입력 %s를 숫자 %d로 읽는다', (input, expected) => {
     expect(parsePriceInput(input)).toBe(expected);
   });
 
-  test('숫자가 하나도 없거나 빈 값이면 null을 반환한다', () => {
+  test('가격 칸이 비어 있으면 숫자로 만들지 않는다', () => {
     expect(parsePriceInput('')).toBe(null);
     expect(parsePriceInput('abc')).toBe(null);
     expect(parsePriceInput(null)).toBe(null);
   });
 });
 
-describe('휴대폰 번호 포맷', () => {
+describe('휴대폰 번호를 보기 쉽게 하이픈을 넣는지', () => {
   test.each([
     ['01012345678', '010-1234-5678'],
     ['010-1234-5678', '010-1234-5678'],
@@ -80,20 +80,20 @@ describe('휴대폰 번호 포맷', () => {
     ['', ''],
     [null, ''],
     ['0101234567899', '010-1234-5678'],
-  ])('%s를 %s로 포맷한다', (input, expected) => {
+  ])('휴대폰 번호 %s를 %s로 보여준다', (input, expected) => {
     expect(formatPhoneNumber(input)).toBe(expected);
   });
 });
 
-describe('휴대폰 번호 유효성', () => {
-  test('010 또는 011로 시작하는 11자리 숫자는 유효하다', () => {
+describe('휴대폰 번호가 신청에 쓸 수 있는 형식인지', () => {
+  test('010 또는 011로 시작하는 11자리면 연락처로 받는다', () => {
     expect(isValidPhoneNumber('010-1234-5678')).toBe(true);
     expect(isValidPhoneNumber('01012345678')).toBe(true);
     expect(isValidPhoneNumber('011-1234-5678')).toBe(true);
     expect(isValidPhoneNumber('01112345678')).toBe(true);
   });
 
-  test('11자리가 아니거나 010/011이 아니면 유효하지 않다', () => {
+  test('자릿수나 시작 번호가 다르면 휴대폰 연락처로 받지 않는다', () => {
     expect(isValidPhoneNumber('1')).toBe(false);
     expect(isValidPhoneNumber('010-123-4567')).toBe(false);
     expect(isValidPhoneNumber('016-1234-5678')).toBe(false);

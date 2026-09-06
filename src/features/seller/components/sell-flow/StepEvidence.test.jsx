@@ -8,14 +8,14 @@ import { fireEvent } from '@testing-library/react';
 import StepEvidence from './StepEvidence';
 import { SALE_REQUEST_ACTION } from '../../../sale-request/state/saleRequestReducer';
 
-describe('증빙 이미지 단계', () => {
-  test('이미지가 없으면 업로드 안내를 보여준다', () => {
+describe('보관상품 확인 이미지를 올리는 단계', () => {
+  test('사진이 없으면 올리라는 안내를 보여준다', () => {
     render(<StepEvidence draft={{ evidenceImage: null }} dispatch={() => {}} />);
 
     expect(screen.getByText(/스크린샷 올리기/)).toBeInTheDocument();
   });
 
-  test('파일을 선택하면 증빙 이미지 설정 액션이 dispatch된다', () => {
+  test('사진을 고르면 신청서에 그 파일이 들어간다', () => {
     const dispatch = jest.fn();
     const file = new File(['image'], 'evidence.png', { type: 'image/png' });
 
@@ -32,7 +32,7 @@ describe('증빙 이미지 단계', () => {
     });
   });
 
-  test('이미지가 아닌 파일은 선택할 수 없다', () => {
+  test('사진이 아닌 파일은 받지 않는다', () => {
     const dispatch = jest.fn();
     const file = new File(['text'], 'notes.txt', { type: 'text/plain' });
 
@@ -48,7 +48,7 @@ describe('증빙 이미지 단계', () => {
     expect(screen.getByText('이미지 파일만 선택해주세요.')).toBeInTheDocument();
   });
 
-  test('이미지 등록 후에는 미리보기와 다른 이미지 선택을 보여준다', () => {
+  test('사진을 올린 뒤에는 미리보기와 다른 사진 고르기를 보여준다', () => {
     const createObjectURL = jest.fn(() => 'blob:mock-evidence');
     global.URL.createObjectURL = createObjectURL;
 

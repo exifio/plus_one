@@ -8,7 +8,7 @@
 import { createAnonClient, createServiceClient } from './clients';
 import { TEST_CONTACT } from './testFixtures';
 
-describe('보관상품 처리 RPC', () => {
+describe('구매·거절은 한 번만 확정되고 마지막 상품이면 신청도 끝나는지', () => {
   let serviceClient;
 
   beforeAll(() => {
@@ -50,7 +50,7 @@ describe('보관상품 처리 RPC', () => {
     storedItemId = items[0].stored_item_id;
   });
 
-  test('구매는 purchase_evidence가 필요하다', async () => {
+  test('구매로 바꾸려면 구매 증빙이 있어야 한다', async () => {
     const { error } = await serviceClient.rpc('process_stored_item', {
       p_stored_item_id: storedItemId,
       p_result: 'purchased',
@@ -61,7 +61,7 @@ describe('보관상품 처리 RPC', () => {
     expect(error.message).toMatch(/evidence/i);
   });
 
-  test('구매 증빙이 있으면 구매 처리에 성공한다', async () => {
+  test('구매 증빙이 있으면 그 상품을 구매로 바꿀 수 있다', async () => {
     const { data, error } = await serviceClient.rpc('process_stored_item', {
       p_stored_item_id: storedItemId,
       p_result: 'purchased',
@@ -72,7 +72,7 @@ describe('보관상품 처리 RPC', () => {
     expect(data).toBe('contacting');
   });
 
-  test('이미 최종 처리된 item은 다시 처리할 수 없다', async () => {
+  test('한 번 처리한 상품은 다시 바꾸지 않는다', async () => {
     const { data, error } = await serviceClient.rpc('process_stored_item', {
       p_stored_item_id: storedItemId,
       p_result: 'rejected',
@@ -95,7 +95,7 @@ describe('보관상품 처리 RPC', () => {
     expect(data).toBeNull();
   });
 
-  test('거절은 rejection_reason이 필요하다', async () => {
+  test('거절로 바꾸려면 거절 이유가 있어야 한다', async () => {
     // 거절 테스트용 stored item을 새로 만든다
     const { data } = await serviceClient.rpc('create_sale_request', {
       p_contact_type: 'phone',
@@ -130,7 +130,7 @@ describe('보관상품 처리 RPC', () => {
     expect(error.message).toMatch(/reason/i);
   });
 
-  test('거절 이유가 있으면 거절 처리에 성공한다', async () => {
+  test('거절 이유가 있으면 그 상품을 거절로 바꾸고, 마지막이면 신청도 처리완료로 바꾼다', async () => {
     const { data: newSr } = await serviceClient.rpc('create_sale_request', {
       p_contact_type: 'phone',
       p_contact_value: TEST_CONTACT.PROCESS_STORED_ITEM_REJECT_SUCCESS,

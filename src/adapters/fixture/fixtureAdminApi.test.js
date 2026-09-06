@@ -30,14 +30,14 @@ const twoItemDraft = {
   contactValue: '010-1234-5678',
 };
 
-describe('Fixture 관리자 API', () => {
-  test('FE-4 Admin API 계약을 준수한다', () => {
+describe('로컬 연습용 관리자 처리', () => {
+  test('관리자 화면에 필요한 목록·처리·모집·실험 기능이 있다', () => {
     const { adminApi } = createFixtureAdapters();
 
     expect(() => assertAdminApiContract(adminApi)).not.toThrow();
   });
 
-  test('제출된 신청이 목록에 보인다', async () => {
+  test('제출한 신청이 관리자 목록에 나타난다', async () => {
     const { saleRequestApi, adminApi } = createFixtureAdapters();
 
     await saleRequestApi.submitSaleRequest(twoItemDraft);
@@ -58,7 +58,7 @@ describe('Fixture 관리자 API', () => {
     );
   });
 
-  test('상세에는 판매자와 보관상품이 포함된다', async () => {
+  test('상세에서 판매자와 상품을 볼 수 있다', async () => {
     const { saleRequestApi, adminApi } = createFixtureAdapters();
 
     const { saleRequestId } = await saleRequestApi.submitSaleRequest(twoItemDraft);
@@ -78,7 +78,7 @@ describe('Fixture 관리자 API', () => {
     });
   });
 
-  test('연락 시작: received → contacting', async () => {
+  test('접수된 신청만 연락중으로 바꿀 수 있다', async () => {
     const { saleRequestApi, adminApi } = createFixtureAdapters();
 
     const { saleRequestId } = await saleRequestApi.submitSaleRequest(twoItemDraft);
@@ -90,7 +90,7 @@ describe('Fixture 관리자 API', () => {
     expect(list[0].status).toBe('contacting');
   });
 
-  test('이미 최종인 신청은 연락 시작할 수 없다', async () => {
+  test('이미 끝난 신청은 다시 연락 시작으로 되돌리지 않는다', async () => {
     const { saleRequestApi, adminApi } = createFixtureAdapters();
 
     const { saleRequestId } = await saleRequestApi.submitSaleRequest(twoItemDraft);
@@ -101,7 +101,7 @@ describe('Fixture 관리자 API', () => {
     await expect(adminApi.startContact(saleRequestId)).rejects.toThrow();
   });
 
-  test('구매 처리: 구매 증빙이 없으면 거부하고, 있으면 contacting을 유지한다', async () => {
+  test('구매 증빙이 있을 때만 구매로 바꾸고, 남은 상품이 있으면 연락중을 유지한다', async () => {
     const { saleRequestApi, adminApi } = createFixtureAdapters();
 
     const { saleRequestId } = await saleRequestApi.submitSaleRequest(twoItemDraft);
@@ -122,7 +122,7 @@ describe('Fixture 관리자 API', () => {
     });
   });
 
-  test('거절 처리: 거절 이유가 없으면 거부한다', async () => {
+  test('거절 이유가 없으면 거절로 바꾸지 않는다', async () => {
     const { saleRequestApi, adminApi } = createFixtureAdapters();
 
     const { saleRequestId } = await saleRequestApi.submitSaleRequest(twoItemDraft);
@@ -142,7 +142,7 @@ describe('Fixture 관리자 API', () => {
     });
   });
 
-  test('모든 상품이 최종 처리되면 신청은 completed가 된다', async () => {
+  test('모든 상품을 처리하면 신청을 처리완료로 바꾼다', async () => {
     const { saleRequestApi, adminApi } = createFixtureAdapters();
 
     const { saleRequestId } = await saleRequestApi.submitSaleRequest(twoItemDraft);
@@ -158,7 +158,7 @@ describe('Fixture 관리자 API', () => {
     expect(after.items.every((item) => item.result !== 'pending')).toBe(true);
   });
 
-  test('최종 처리된 상품은 다시 변경할 수 없다', async () => {
+  test('한 번 구매·거절한 상품은 다시 바꾸지 않는다', async () => {
     const { saleRequestApi, adminApi } = createFixtureAdapters();
 
     const { saleRequestId } = await saleRequestApi.submitSaleRequest(twoItemDraft);
@@ -171,14 +171,14 @@ describe('Fixture 관리자 API', () => {
     await expect(adminApi.purchaseStoredItem(itemId, 'deals/purchase/b.png')).rejects.toThrow();
   });
 
-  test('없는 신청 조회는 실패한다', async () => {
+  test('없는 신청을 찾으면 실패로 돌려준다', async () => {
     const { adminApi } = createFixtureAdapters();
 
     await expect(adminApi.getSaleRequest('missing')).rejects.toThrow();
     await expect(adminApi.startContact('missing')).rejects.toThrow();
   });
 
-  test('모집 상태를 변경하면 같은 저장소를 공유하는 조회에 반영된다', async () => {
+  test('운영자가 모집을 바꾸면 판매자 조회에도 바로 반영된다', async () => {
     const { saleRequestApi, adminApi } = createFixtureAdapters();
 
     expect(await saleRequestApi.getRecruitmentStatus()).toEqual({ status: 'open' });
@@ -202,7 +202,7 @@ describe('Fixture 관리자 API', () => {
     },
   );
 
-  describe('실험 지표 조회', () => {
+  describe('실험 현황 숫자를 어떻게 세는지', () => {
     const seedMetrics = async () => {
       const { saleRequestApi, adminApi } = createFixtureAdapters();
 
@@ -254,7 +254,7 @@ describe('Fixture 관리자 API', () => {
       return { saleRequestApi, adminApi };
     };
 
-    test('빈 저장소에서는 0과 빈 분포를 반환한다', async () => {
+    test('데이터가 없으면 0과 빈 분포를 돌려준다', async () => {
       const { adminApi } = createFixtureAdapters();
 
       const metrics = await adminApi.getExperimentMetrics();
@@ -281,7 +281,7 @@ describe('Fixture 관리자 API', () => {
       });
     });
 
-    test('운영 데이터에서 핵심 지표를 집계한다', async () => {
+    test('신청·판매자·구매·완료·재신청 숫자를 센다', async () => {
       const { adminApi } = await seedMetrics();
 
       const metrics = await adminApi.getExperimentMetrics();
@@ -294,7 +294,7 @@ describe('Fixture 관리자 API', () => {
       expect(metrics.repeatSellers).toBe(1);
     });
 
-    test('판매 희망금액 분포와 희망가격 비율 구간을 집계한다', async () => {
+    test('희망 가격과 원래 가격 대비 비율을 구간별로 센다', async () => {
       const { adminApi } = await seedMetrics();
 
       const metrics = await adminApi.getExperimentMetrics();
@@ -317,7 +317,7 @@ describe('Fixture 관리자 API', () => {
       });
     });
 
-    test('편의점/행사/신청 상태/상품 결과별 집계를 반환한다', async () => {
+    test('편의점·행사·신청 상태·상품 결과별로 센다', async () => {
       const { adminApi } = await seedMetrics();
 
       const metrics = await adminApi.getExperimentMetrics();
@@ -332,7 +332,7 @@ describe('Fixture 관리자 API', () => {
       expect(metrics.itemResultCounts).toEqual({ pending: 5, purchased: 1, rejected: 1 });
     });
 
-    test('모집 상태 변경이 실험 지표에 반영된다', async () => {
+    test('지금 모집 상태도 실험 현황에 같이 보여준다', async () => {
       const { adminApi } = await seedMetrics();
 
       await adminApi.updateRecruitmentStatus('paused');
@@ -341,7 +341,7 @@ describe('Fixture 관리자 API', () => {
       expect(metrics.recruitmentStatus).toBe('paused');
     });
 
-    test('개인정보와 증빙 경로는 응답에 포함되지 않는다', async () => {
+    test('실험 현황에 연락처나 사진 경로를 넣지 않는다', async () => {
       const { adminApi } = await seedMetrics();
 
       const metrics = await adminApi.getExperimentMetrics();

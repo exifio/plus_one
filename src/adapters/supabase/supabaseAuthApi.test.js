@@ -1,7 +1,7 @@
 import { createSupabaseAuthApi } from './supabaseAuthApi';
 
-describe('Supabase Auth API', () => {
-  test('세션 조회·로그인·로그아웃을 안전한 반환값으로 감싼다', async () => {
+describe('관리자 로그인 연결', () => {
+  test('로그인·로그아웃 결과를 화면이 쓰기 쉬운 값으로 돌려준다', async () => {
     const session = { access_token: 'token' };
     const client = {
       auth: {
@@ -21,7 +21,7 @@ describe('Supabase Auth API', () => {
     });
   });
 
-  test('로그인 실패는 원본 Auth 오류를 노출하지 않고 코드화한다', async () => {
+  test('로그인 실패 시 서버 오류 문구를 그대로 넘기지 않는다', async () => {
     const client = {
       auth: {
         getSession: jest.fn(),
@@ -38,7 +38,7 @@ describe('Supabase Auth API', () => {
       .rejects.toMatchObject({ code: 'AUTH_SIGN_IN_FAILED' });
   });
 
-  test('getUser는 서버에서 현재 사용자를 확인하고 실패하면 코드화한다', async () => {
+  test('지금 로그인한 사람이 맞는지 서버에서 확인하고, 실패하면 안전한 오류로 바꾼다', async () => {
     const user = { id: 'admin-user' };
     const okClient = {
       auth: {
@@ -59,7 +59,7 @@ describe('Supabase Auth API', () => {
       .rejects.toMatchObject({ code: 'AUTH_USER_REQUEST_FAILED' });
   });
 
-  test('Auth 상태 변경 구독 해제 함수를 반환한다', () => {
+  test('로그인 상태 감시를 끊을 수 있게 한다', () => {
     const unsubscribe = jest.fn();
     const client = {
       auth: {

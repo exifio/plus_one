@@ -17,8 +17,8 @@ function renderPage(authApi) {
   );
 }
 
-describe('Admin 로그인 페이지', () => {
-  test('로그인 실패 시 원본 Auth 오류 대신 안전한 안내를 보여준다', async () => {
+describe('관리자 로그인 화면', () => {
+  test('로그인에 실패해도 서버 오류 문구를 그대로 보여주지 않는다', async () => {
     const user = userEvent.setup();
     const authApi = {
       getUser: jest.fn(async () => {

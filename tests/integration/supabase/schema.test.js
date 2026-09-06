@@ -8,7 +8,7 @@
 import { createServiceClient } from './clients';
 import { TEST_CONTACT } from './testFixtures';
 
-describe('핵심 테이블의 데이터 제약', () => {
+describe('잘못된 값이 데이터베이스에 저장되지 않는지', () => {
   let serviceClient;
   let saleRequestId;
   let sellerId;
@@ -41,7 +41,7 @@ describe('핵심 테이블의 데이터 제약', () => {
     sellerId = data.seller_id;
   });
 
-  test('pending item은 purchase_evidence를 가질 수 없다', async () => {
+  test('아직 처리 전인 상품에 구매 증빙을 저장하지 못하게 한다', async () => {
     const { error } = await serviceClient.from('stored_items').insert({
       sale_request_id: saleRequestId,
       product_name: '잘못된 보조데이터 상품',
@@ -60,7 +60,7 @@ describe('핵심 테이블의 데이터 제약', () => {
     { product_name: null },
     { original_price: null },
     { asking_price: null },
-  ])('새 stored item은 필수 상품 필드 %s를 비워둘 수 없다', async (missingField) => {
+  ])('직접 입력 상품의 필수 값(%s)을 비워 저장하지 못하게 한다', async (missingField) => {
     const { error } = await serviceClient.from('stored_items').insert({
       sale_request_id: saleRequestId,
       product_name: '필수 필드 제약 테스트 상품',
@@ -73,7 +73,7 @@ describe('핵심 테이블의 데이터 제약', () => {
     expect(error).not.toBeNull();
   });
 
-  test('stored item의 유효기간은 비워둘 수 있다', async () => {
+  test('유효기간은 비워 저장할 수 있다', async () => {
     const { data, error } = await serviceClient
       .from('stored_items')
       .insert({
@@ -96,7 +96,7 @@ describe('핵심 테이블의 데이터 제약', () => {
     }
   });
 
-  test('동일한 contact_type과 contact_value 조합은 중복될 수 없다', async () => {
+  test('같은 연락 방법·연락처로 판매자를 두 명 만들지 않는다', async () => {
     const { error } = await serviceClient.from('sellers').insert({
       contact_type: 'phone',
       contact_value: TEST_CONTACT.SCHEMA_CONSTRAINT,
@@ -109,7 +109,7 @@ describe('핵심 테이블의 데이터 제약', () => {
     ['convenience_store', 'seven11'],
     ['promotion_type', 'three_plus_one'],
     ['status', 'unknown'],
-  ])('sale_requests의 %s 허용 목록 밖 값은 거부한다', async (field, value) => {
+  ])('정해지지 않은 편의점·행사·신청 상태(%s)는 저장하지 않는다', async (field, value) => {
     const { error } = await serviceClient.from('sale_requests').insert({
       seller_id: sellerId,
       convenience_store: field === 'convenience_store' ? value : 'gs25',
@@ -125,7 +125,7 @@ describe('핵심 테이블의 데이터 제약', () => {
     { original_price: 0, asking_price: 500, result: 'pending' },
     { original_price: 1000, asking_price: -1, result: 'pending' },
     { original_price: 1000, asking_price: 500, result: 'unknown' },
-  ])('stored_items의 핵심 값 제약을 위반하면 거부한다', async (values) => {
+  ])('가격이 0이거나 결과가 이상하면 상품을 저장하지 않는다', async (values) => {
     const { error } = await serviceClient.from('stored_items').insert({
       sale_request_id: saleRequestId,
       product_name: '잘못된 스키마 값 상품',
@@ -136,7 +136,7 @@ describe('핵심 테이블의 데이터 제약', () => {
     expect(error).not.toBeNull();
   });
 
-  test('recruitment_settings는 open 상태의 singleton을 유지한다', async () => {
+  test('모집 설정은 한 줄만 두고, 처음에는 모집 중이다', async () => {
     const { data, error } = await serviceClient
       .from('recruitment_settings')
       .select('id, status')

@@ -5,7 +5,7 @@ import { createSubmitSaleRequestService } from '../../../src/features/seller/ser
 import { createAnonClient, createServiceClient } from './clients';
 import { TEST_CONTACT, TEST_STORAGE_FILES } from './testFixtures';
 
-test('실제 adapter가 스크린샷을 업로드한 뒤 판매 신청을 저장한다', async () => {
+test('실제 서버에서 스크린샷을 올린 뒤 신청이 저장되는지 확인한다', async () => {
   const anonClient = createAnonClient();
   const serviceClient = createServiceClient();
   const objectPath = TEST_STORAGE_FILES['sale-evidence'][0];

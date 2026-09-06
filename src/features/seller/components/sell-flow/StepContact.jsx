@@ -39,28 +39,30 @@ export default function StepContact({ draft, dispatch }) {
         </div>
       </fieldset>
 
-      <FormField
-        label={isPhone ? '휴대폰 번호' : '카카오톡 연락처'}
-        htmlFor="contact-value"
-        error={phoneError}
-      >
-        <input
-          id="contact-value"
-          className={`text-input${phoneError ? ' invalid' : ''}`}
-          type={isPhone ? 'tel' : 'text'}
-          inputMode={isPhone ? 'tel' : undefined}
-          placeholder={isPhone ? '010-1234-5678' : '연락 가능한 정보를 입력해주세요'}
-          value={draft.contactValue}
-          maxLength={isPhone ? 13 : undefined}
-          onBlur={() => setTouched(true)}
-          onChange={(event) =>
-            dispatch({
-              type: SALE_REQUEST_ACTION.SET_CONTACT_VALUE,
-              payload: isPhone ? formatPhoneNumber(event.target.value) : event.target.value,
-            })
-          }
-        />
-      </FormField>
+      {draft.contactType && (
+        <FormField
+          label={isPhone ? '휴대폰 번호' : '카카오톡 연락처'}
+          htmlFor="contact-value"
+          error={phoneError}
+        >
+          <input
+            id="contact-value"
+            className={`text-input${phoneError ? ' invalid' : ''}`}
+            type={isPhone ? 'tel' : 'text'}
+            inputMode={isPhone ? 'tel' : undefined}
+            placeholder={isPhone ? '010-1234-5678' : '연락 가능한 정보를 입력해주세요'}
+            value={draft.contactValue}
+            maxLength={isPhone ? 13 : undefined}
+            onBlur={() => setTouched(true)}
+            onChange={(event) =>
+              dispatch({
+                type: SALE_REQUEST_ACTION.SET_CONTACT_VALUE,
+                payload: isPhone ? formatPhoneNumber(event.target.value) : event.target.value,
+              })
+            }
+          />
+        </FormField>
+      )}
 
       <p className="step-notice">판매 신청 확인 및 연락을 위해 사용됩니다.</p>
     </section>

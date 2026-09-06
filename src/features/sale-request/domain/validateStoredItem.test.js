@@ -14,43 +14,43 @@ const validItem = {
   askingPrice: 1000,
 };
 
-test('정상 상품은 유효하다', () => {
+test('이름·가격이 있는 상품은 저장할 수 있다', () => {
   expect(validateStoredItem(validItem, today).valid).toBe(true);
 });
 
-test('상품명 없음 → 실패', () => {
+test('직접 입력인데 상품명이 없으면 막는다', () => {
   const result = validateStoredItem({ ...validItem, productName: '' }, today);
   expect(result.valid).toBe(false);
   expect(result.errors.productName).toBeDefined();
 });
 
-test('유효기간 없음 → 성공 (선택 입력)', () => {
+test('유효기간을 비워 두어도 상품 검증은 통과한다', () => {
   const result = validateStoredItem({ ...validItem, expirationDate: '' }, today);
   expect(result.valid).toBe(true);
   expect(result.errors.expirationDate).toBeUndefined();
 });
 
-test('과거 유효기간 → 실패', () => {
+test('이미 지난 유효기간이 있으면 그 상품을 막는다', () => {
   const result = validateStoredItem({ ...validItem, expirationDate: '2026-09-03' }, today);
   expect(result.valid).toBe(false);
   expect(result.errors.expirationDate).toBeDefined();
 });
 
-test('행사 당시 가격 <= 0 → 실패', () => {
+test('행사 당시 가격이 0원이면 막는다', () => {
   expect(validateStoredItem({ ...validItem, originalPrice: 0 }, today).valid).toBe(false);
   expect(validateStoredItem({ ...validItem, originalPrice: -1 }, today).valid).toBe(false);
 });
 
-test('판매 희망 가격 <= 0 → 실패', () => {
+test('판매 희망 가격이 0원이면 막는다', () => {
   expect(validateStoredItem({ ...validItem, askingPrice: 0 }, today).valid).toBe(false);
   expect(validateStoredItem({ ...validItem, askingPrice: -100 }, today).valid).toBe(false);
 });
 
-test('판매 희망 가격 > 행사 당시 가격 → 성공 (정상)', () => {
+test('희망 가격이 원래 가격보다 높아도 받을 수 있다', () => {
   expect(validateStoredItem({ ...validItem, askingPrice: 3000 }, today).valid).toBe(true);
 });
 
-test('스크린샷 등록은 판매 희망 가격만 있으면 유효하다', () => {
+test('스크린샷 등록은 희망 가격만 있어도 된다', () => {
   expect(validateStoredItem({
     productName: '',
     expirationDate: '',

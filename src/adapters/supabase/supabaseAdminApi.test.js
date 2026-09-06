@@ -16,8 +16,8 @@ function createClient(invokeResults = []) {
   };
 }
 
-describe('Supabase Admin API', () => {
-  test('신청 목록과 상세를 Edge Function 응답에서 계약 shape으로 반환한다', async () => {
+describe('실제 서버의 관리자 목록·처리 연결', () => {
+  test('관리자 목록·상세는 로그인된 관리자 API 응답만 화면에 맞게 바꾼다', async () => {
     const client = createClient([
       {
         data: [{
@@ -84,7 +84,7 @@ describe('Supabase Admin API', () => {
     });
   });
 
-  test('연락 시작·구매·거절은 Edge Function 결과 상태를 반환한다', async () => {
+  test('연락·구매·거절 결과는 관리자 API가 준 상태만 사용한다', async () => {
     const client = createClient([
       { data: { status: 'contacting' }, error: null },
       { data: { status: 'completed' }, error: null },
@@ -120,7 +120,7 @@ describe('Supabase Admin API', () => {
     });
   });
 
-  test('구매 증빙은 인증된 Edge Function을 통해 private bucket에 업로드한다', async () => {
+  test('구매 증빙은 로그인한 관리자만 비공개 저장소에 올릴 수 있다', async () => {
     const client = createClient([{ data: { path: 'admin/purchase-id.png' }, error: null }]);
     const { adminStorageApi } = createSupabaseRecruitmentApis(client);
     const image = new File(['purchase'], 'purchase.png', { type: 'image/png' });
@@ -138,7 +138,7 @@ describe('Supabase Admin API', () => {
     expect(body.get('file')).toBe(image);
   });
 
-  test('실험 현황은 원격 JSON을 그대로 성공시키지 않고 shape을 검증한다', async () => {
+  test('실험 현황 응답이 이상하면 숫자를 성공으로 보여주지 않는다', async () => {
     const metrics = {
       recruitmentStatus: 'open',
       totalSaleRequests: 0,
@@ -163,7 +163,7 @@ describe('Supabase Admin API', () => {
     });
   });
 
-  test('세션이 없으면 Admin Edge Function을 호출하지 않는다', async () => {
+  test('로그인이 없으면 관리자 API를 부르지 않는다', async () => {
     const invoke = jest.fn();
     const client = {
       auth: {

@@ -54,7 +54,7 @@ async function authorizeAdmin(supabase, request) {
 async function listSaleRequests(supabase, body) {
   let query = supabase
     .from('sale_requests')
-    .select('sale_request_id, seller_id, convenience_store, promotion_type, status, created_at')
+    .select('sale_request_id, seller_id, convenience_store, promotion_type, registration_method, evidence_image, status, created_at')
     .order('created_at', { ascending: false });
 
   if (body.status !== undefined) {

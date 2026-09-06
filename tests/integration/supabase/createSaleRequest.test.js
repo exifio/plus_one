@@ -10,7 +10,7 @@ import {
   TEST_CONTACT,
 } from './testFixtures';
 
-describe('create_sale_request RPC', () => {
+describe('판매 신청 한 번에 판매자·신청·상품이 함께 저장되는지', () => {
   let anonClient;
   let serviceClient;
 
@@ -19,7 +19,7 @@ describe('create_sale_request RPC', () => {
     serviceClient = createServiceClient();
   });
 
-  test('한 번의 호출로 seller, sale_request, stored_items를 생성한다', async () => {
+  test('한 번 신청하면 판매자·신청·상품이 함께 만들어진다', async () => {
     const { data, error } = await anonClient.rpc('create_sale_request', {
       p_contact_type: 'phone',
       p_contact_value: TEST_CONTACT.CREATE_SALE_PRIMARY,
@@ -61,7 +61,7 @@ describe('create_sale_request RPC', () => {
     }]);
   });
 
-  test('스크린샷 방식은 증빙과 희망 가격만 저장한다', async () => {
+  test('스크린샷 신청은 사진과 희망 가격만 저장한다', async () => {
     const evidenceImage = 'anonymous/test-user/screenshot.png';
     const { data, error } = await anonClient.rpc('create_sale_request', {
       p_contact_type: 'phone',
@@ -103,7 +103,7 @@ describe('create_sale_request RPC', () => {
     }]);
   });
 
-  test('같은 연락처면 기존 seller를 재사용한다', async () => {
+  test('같은 연락처로 다시 신청하면 기존 판매자를 재사용한다', async () => {
     const payload = {
       p_contact_type: 'phone',
       p_contact_value: TEST_CONTACT.CREATE_SALE_PRIMARY,
@@ -128,7 +128,7 @@ describe('create_sale_request RPC', () => {
     expect(first.sale_request_id).not.toBe(second.sale_request_id);
   });
 
-  test('잘못된 convenience_store는 거부한다', async () => {
+  test('정해지지 않은 편의점은 신청을 저장하지 않는다', async () => {
     const { error } = await anonClient.rpc('create_sale_request', {
       p_contact_type: 'phone',
       p_contact_value: TEST_CONTACT.CREATE_SALE_INVALID_STORE,
@@ -142,7 +142,7 @@ describe('create_sale_request RPC', () => {
     expect(error).not.toBeNull();
   });
 
-  test('빈 items 배열은 거부한다', async () => {
+  test('상품이 없으면 신청을 저장하지 않는다', async () => {
     const { error } = await anonClient.rpc('create_sale_request', {
       p_contact_type: 'phone',
       p_contact_value: TEST_CONTACT.CREATE_SALE_EMPTY_ITEMS,
@@ -156,7 +156,7 @@ describe('create_sale_request RPC', () => {
     expect(error).not.toBeNull();
   });
 
-  test('StoredItem 검증 실패 시 seller와 sale_request를 함께 rollback한다', async () => {
+  test('상품이 잘못되면 판매자와 신청도 같이 되돌린다', async () => {
     const contactValue = TEST_CONTACT.CREATE_SALE_ROLLBACK;
 
     const { error } = await anonClient.rpc('create_sale_request', {
@@ -185,7 +185,7 @@ describe('create_sale_request RPC', () => {
     expect(sellers).toHaveLength(0);
   });
 
-  test('스크린샷 방식은 증빙 이미지가 없으면 등록을 거부한다', async () => {
+  test('스크린샷 신청인데 사진이 없으면 저장하지 않는다', async () => {
     const { error } = await anonClient.rpc('create_sale_request', {
       p_contact_type: 'phone',
       p_contact_value: TEST_CONTACT.CREATE_SALE_NO_EVIDENCE,
@@ -204,7 +204,7 @@ describe('create_sale_request RPC', () => {
     expect(error).not.toBeNull();
   });
 
-  test('상품 유효기간은 입력하지 않아도 등록할 수 있다', async () => {
+  test('유효기간을 비워도 신청을 저장할 수 있다', async () => {
     const { data, error } = await anonClient.rpc('create_sale_request', {
       p_contact_type: 'phone',
       p_contact_value: TEST_CONTACT.CREATE_SALE_NO_EXPIRATION,
@@ -224,7 +224,7 @@ describe('create_sale_request RPC', () => {
     expect(data).toHaveProperty('sale_request_id');
   });
 
-  test('알 수 없는 등록 방식은 거부한다', async () => {
+  test('스크린샷·직접 입력이 아닌 등록 방식은 저장하지 않는다', async () => {
     const { error } = await anonClient.rpc('create_sale_request', {
       p_contact_type: 'phone',
       p_contact_value: TEST_CONTACT.CREATE_SALE_NO_EVIDENCE,

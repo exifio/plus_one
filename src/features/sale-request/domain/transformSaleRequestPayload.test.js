@@ -20,7 +20,7 @@ const draft = {
   contactValue: '010-1234-5678',
 };
 
-test('DB 저장 형식으로 변환한다', () => {
+test('화면 입력을 서버가 저장하는 형식으로 바꾼다', () => {
   const payload = transformSaleRequestPayload(draft, 'sale-evidence/evidence.png');
 
   expect(payload).toEqual({
@@ -41,7 +41,7 @@ test('DB 저장 형식으로 변환한다', () => {
   });
 });
 
-test('카카오톡 연락처는 앞뒤 공백만 정리한다', () => {
+test('카카오톡 아이디는 공백만 지우고 대소문자는 유지한다', () => {
   const payload = transformSaleRequestPayload(
     { ...draft, contactType: 'kakao', contactValue: '  seller-id  ' },
     'sale-evidence/evidence.png',
@@ -50,7 +50,7 @@ test('카카오톡 연락처는 앞뒤 공백만 정리한다', () => {
   expect(payload.contact_value).toBe('seller-id');
 });
 
-test('여러 상품을 모두 변환한다', () => {
+test('상품이 여러 개여도 빠짐없이 저장 형식으로 바꾼다', () => {
   const payload = transformSaleRequestPayload(
     {
       ...draft,
@@ -66,14 +66,14 @@ test('여러 상품을 모두 변환한다', () => {
   expect(payload.items[1].product_name).toBe('딸기우유 200ml');
 });
 
-test('quantity 필드를 만들지 않는다', () => {
+test('수량 필드를 만들지 않고 상품은 한 줄에 하나다', () => {
   const payload = transformSaleRequestPayload(draft, 'sale-evidence/evidence.png');
 
   expect(payload).not.toHaveProperty('quantity');
   expect(payload.items[0]).not.toHaveProperty('quantity');
 });
 
-test('스크린샷 등록 payload는 직접 입력 필드를 비워서 전달한다', () => {
+test('스크린샷 등록은 상품명·원가를 비우고 희망 가격만 넘긴다', () => {
   const payload = transformSaleRequestPayload({
     ...draft,
     registrationMethod: 'screenshot',

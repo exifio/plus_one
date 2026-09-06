@@ -8,15 +8,15 @@ import {
   assertSaleRequestApiContract,
 } from './saleRequestApiContract';
 
-describe('판매 신청 API 계약', () => {
-  test('계약은 판매 신청 제출(초안)과 모집 상태 조회다', () => {
+describe('판매 화면이 제출·모집 조회 기능을 빠뜨리지 않는지', () => {
+  test('판매 화면은 신청 제출과 모집 상태 조회가 필요하다', () => {
     expect(SALE_REQUEST_API_CONTRACT).toEqual([
       { name: 'submitSaleRequest', arity: 1 },
       { name: 'getRecruitmentStatus', arity: 0 },
     ]);
   });
 
-  test('계약 함수를 모두 제공하는 어댑터는 계약을 통과한다', () => {
+  test('필요한 판매 기능이 있으면 연결을 통과한다', () => {
     const api = {
       submitSaleRequest: async (draft) => draft,
       getRecruitmentStatus: async () => ({ status: 'open' }),
@@ -25,13 +25,13 @@ describe('판매 신청 API 계약', () => {
     expect(() => assertSaleRequestApiContract(api)).not.toThrow();
   });
 
-  test('판매 신청 제출 함수가 없는 어댑터는 계약을 위반한다', () => {
+  test('신청 제출 기능이 없으면 연결을 막는다', () => {
     const api = { getRecruitmentStatus: async () => ({ status: 'open' }) };
 
     expect(() => assertSaleRequestApiContract(api)).toThrow(/submitSaleRequest/);
   });
 
-  test('모집 상태 조회 함수가 없는 어댑터는 계약을 위반한다', () => {
+  test('모집 상태 조회 기능이 없으면 연결을 막는다', () => {
     const api = { submitSaleRequest: async (draft) => draft };
 
     expect(() => assertSaleRequestApiContract(api)).toThrow(/getRecruitmentStatus/);

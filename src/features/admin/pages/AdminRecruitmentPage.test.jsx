@@ -1,7 +1,7 @@
 /*
  * 관련 작업: FE-9 — 관리자 모집 관리 화면.
  * 작성 이유: 운영자가 모집 상태를 바꿀 수 있어야 하지만 저장 실패 때 기존 상태를 잃으면 안 되기 때문.
- * 확인 내용: 현재 상태 표시, 같은 상태 저장 차단, 차단 변경 확인, 성공·실패·취소 흐름.
+ * 확인 내용: 현재 상태 표시, 같은 상태 저장 차단, 저장 중 중복 요청 방지, 성공·실패·취소 흐름.
  */
 import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
@@ -27,8 +27,8 @@ function renderPage({ status = 'open', updateRecruitmentStatus } = {}) {
   return { adminApi };
 }
 
-describe('관리자 모집 관리 페이지', () => {
-  test('현재 상태와 상태별 안내 문구를 보여준다', async () => {
+describe('운영자가 모집을 열고 닫을 때 기존 상태를 잃지 않는지', () => {
+  test('지금 모집 상태가 무엇이고 무슨 뜻인지 보여준다', async () => {
     renderPage({ status: 'open' });
 
     const current = await screen.findByTestId('recruitment-current-status');
@@ -36,14 +36,14 @@ describe('관리자 모집 관리 페이지', () => {
     expect(screen.getByText('현재 판매 신청을 받고 있습니다.')).toBeInTheDocument();
   });
 
-  test('현재 상태와 선택 상태가 같으면 저장 버튼이 비활성화된다', async () => {
+  test('지금과 같은 상태로는 다시 저장하지 못하게 한다', async () => {
     renderPage({ status: 'open' });
 
     await screen.findByTestId('recruitment-current-status');
     expect(screen.getByRole('button', { name: '변경 사항 저장' })).toBeDisabled();
   });
 
-  test('open → paused는 확인 대화상자를 거쳐 저장된다', async () => {
+  test('모집을 일시중지할 때는 한 번 더 확인한 뒤에 저장한다', async () => {
     const user = userEvent.setup();
     const { adminApi } = renderPage({ status: 'open' });
 
@@ -58,7 +58,7 @@ describe('관리자 모집 관리 페이지', () => {
     expect(await screen.findByText('모집 상태가 변경되었습니다.')).toBeInTheDocument();
   });
 
-  test('paused → open은 확인 대화상자 없이 저장된다', async () => {
+  test('모집을 다시 열 때는 바로 저장할 수 있다', async () => {
     const user = userEvent.setup();
     const { adminApi } = renderPage({ status: 'paused' });
 
@@ -69,7 +69,7 @@ describe('관리자 모집 관리 페이지', () => {
     expect(await screen.findByText('모집 상태가 변경되었습니다.')).toBeInTheDocument();
   });
 
-  test('저장 실패 시 기존 상태를 유지하고 재시도 안내를 보여준다', async () => {
+  test('저장에 실패하면 화면 상태를 바꾸지 않고 다시 시도하게 한다', async () => {
     const user = userEvent.setup();
     const { adminApi } = renderPage({
       status: 'open',
@@ -91,7 +91,25 @@ describe('관리자 모집 관리 페이지', () => {
     expect(screen.getByRole('button', { name: '변경 사항 저장' })).toBeDisabled();
   });
 
-  test('확인 대화상자에서 취소하면 저장하지 않는다', async () => {
+  test('저장 버튼을 여러 번 눌러도 모집 상태가 두 번 바뀌지 않게 막는다', async () => {
+    const user = userEvent.setup();
+    let finishSave;
+    const updateRecruitmentStatus = jest.fn(() => new Promise((resolve) => {
+      finishSave = () => resolve('open');
+    }));
+    renderPage({ status: 'paused', updateRecruitmentStatus });
+
+    await user.click(await screen.findByRole('button', { name: '모집 중' }));
+    await user.click(screen.getByRole('button', { name: '변경 사항 저장' }));
+
+    expect(await screen.findByRole('button', { name: '저장 중…' })).toBeDisabled();
+    expect(updateRecruitmentStatus).toHaveBeenCalledTimes(1);
+
+    finishSave();
+    expect(await screen.findByText('모집 상태가 변경되었습니다.')).toBeInTheDocument();
+  });
+
+  test('확인 창에서 취소하면 모집 상태를 바꾸지 않는다', async () => {
     const user = userEvent.setup();
     const { adminApi } = renderPage({ status: 'open' });
 

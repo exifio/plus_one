@@ -21,8 +21,8 @@ function makeService(overrides = {}) {
   return { service, storageApi, adminApi };
 }
 
-describe('보관상품 구매 서비스', () => {
-  test('정상 처리: 업로드 후 Admin API가 정확히 한 번 호출된다', async () => {
+describe('구매 처리는 증빙 사진이 올라간 뒤에만 확정하는지', () => {
+  test('구매 증빙을 올린 뒤에만 구매 처리를 한 번 요청한다', async () => {
     const { service, storageApi, adminApi } = makeService();
 
     const result = await service('item-1', new File(['x'], 'deal.png', { type: 'image/png' }));
@@ -32,7 +32,7 @@ describe('보관상품 구매 서비스', () => {
     expect(adminApi.purchaseStoredItem).toHaveBeenCalledTimes(1);
   });
 
-  test('업로드 결과 경로가 Admin API에 전달된다', async () => {
+  test('올린 구매 증빙 경로가 구매 처리에 넘어가게 한다', async () => {
     const { service, adminApi } = makeService({
       uploadPurchaseEvidence: jest.fn(async () => 'purchase-evidence/deal.png'),
     });
@@ -42,7 +42,7 @@ describe('보관상품 구매 서비스', () => {
     expect(adminApi.purchaseStoredItem).toHaveBeenCalledWith('item-1', 'purchase-evidence/deal.png');
   });
 
-  test('구매 증빙이 없으면 업로드와 Admin API를 호출하지 않는다', async () => {
+  test('구매 증빙이 없으면 구매 완료로 바꾸지 않는다', async () => {
     const { service, storageApi, adminApi } = makeService();
 
     const result = await service('item-1', null);
@@ -52,7 +52,7 @@ describe('보관상품 구매 서비스', () => {
     expect(adminApi.purchaseStoredItem).not.toHaveBeenCalled();
   });
 
-  test('업로드 실패 시 Admin API를 호출하지 않는다', async () => {
+  test('구매 증빙을 올리지 못하면 구매 완료로 바꾸지 않는다', async () => {
     const { service, adminApi } = makeService({
       uploadPurchaseEvidence: jest.fn(async () => { throw new Error('upload failed'); }),
     });
@@ -64,7 +64,7 @@ describe('보관상품 구매 서비스', () => {
     expect(adminApi.purchaseStoredItem).not.toHaveBeenCalled();
   });
 
-  test('Admin API 실패 시 성공 결과를 반환하지 않는다', async () => {
+  test('관리자 저장에 실패하면 성공한 것처럼 돌려주지 않는다', async () => {
     const { service } = makeService({
       purchaseStoredItem: jest.fn(async () => { throw new Error('api failed'); }),
     });

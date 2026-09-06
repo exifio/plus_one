@@ -23,14 +23,14 @@ const validDraft = {
   contactValue: '010-1234-5678',
 };
 
-describe('Fixture 판매 신청 API', () => {
-  test('FE-4 판매자 API 계약을 준수한다', () => {
+describe('로컬 연습용 판매 신청 저장', () => {
+  test('판매 화면에 필요한 제출·모집 조회 기능이 있다', () => {
     const { saleRequestApi } = createFixtureAdapters();
 
     expect(() => assertSaleRequestApiContract(saleRequestApi)).not.toThrow();
   });
 
-  test('판매 신청 제출은 성공 결과를 반환한다', async () => {
+  test('연습 데이터에 신청을 넣으면 신청 번호를 돌려준다', async () => {
     const { saleRequestApi } = createFixtureAdapters();
 
     const result = await saleRequestApi.submitSaleRequest(validDraft);
@@ -42,7 +42,7 @@ describe('Fixture 판매 신청 API', () => {
     });
   });
 
-  test('여러 상품을 제출하면 상품 수와 판매/신청 id가 일치한다', async () => {
+  test('상품이 여러 개면 그 개수만큼 저장한다', async () => {
     const { saleRequestApi } = createFixtureAdapters();
 
     const result = await saleRequestApi.submitSaleRequest({
@@ -58,7 +58,7 @@ describe('Fixture 판매 신청 API', () => {
     expect(result.sellerId).toBe('seller-1');
   });
 
-  test('같은 연락처로 다시 제출하면 같은 판매자를 재사용하고 신청 번호는 새로 만든다', async () => {
+  test('같은 연락처로 다시 신청하면 판매자는 같고 신청만 새로 만든다', async () => {
     const { saleRequestApi } = createFixtureAdapters();
 
     const first = await saleRequestApi.submitSaleRequest(validDraft);
@@ -73,7 +73,7 @@ describe('Fixture 판매 신청 API', () => {
     expect(second.saleRequestId).toBe('sr-2');
   });
 
-  test('다른 연락처는 다른 판매자로 생성된다', async () => {
+  test('다른 연락처면 다른 판매자로 만든다', async () => {
     const { saleRequestApi } = createFixtureAdapters();
 
     const first = await saleRequestApi.submitSaleRequest(validDraft);
@@ -86,7 +86,7 @@ describe('Fixture 판매 신청 API', () => {
     expect(second.sellerId).toBe('seller-2');
   });
 
-  test('전화번호는 저장 전에 정규화된다', async () => {
+  test('휴대폰 번호는 하이픈을 빼고 저장한다', async () => {
     const { saleRequestApi, adminApi } = createFixtureAdapters();
 
     const { saleRequestId } = await saleRequestApi.submitSaleRequest(validDraft);
@@ -95,7 +95,7 @@ describe('Fixture 판매 신청 API', () => {
     expect(detail.seller.contact_value).toBe('01012345678');
   });
 
-  test('증빙 이미지 파일 이름을 저장한다', async () => {
+  test('올린 사진 이름을 신청에 남긴다', async () => {
     const { saleRequestApi, adminApi } = createFixtureAdapters();
 
     const { saleRequestId } = await saleRequestApi.submitSaleRequest({
@@ -108,7 +108,7 @@ describe('Fixture 판매 신청 API', () => {
     expect(detail.items).toHaveLength(1);
   });
 
-  test('증빙 이미지가 없으면 제출을 거부한다', async () => {
+  test('스크린샷 등록인데 사진이 없으면 저장하지 않는다', async () => {
     const { saleRequestApi } = createFixtureAdapters();
 
     await expect(saleRequestApi.submitSaleRequest({
@@ -118,7 +118,7 @@ describe('Fixture 판매 신청 API', () => {
     })).rejects.toThrow();
   });
 
-  test('스크린샷 등록은 상품 정보 없이 제출할 수 있다', async () => {
+  test('스크린샷 등록은 상품명 없이도 저장할 수 있다', async () => {
     const { saleRequestApi, adminApi } = createFixtureAdapters();
 
     const { saleRequestId } = await saleRequestApi.submitSaleRequest({
@@ -142,7 +142,7 @@ describe('Fixture 판매 신청 API', () => {
     });
   });
 
-  test('직접 입력은 증빙 이미지 없이 제출할 수 있다', async () => {
+  test('직접 입력은 사진 없이도 저장할 수 있다', async () => {
     const { saleRequestApi, adminApi } = createFixtureAdapters();
 
     const { saleRequestId } = await saleRequestApi.submitSaleRequest({
@@ -156,14 +156,14 @@ describe('Fixture 판매 신청 API', () => {
     expect(detail.evidence_image).toBeNull();
   });
 
-  test('초기 모집 상태는 open이다', async () => {
+  test('처음에는 모집을 받고 있는 상태다', async () => {
     const { saleRequestApi } = createFixtureAdapters();
 
     expect(await saleRequestApi.getRecruitmentStatus()).toEqual({ status: 'open' });
   });
 
   test.each(['paused', 'closed'])(
-    '모집 상태가 %s이면 create_sale_request 재현 로직도 판매 신청 생성을 거부한다',
+    '모집이 일시중지이거나 마감이면 연습 데이터에도 신청을 남기지 않는다',
     async (status) => {
       const { saleRequestApi, adminApi } = createFixtureAdapters();
 
@@ -179,7 +179,7 @@ describe('Fixture 판매 신청 API', () => {
     },
   );
 
-  test('모집 상태를 open으로 되돌리면 다시 신청할 수 있다', async () => {
+  test('모집을 다시 열면 신청을 다시 받을 수 있다', async () => {
     const { saleRequestApi, adminApi } = createFixtureAdapters();
 
     await adminApi.updateRecruitmentStatus('paused');

@@ -7,19 +7,19 @@ import { validateExpirationDate } from './validateExpirationDate';
 
 const today = '2026-09-04';
 
-test('어제 만료된 상품은 거부한다', () => {
+test('이미 지난 유효기간은 받지 않는다', () => {
   expect(validateExpirationDate('2026-09-03', today).valid).toBe(false);
 });
 
-test('오늘 만료되는 상품은 허용한다', () => {
+test('오늘까지인 유효기간은 받을 수 있다', () => {
   expect(validateExpirationDate('2026-09-04', today).valid).toBe(true);
 });
 
-test('내일 만료되는 상품은 허용한다', () => {
+test('내일 이후 유효기간은 받을 수 있다', () => {
   expect(validateExpirationDate('2026-09-05', today).valid).toBe(true);
 });
 
-test('유효기간을 입력하지 않아도 유효하다', () => {
+test('유효기간은 비워 두어도 된다', () => {
   expect(validateExpirationDate('', today).valid).toBe(true);
   expect(validateExpirationDate('   ', today).valid).toBe(true);
   expect(validateExpirationDate(null, today).valid).toBe(true);

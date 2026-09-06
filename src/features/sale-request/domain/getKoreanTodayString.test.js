@@ -5,25 +5,25 @@
  */
 import { getKoreanTodayString } from './getKoreanTodayString';
 
-describe('한국 오늘 날짜 문자열', () => {
-  test('서울 오후 시각은 같은 날짜 YYYY-MM-DD로 반환한다', () => {
+describe('한국 날짜 기준으로 오늘을 계산하는지', () => {
+  test('서울 오후 시각도 같은 날로 계산한다', () => {
     const now = new Date('2026-09-04T12:00:00+09:00');
     expect(getKoreanTodayString(now)).toBe('2026-09-04');
   });
 
-  test('UTC 시각이 서울 기준 하루를 넘기면 서울 날짜를 사용한다', () => {
+  test('세계 표준시로 전날이어도 서울이 다음 날이면 서울 날짜를 쓴다', () => {
     // 2026-09-04 16:00 UTC = 서울 2026-09-05 01:00
     const now = new Date('2026-09-04T16:00:00Z');
     expect(getKoreanTodayString(now)).toBe('2026-09-05');
   });
 
-  test('UTC 시각이 서울 기준 하루 전이면 전날 서울 날짜를 사용한다', () => {
+  test('세계 표준시 날짜와 달라도 서울 날짜를 쓴다', () => {
     // 2026-09-04 02:00 UTC = 서울 2026-09-04 11:00 (KST+9 경계 확인용)
     const now = new Date('2026-09-03T20:00:00Z');
     expect(getKoreanTodayString(now)).toBe('2026-09-04');
   });
 
-  test('한 자리 월/일은 앞에 0을 붙인다', () => {
+  test('1월 5일도 01-05처럼 자리를 맞춰 저장한다', () => {
     const now = new Date('2026-01-05T10:00:00+09:00');
     expect(getKoreanTodayString(now)).toBe('2026-01-05');
   });

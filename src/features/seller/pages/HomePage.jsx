@@ -21,10 +21,10 @@ export default function HomePage() {
   return (
     <div className="home-page">
       <header className="brand-header">
-        <span className="brand-logo">
+        <Link to="/" className="brand-logo" aria-label="홈으로 이동">
           <span className="brand-logo-plus">+</span>
           <span className="brand-logo-num">1</span>
-        </span>
+        </Link>
       </header>
 
       {isBlocked ? (

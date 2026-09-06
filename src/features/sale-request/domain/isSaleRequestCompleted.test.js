@@ -13,6 +13,6 @@ test.each([
   [['rejected', 'pending'], false],
   [['pending'], false],
   [[], false],
-])('results=%p의 완료 여부는 %p다', (results, expected) => {
+])('상품 결과가 %p이면 신청 완료 여부는 %p다', (results, expected) => {
   expect(isSaleRequestCompleted(results)).toBe(expected);
 });

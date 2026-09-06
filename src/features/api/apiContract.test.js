@@ -5,15 +5,15 @@
  */
 import { assertApiContract } from './apiContract';
 
-describe('API 계약 검증', () => {
-  test('모든 함수가 계약과 일치하면 객체를 그대로 반환한다', () => {
+describe('화면이 어떤 연결을 쓰든 필요한 기능 이름과 인자 수가 맞는지', () => {
+  test('필요한 기능이 맞으면 그 연결을 그대로 쓴다', () => {
     const api = { submitSaleRequest: async (draft) => draft };
     const result = assertApiContract(api, [{ name: 'submitSaleRequest', arity: 1 }]);
 
     expect(result).toBe(api);
   });
 
-  test('계약에 없는 추가 함수는 위반으로 보지 않는다', () => {
+  test('필요 없는 추가 기능이 있어도 연결을 막지 않는다', () => {
     const api = { submitSaleRequest: async (draft) => draft, extra: () => {} };
 
     expect(() =>
@@ -21,7 +21,7 @@ describe('API 계약 검증', () => {
     ).not.toThrow();
   });
 
-  test('함수가 없으면 예외를 던진다', () => {
+  test('필요한 기능이 없으면 연결을 막는다', () => {
     const api = {};
 
     expect(() =>
@@ -29,7 +29,7 @@ describe('API 계약 검증', () => {
     ).toThrow(/getSaleRequests/);
   });
 
-  test('함수가 함수가 아니면 예외를 던진다', () => {
+  test('필요한 기능이 함수가 아니면 연결을 막는다', () => {
     const api = { submitSaleRequest: 'not-a-function' };
 
     expect(() =>
@@ -37,7 +37,7 @@ describe('API 계약 검증', () => {
     ).toThrow(/submitSaleRequest/);
   });
 
-  test('인자 개수가 다르면 예외를 던진다', () => {
+  test('기능 인자 수가 다르면 연결을 막는다', () => {
     const api = { submitSaleRequest: async (a, b) => a + b };
 
     expect(() =>
@@ -45,7 +45,7 @@ describe('API 계약 검증', () => {
     ).toThrow(/argument/);
   });
 
-  test('계약 목록이 배열이 아니면 예외를 던진다', () => {
+  test('기능 목록 형식이 잘못되면 연결을 막는다', () => {
     expect(() => assertApiContract({}, null)).toThrow();
   });
 });

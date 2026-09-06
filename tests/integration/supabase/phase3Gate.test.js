@@ -38,8 +38,8 @@ function draft(contactValue = TEST_CONTACT.PHASE3_GATE) {
   };
 }
 
-describe('Phase 3 Gate 실제 Seller/Admin 흐름', () => {
-  adminAuthTest('실제 non-production에서 전체 Gate 흐름을 통과한다', async () => {
+describe('실제 서버에서 신청부터 처리·모집 차단·실험 현황까지 한 번에 이어지는지', () => {
+  adminAuthTest('연습용 서버에서 신청·연락·구매·거절·완료·모집 차단·실험 현황이 이어진다', async () => {
     const anonClient = createAnonClient();
     const authClient = createAuthClient();
     const serviceClient = createServiceClient();

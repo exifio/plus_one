@@ -140,10 +140,10 @@ export default function SellPage() {
     return (
       <div className="sell-page">
         <header className="sell-header">
-          <span className="brand-logo">
+          <Link to="/" className="brand-logo" aria-label="홈으로 이동">
             <span className="brand-logo-plus">+</span>
             <span className="brand-logo-num">1</span>
-          </span>
+          </Link>
         </header>
         <main className="sell-main">
           <RecruitmentNotice status={view}>
@@ -164,10 +164,10 @@ export default function SellPage() {
         <button type="button" className="back-button" onClick={goBack} aria-label="이전 단계">
           ←
         </button>
-        <span className="brand-logo">
+        <Link to="/" className="brand-logo" aria-label="홈으로 이동">
           <span className="brand-logo-plus">+</span>
           <span className="brand-logo-num">1</span>
-        </span>
+        </Link>
         <span className="step-count">{step} / {TOTAL_STEPS}</span>
       </header>
 

@@ -16,8 +16,8 @@ function makeService(overrides = {}) {
   return { service, adminApi };
 }
 
-describe('보관상품 거절 서비스', () => {
-  test('정상 처리: 거절 이유가 있으면 Admin API를 한 번 호출한다', async () => {
+describe('거절은 이유가 있을 때만 확정하는지', () => {
+  test('거절 이유가 있으면 거절 처리를 한 번만 요청한다', async () => {
     const { service, adminApi } = makeService();
 
     const result = await service('item-1', '가격 협의 불가');
@@ -26,7 +26,7 @@ describe('보관상품 거절 서비스', () => {
     expect(adminApi.rejectStoredItem).toHaveBeenCalledTimes(1);
   });
 
-  test('구매 증빙을 잘못 전달하지 않는다', async () => {
+  test('거절할 때는 구매 증빙을 같이 보내지 않는다', async () => {
     const { service, adminApi } = makeService();
 
     await service('item-1', '연락 두절');
@@ -37,7 +37,7 @@ describe('보관상품 거절 서비스', () => {
     expect(args[1]).toBe('연락 두절');
   });
 
-  test('거절 이유가 없으면 Admin API를 호출하지 않는다', async () => {
+  test('거절 이유가 없으면 거절로 바꾸지 않는다', async () => {
     const { service, adminApi } = makeService();
 
     expect((await service('item-1', '')).ok).toBe(false);
@@ -46,7 +46,7 @@ describe('보관상품 거절 서비스', () => {
     expect(adminApi.rejectStoredItem).not.toHaveBeenCalled();
   });
 
-  test('Admin API 실패 시 성공 결과를 반환하지 않는다', async () => {
+  test('관리자 저장에 실패하면 성공한 것처럼 돌려주지 않는다', async () => {
     const { service } = makeService({
       rejectStoredItem: jest.fn(async () => { throw new Error('api failed'); }),
     });

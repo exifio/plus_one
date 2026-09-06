@@ -19,6 +19,7 @@ npm-debug.log*
 !.env.example
 !.env.test.example
 .env.test.local
+.env.keys
 
 # Supabase 로컬
 supabase/.temp/
@@ -28,6 +29,8 @@ supabase/.temp/
 
 # 로컬 도구 출력
 .playwright-cli/
+.playwright-mcp/
+.omo/
 graphify-out/
 .code-review-graph/
 .codex/
@@ -35,6 +38,7 @@ graphify-out/
 
 # 로컬 임시
 private/
+scripts/temp*
 
 # IDE·에디터
 .idea/

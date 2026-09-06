@@ -17,8 +17,8 @@ function renderApp() {
   );
 }
 
-describe('App 라우팅', () => {
-  test('홈에서 판매 등록 시작을 누르면 /sell 1단계로 이동한다', async () => {
+describe('홈에서 판매 등록으로 들어가는지', () => {
+  test('홈의 판매 등록 시작을 누르면 신청 1단계로 들어간다', async () => {
     const user = userEvent.setup();
     renderApp();
 

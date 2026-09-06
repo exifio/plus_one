@@ -21,11 +21,11 @@ const validDraft = {
   contactValue: '010-1234-5678',
 };
 
-test('gs25와 one_plus_one 상품 신청은 유효하다', () => {
+test('GS25 1+1 신청은 받을 수 있다', () => {
   expect(validateSaleRequest(validDraft, today).valid).toBe(true);
 });
 
-test('cu와 two_plus_one도 유효하다', () => {
+test('CU 2+1 신청도 받을 수 있다', () => {
   expect(validateSaleRequest({
     ...validDraft,
     convenienceStore: 'cu',
@@ -33,16 +33,16 @@ test('cu와 two_plus_one도 유효하다', () => {
   }, today).valid).toBe(true);
 });
 
-test('허용되지 않은 편의점·행사 유형은 실패한다', () => {
+test('정해진 편의점·행사만 받고 다른 값은 막는다', () => {
   expect(validateSaleRequest({ ...validDraft, convenienceStore: 'seven' }, today).valid).toBe(false);
   expect(validateSaleRequest({ ...validDraft, promotionType: 'three_plus_one' }, today).valid).toBe(false);
 });
 
-test('상품이 없으면 실패한다', () => {
+test('상품이 하나도 없으면 신청을 받지 않는다', () => {
   expect(validateSaleRequest({ ...validDraft, items: [] }, today).valid).toBe(false);
 });
 
-test('증빙 이미지가 없으면 실패한다', () => {
+test('스크린샷 등록인데 사진이 없으면 신청을 받지 않는다', () => {
   expect(validateSaleRequest({
     ...validDraft,
     registrationMethod: 'screenshot',
@@ -50,7 +50,7 @@ test('증빙 이미지가 없으면 실패한다', () => {
   }, today).valid).toBe(false);
 });
 
-test('스크린샷 등록은 상품명·행사 당시 가격 없이도 유효하다', () => {
+test('스크린샷 등록은 상품명 없이도 신청할 수 있다', () => {
   expect(validateSaleRequest({
     ...validDraft,
     registrationMethod: 'screenshot',
@@ -58,7 +58,7 @@ test('스크린샷 등록은 상품명·행사 당시 가격 없이도 유효하
   }, today).valid).toBe(true);
 });
 
-test('직접 입력은 이미지 없이도 유효하다', () => {
+test('직접 입력은 사진 없이도 신청할 수 있다', () => {
   expect(validateSaleRequest({
     ...validDraft,
     registrationMethod: 'manual',
@@ -66,18 +66,18 @@ test('직접 입력은 이미지 없이도 유효하다', () => {
   }, today).valid).toBe(true);
 });
 
-test('등록 방식을 선택하지 않으면 실패한다', () => {
+test('등록 방식을 고르지 않으면 신청을 받지 않는다', () => {
   expect(validateSaleRequest({ ...validDraft, registrationMethod: '' }, today).valid).toBe(false);
 });
 
-test('유효기간이 없어도 신청 검증은 성공한다', () => {
+test('유효기간을 비워 두어도 신청 자체는 받을 수 있다', () => {
   expect(validateSaleRequest({
     ...validDraft,
     items: [{ ...validDraft.items[0], expirationDate: '' }],
   }, today).valid).toBe(true);
 });
 
-test('phone과 kakao 연락처는 유효하다', () => {
+test('휴대폰이나 카카오톡 연락처면 신청할 수 있다', () => {
   expect(validateSaleRequest(validDraft, today).valid).toBe(true);
   expect(validateSaleRequest({
     ...validDraft,
@@ -86,11 +86,11 @@ test('phone과 kakao 연락처는 유효하다', () => {
   }, today).valid).toBe(true);
 });
 
-test('허용되지 않은 연락처 유형은 실패한다', () => {
+test('휴대폰·카카오톡이 아닌 연락 방법은 받지 않는다', () => {
   expect(validateSaleRequest({ ...validDraft, contactType: 'email' }, today).valid).toBe(false);
 });
 
-test('연락처가 비어 있으면 실패한다', () => {
+test('연락처가 비어 있으면 신청을 받지 않는다', () => {
   expect(validateSaleRequest({ ...validDraft, contactValue: '   ' }, today).valid).toBe(false);
 });
 

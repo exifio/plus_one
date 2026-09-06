@@ -36,8 +36,8 @@ function createClient(rpcResult = {
   };
 }
 
-describe('Supabase 판매 신청 API', () => {
-  test('현재 7인자 RPC 계약으로 직접 입력 신청을 제출한다', async () => {
+describe('실제 서버로 판매 신청을 보내는 연결', () => {
+  test('직접 입력 신청은 사진 없이 상품 정보만 서버에 저장한다', async () => {
     const client = createClient();
     const { submitSaleRequest } = createSupabaseSubmissionApis(client, () => 'evidence-id');
 
@@ -62,7 +62,7 @@ describe('Supabase 판매 신청 API', () => {
     });
   });
 
-  test('판매 증빙은 private bucket의 anonymous 경로에 업로드한다', async () => {
+  test('판매 사진은 비공개 저장소의 공개 업로드 경로에만 올린다', async () => {
     const client = createClient();
     const upload = client.storage.from().upload;
     client.storage.from.mockReturnValue({ upload });
@@ -77,7 +77,7 @@ describe('Supabase 판매 신청 API', () => {
     });
   });
 
-  test('모집 중단과 일반 RPC 오류를 안전한 코드로 구분한다', async () => {
+  test('모집이 멈춰 실패한 것과 일반 저장 실패를 구분한다', async () => {
     const stoppedClient = createClient({
       data: null,
       error: new Error('RECRUITMENT_NOT_OPEN'),

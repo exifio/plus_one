@@ -5,8 +5,8 @@
  */
 import { createFixtureStorageApi } from './fixtureStorageApi';
 
-describe('Fixture 저장소 API', () => {
-  test('문자열 이미지는 그대로 object path로 반환한다', async () => {
+describe('로컬 연습용 사진 올리기', () => {
+  test('이미 있는 사진 경로는 그대로 저장 경로로 쓴다', async () => {
     const api = createFixtureStorageApi();
 
     await expect(api.uploadEvidence('evidence/sale/screen.png')).resolves.toBe(
@@ -14,14 +14,14 @@ describe('Fixture 저장소 API', () => {
     );
   });
 
-  test('File은 파일 이름을 object path로 반환한다', async () => {
+  test('새로 고른 사진은 파일 이름을 저장 경로로 쓴다', async () => {
     const api = createFixtureStorageApi();
     const file = new File(['image'], 'evidence.png', { type: 'image/png' });
 
     await expect(api.uploadEvidence(file)).resolves.toBe('evidence.png');
   });
 
-  test('이미지가 아닌 값은 거부한다', async () => {
+  test('사진이 아니면 올리지 않는다', async () => {
     const api = createFixtureStorageApi();
 
     await expect(api.uploadEvidence(null)).rejects.toThrow();

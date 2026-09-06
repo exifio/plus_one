@@ -11,14 +11,14 @@ import { createSupabaseRecruitmentApis } from '../../../src/adapters/supabase/su
 const { email, password } = getTestAdminCredentials();
 const adminAuthTest = email && password ? test : test.skip;
 
-describe('실제 Supabase 모집 상태 adapter', () => {
+describe('실제 서버에서 판매자·운영자 모집 상태가 맞는지', () => {
   const serviceClient = createServiceClient();
 
   afterAll(async () => {
     await serviceClient.rpc('update_recruitment_status', { p_status: 'open' });
   });
 
-  test('판매자 adapter는 실제 공개 모집 상태 RPC를 읽는다', async () => {
+  test('판매자 화면은 실제 공개 조회로 모집 상태를 읽는다', async () => {
     await serviceClient.rpc('update_recruitment_status', { p_status: 'paused' });
 
     const { saleRequestApi } = createSupabaseRecruitmentApis(createAnonClient());
@@ -26,7 +26,7 @@ describe('실제 Supabase 모집 상태 adapter', () => {
     await expect(saleRequestApi.getRecruitmentStatus()).resolves.toEqual({ status: 'paused' });
   });
 
-  adminAuthTest('관리자 adapter는 Auth Edge Function으로 조회·변경하고 판매자 조회에 반영한다', async () => {
+  adminAuthTest('운영자가 모집을 바꾸면 판매자 화면 조회에도 바로 반영된다', async () => {
     const authClient = createAuthClient();
     const { error } = await authClient.auth.signInWithPassword({ email, password });
     expect(error).toBeNull();

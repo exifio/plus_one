@@ -10,8 +10,8 @@ import {
   saleRequestReducer,
 } from './saleRequestReducer';
 
-describe('판매 신청 상태 reducer', () => {
-  test('초기 초안은 빈 편의점/행사/연락처와 빈 보관상품 1개를 가진다', () => {
+describe('단계가 바뀌어도 입력한 내용이 사라지지 않는지', () => {
+  test('처음에는 빈 신청서에 상품 칸 하나만 둔다', () => {
     const state = createInitialSaleRequestDraft();
 
     expect(state.convenienceStore).toBe('');
@@ -27,7 +27,7 @@ describe('판매 신청 상태 reducer', () => {
     expect(state.contactValue).toBe('');
   });
 
-  test('편의점을 선택한다', () => {
+  test('편의점을 고르면 그 값이 신청서에 남는다', () => {
     const state = saleRequestReducer(createInitialSaleRequestDraft(), {
       type: SALE_REQUEST_ACTION.SET_CONVENIENCE_STORE,
       payload: 'gs25',
@@ -37,7 +37,7 @@ describe('판매 신청 상태 reducer', () => {
     expect(state.items).toHaveLength(1);
   });
 
-  test('행사 유형을 선택한다', () => {
+  test('행사 종류를 고르면 그 값이 신청서에 남는다', () => {
     const state = saleRequestReducer(createInitialSaleRequestDraft(), {
       type: SALE_REQUEST_ACTION.SET_PROMOTION_TYPE,
       payload: 'two_plus_one',
@@ -46,7 +46,7 @@ describe('판매 신청 상태 reducer', () => {
     expect(state.promotionType).toBe('two_plus_one');
   });
 
-  test('등록 방식을 선택한다', () => {
+  test('등록 방식을 고르면 그 값이 신청서에 남는다', () => {
     const state = saleRequestReducer(createInitialSaleRequestDraft(), {
       type: SALE_REQUEST_ACTION.SET_REGISTRATION_METHOD,
       payload: 'screenshot',
@@ -55,7 +55,7 @@ describe('판매 신청 상태 reducer', () => {
     expect(state.registrationMethod).toBe('screenshot');
   });
 
-  test('보관상품을 추가한다', () => {
+  test('상품을 더 넣으면 기존 상품은 그대로 두고 한 줄을 추가한다', () => {
     const initial = createInitialSaleRequestDraft();
     const state = saleRequestReducer(initial, {
       type: SALE_REQUEST_ACTION.ADD_ITEM,
@@ -67,7 +67,7 @@ describe('판매 신청 상태 reducer', () => {
     expect(state.items[1].id).toBe('item-2');
   });
 
-  test('보관상품 필드를 수정한다', () => {
+  test('한 상품의 이름·가격만 바꿔도 다른 값은 유지한다', () => {
     const initial = createInitialSaleRequestDraft();
     const id = initial.items[0].id;
     let state = saleRequestReducer(initial, {
@@ -92,7 +92,7 @@ describe('판매 신청 상태 reducer', () => {
     });
   });
 
-  test('한 번에 여러 필드를 수정할 수 있다', () => {
+  test('한 상품의 여러 칸을 한 번에 바꿔도 된다', () => {
     const initial = createInitialSaleRequestDraft();
     const id = initial.items[0].id;
     const state = saleRequestReducer(initial, {
@@ -105,7 +105,7 @@ describe('판매 신청 상태 reducer', () => {
     expect(state.items[0].productName).toBe('');
   });
 
-  test('없는 id를 수정하면 상품 목록은 그대로다', () => {
+  test('없는 상품을 바꾸려 해도 목록을 망가뜨리지 않는다', () => {
     const initial = createInitialSaleRequestDraft();
     const state = saleRequestReducer(initial, {
       type: SALE_REQUEST_ACTION.UPDATE_ITEM,
@@ -116,7 +116,7 @@ describe('판매 신청 상태 reducer', () => {
     expect(state.items[0].productName).toBe('');
   });
 
-  test('보관상품을 삭제한다', () => {
+  test('상품을 지우면 그 줄만 빠진다', () => {
     const initial = createInitialSaleRequestDraft();
     let state = saleRequestReducer(initial, {
       type: SALE_REQUEST_ACTION.ADD_ITEM,
@@ -132,7 +132,7 @@ describe('판매 신청 상태 reducer', () => {
     expect(state.items[0].id).toBe(initial.items[0].id);
   });
 
-  test('마지막 하나 남은 보관상품은 삭제되지 않는다', () => {
+  test('마지막 상품 한 개는 지울 수 없다', () => {
     const initial = createInitialSaleRequestDraft();
     const state = saleRequestReducer(initial, {
       type: SALE_REQUEST_ACTION.REMOVE_ITEM,
@@ -142,7 +142,7 @@ describe('판매 신청 상태 reducer', () => {
     expect(state.items).toHaveLength(1);
   });
 
-  test('증빙 이미지를 설정한다', () => {
+  test('선택한 보관 확인 이미지가 신청서에 남는다', () => {
     const state = saleRequestReducer(createInitialSaleRequestDraft(), {
       type: SALE_REQUEST_ACTION.SET_EVIDENCE_IMAGE,
       payload: 'evidence/sale/screen.png',
@@ -151,7 +151,7 @@ describe('판매 신청 상태 reducer', () => {
     expect(state.evidenceImage).toBe('evidence/sale/screen.png');
   });
 
-  test('연락 방식과 연락처를 설정한다', () => {
+  test('연락 방법과 연락처가 신청서에 남는다', () => {
     let state = saleRequestReducer(createInitialSaleRequestDraft(), {
       type: SALE_REQUEST_ACTION.SET_CONTACT_TYPE,
       payload: 'phone',
@@ -165,7 +165,7 @@ describe('판매 신청 상태 reducer', () => {
     expect(state.contactValue).toBe('010-1234-5678');
   });
 
-  test('단계를 오가도 이전 단계에서 입력한 값이 유지된다', () => {
+  test('이전 단계로 돌아가도 이미 입력한 내용은 지워지지 않는다', () => {
     const initial = createInitialSaleRequestDraft();
     const firstItemId = initial.items[0].id;
 
@@ -212,7 +212,7 @@ describe('판매 신청 상태 reducer', () => {
     expect(state.contactValue).toBe('seller-id');
   });
 
-  test('dispatch는 기존 상태를 변경하지 않는다', () => {
+  test('값을 바꿔도 이전 신청서 원본은 그대로 둔다', () => {
     const initial = createInitialSaleRequestDraft();
 
     const state = saleRequestReducer(initial, {
@@ -225,7 +225,7 @@ describe('판매 신청 상태 reducer', () => {
     expect(initial.promotionType).toBe('');
   });
 
-  test('상품 변경 액션은 새 items 배열을 만든다', () => {
+  test('상품을 바꾸면 기존 상품 목록을 직접 고치지 않는다', () => {
     const initial = createInitialSaleRequestDraft();
 
     const state = saleRequestReducer(initial, {
@@ -238,7 +238,7 @@ describe('판매 신청 상태 reducer', () => {
     expect(state.items[0].productName).toBe('물');
   });
 
-  test('알 수 없는 액션은 상태를 그대로 반환한다', () => {
+  test('모르는 동작이 와도 신청서를 바꾸지 않는다', () => {
     const initial = createInitialSaleRequestDraft();
     const state = saleRequestReducer(initial, { type: 'UNKNOWN', payload: 'x' });
 

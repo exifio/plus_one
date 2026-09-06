@@ -8,8 +8,8 @@ import {
   assertAdminApiContract,
 } from './adminApiContract';
 
-describe('관리자 API 계약', () => {
-  test('계약은 Admin 함수 8종이다', () => {
+describe('관리자 화면에 필요한 기능이 빠지지 않았는지', () => {
+  test('관리자 화면은 목록·상세·연락·구매·거절·모집·실험 현황 기능이 필요하다', () => {
     expect(ADMIN_API_CONTRACT).toEqual([
       { name: 'getSaleRequests', arity: 0 },
       { name: 'getSaleRequest', arity: 1 },
@@ -22,7 +22,7 @@ describe('관리자 API 계약', () => {
     ]);
   });
 
-  test('Admin 함수 8종을 모두 제공하면 계약을 통과한다', () => {
+  test('필요한 관리자 기능이 있으면 연결을 통과한다', () => {
     const api = {
       getSaleRequests: async () => [],
       getSaleRequest: async (saleRequestId) => ({ saleRequestId }),
@@ -37,7 +37,7 @@ describe('관리자 API 계약', () => {
     expect(() => assertAdminApiContract(api)).not.toThrow();
   });
 
-  test('함수가 하나라도 없으면 계약을 위반한다', () => {
+  test('관리자 기능이 하나라도 빠지면 연결을 막는다', () => {
     expect(() => assertAdminApiContract({})).toThrow(/getSaleRequests/);
     expect(() =>
       assertAdminApiContract({ getSaleRequests: async () => [] }),

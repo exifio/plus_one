@@ -13,6 +13,6 @@ test.each([
   [1.5, false],
   ['abc', false],
   ['', false],
-])('가격 %p의 유효성은 %p다', (value, expected) => {
+])('가격 %p가 저장 가능한 양의 정수인지 확인한다 → %p', (value, expected) => {
   expect(validatePrice(value).valid).toBe(expected);
 });

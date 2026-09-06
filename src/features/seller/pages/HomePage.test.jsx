@@ -20,15 +20,22 @@ function renderHome(getRecruitmentStatus) {
   return { saleRequestApi };
 }
 
-describe('홈 페이지 모집 상태 반영', () => {
-  test('open이면 판매 등록 버튼이 활성화된다', async () => {
+describe('홈에서 모집이 열려 있을 때만 판매 등록을 시작하는지', () => {
+  test('로고를 눌러도 판매 홈으로 돌아온다', async () => {
+    renderHome(jest.fn(async () => ({ status: 'open' })));
+
+    const logoLink = await screen.findByRole('link', { name: '홈으로 이동' });
+    expect(logoLink).toHaveAttribute('href', '/');
+  });
+
+  test('모집 중일 때만 판매 등록을 시작할 수 있다', async () => {
     renderHome(jest.fn(async () => ({ status: 'open' })));
 
     const cta = await screen.findByRole('link', { name: '판매 등록 시작' });
     expect(cta).toHaveAttribute('href', '/sell');
   });
 
-  test('paused이면 모집 중단 안내를 보여주고 판매 등록 링크를 비활성 버튼으로 대체한다', async () => {
+  test('모집이 일시중지면 판매 등록을 시작하지 못하게 한다', async () => {
     renderHome(jest.fn(async () => ({ status: 'paused' })));
 
     expect(await screen.findByText('판매 신청을 잠시 쉬고 있어요')).toBeInTheDocument();
@@ -36,14 +43,14 @@ describe('홈 페이지 모집 상태 반영', () => {
     expect(screen.getByRole('button', { name: '판매 등록 시작' })).toBeDisabled();
   });
 
-  test('closed이면 모집 마감 안내를 보여준다', async () => {
+  test('모집이 마감이면 새 신청을 시작하지 못하게 한다', async () => {
     renderHome(jest.fn(async () => ({ status: 'closed' })));
 
     expect(await screen.findByText('현재 모집이 마감됐어요')).toBeInTheDocument();
     expect(screen.queryByRole('link', { name: '판매 등록 시작' })).not.toBeInTheDocument();
   });
 
-  test('조회 실패 시 신청을 허용하지 않고 안전한 오류 안내를 보여준다', async () => {
+  test('모집 상태를 모르면 신청을 시작시키지 않는다', async () => {
     renderHome(jest.fn(async () => {
       throw new Error('recruitment status failed');
     }));

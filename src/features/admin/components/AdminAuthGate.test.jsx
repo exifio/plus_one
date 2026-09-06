@@ -18,8 +18,8 @@ function renderGate(authApi, initialEntries = ['/admin']) {
   );
 }
 
-describe('Admin Auth Gate', () => {
-  test('세션이 없으면 관리자 화면 대신 로그인 route로 보낸다', async () => {
+describe('관리자 화면 입장 검사', () => {
+  test('로그인이 없으면 관리자 화면을 열어주지 않는다', async () => {
     const authApi = {
       getUser: jest.fn(async () => {
         throw Object.assign(new Error('AUTH_USER_REQUEST_FAILED'), { code: 'AUTH_USER_REQUEST_FAILED' });
@@ -34,7 +34,7 @@ describe('Admin Auth Gate', () => {
     expect(screen.queryByText('보호된 관리자 화면')).not.toBeInTheDocument();
   });
 
-  test('로컬 세션만 있고 서버 사용자가 없으면 로그인 route로 보낸다', async () => {
+  test('브라우저에만 남은 로그인으로는 관리자 화면에 들어가지 못하게 한다', async () => {
     const authApi = {
       getUser: jest.fn(async () => {
         throw Object.assign(new Error('AUTH_USER_REQUEST_FAILED'), { code: 'AUTH_USER_REQUEST_FAILED' });
@@ -49,7 +49,7 @@ describe('Admin Auth Gate', () => {
     expect(authApi.signOut).toHaveBeenCalled();
   });
 
-  test('유효한 세션이 있으면 관리자 route를 통과시킨다', async () => {
+  test('허용된 관리자 로그인이면 관리자 화면을 열어준다', async () => {
     const authApi = {
       getUser: jest.fn(async () => ({ id: 'admin-user' })),
       signOut: jest.fn(async () => {}),

@@ -33,7 +33,7 @@ async function countRows(client, table) {
   return count;
 }
 
-describe('모집 설정', () => {
+describe('모집 상태는 공개로 읽히고, 신청 차단은 서버에서 막히는지', () => {
   let anonClient;
   let serviceClient;
 
@@ -47,14 +47,14 @@ describe('모집 설정', () => {
     await serviceClient.rpc('update_recruitment_status', { p_status: 'open' });
   });
 
-  test('anon 클라이언트는 공개 모집 상태 RPC를 호출할 수 있다', async () => {
+  test('로그인하지 않아도 지금 모집 중인지는 물어볼 수 있다', async () => {
     const { data, error } = await anonClient.rpc('get_recruitment_status');
 
     expect(error).toBeNull();
     expect(['open', 'paused', 'closed']).toContain(data);
   });
 
-  test('anon 클라이언트는 모집 설정 테이블을 직접 조회할 수 없다', async () => {
+  test('로그인하지 않은 사용자는 모집 설정 테이블을 직접 볼 수 없다', async () => {
     const { error } = await anonClient
       .from('recruitment_settings')
       .select('status');
@@ -62,7 +62,7 @@ describe('모집 설정', () => {
     expect(error).not.toBeNull();
   });
 
-  test('anon 클라이언트는 모집 상태를 직접 수정할 수 없다', async () => {
+  test('로그인하지 않은 사용자는 모집 상태를 직접 바꿀 수 없다', async () => {
     const { error } = await anonClient
       .from('recruitment_settings')
       .update({ status: 'closed' })
@@ -71,7 +71,7 @@ describe('모집 설정', () => {
     expect(error).not.toBeNull();
   });
 
-  test('anon 클라이언트는 update_recruitment_status RPC를 실행할 수 없다', async () => {
+  test('로그인하지 않은 사용자는 모집 상태 변경 기능을 실행할 수 없다', async () => {
     const { error } = await anonClient.rpc('update_recruitment_status', {
       p_status: 'closed',
     });
@@ -79,7 +79,7 @@ describe('모집 설정', () => {
     expect(error).not.toBeNull();
   });
 
-  test('service role은 open → paused → open, open → closed → open 전환이 가능하다', async () => {
+  test('운영자 권한으로는 모집을 열고 닫을 수 있다', async () => {
     for (const status of ['paused', 'open', 'closed', 'open']) {
       const { data, error } = await serviceClient.rpc('update_recruitment_status', {
         p_status: status,
@@ -94,7 +94,7 @@ describe('모집 설정', () => {
     }
   });
 
-  test('service role은 잘못된 상태 값을 거부한다', async () => {
+  test('운영자 권한이어도 이상한 모집 상태 값은 저장하지 않는다', async () => {
     for (const status of ['', 'active', 'REOPEN', null]) {
       const { error } = await serviceClient.rpc('update_recruitment_status', {
         p_status: status,
@@ -103,7 +103,7 @@ describe('모집 설정', () => {
     }
   });
 
-  test('모집 중(open)일 때 create_sale_request가 성공한다', async () => {
+  test('모집 중일 때만 새 판매 신청을 저장한다', async () => {
     await serviceClient.rpc('update_recruitment_status', { p_status: 'open' });
 
     const { data, error } = await anonClient.rpc('create_sale_request', SAMPLE_REQUEST);
@@ -113,7 +113,7 @@ describe('모집 설정', () => {
   });
 
   test.each(['paused', 'closed'])(
-    '모집 상태가 %s일 때 create_sale_request는 실패하고 데이터를 남기지 않는다',
+    '모집이 일시중지이거나 마감이면 신청을 저장하지 않고 데이터도 남기지 않는다',
     async (status) => {
       await serviceClient.rpc('update_recruitment_status', { p_status: status });
 
@@ -137,7 +137,7 @@ describe('모집 설정', () => {
     },
   );
 
-  test('모집 설정 row가 없으면 create_sale_request는 실패하고 데이터를 남기지 않는다', async () => {
+  test('모집 설정이 없으면 신청을 허용하지 않고 데이터도 남기지 않는다', async () => {
     const contactValue = TEST_CONTACT.RECRUITMENT_MISSING_ROW;
     const { error: deleteError } = await serviceClient
       .from('recruitment_settings')

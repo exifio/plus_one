@@ -27,11 +27,11 @@ TASKS.md
 
 # 1. 현재 상태
 
-**현재 단계:** Phase 3 Gate 완료 → Phase 4. 로컬 확인은 사람, 복잡한 검증만 AI
+**현재 단계:** Phase 4 완료 — Vercel Production 운영 확인 완료
 
-**현재 Task:** 없음. 사람이 로컬에서 남은 UX/흐름 이슈를 찾고, AI는 그 이슈만 고친다.
+**현재 Task:** 없음. 새 버그 또는 기능 요청이 들어올 때만 작업한다.
 
-**한 줄 요약:** Seller와 Admin 신청·처리·모집·실험 현황을 실제 non-production Supabase에 연결하고 Phase 3 Gate를 통과했다. 남은 클릭 검증과 `npm` 명령은 사람이 로컬에서 한다.
+**한 줄 요약:** Seller와 Admin 신청·처리·모집·실험 현황을 기존 Supabase에 연결했고, Vercel Production의 `/admin`에서 실제 신청 목록을 확인했다.
 
 **완료된 것:**
 
@@ -42,18 +42,14 @@ TASKS.md
 - Admin 신청 목록/상세·signed URL·연락·구매·거절 실제 연결
 - Admin Auth gate/login·실험 현황·모집 상태 실제 연결
 - Phase 3 Gate 실제 end-to-end 검증 및 non-production 데이터 정리
-- Phase 4 검증 역할을 사람과 AI로 분리
+- Phase 4 `VERIFY-HARD` / `VERIFY-SCOPE` 검증
+- Vercel Production 환경 변수와 실제 `/admin` 운영 화면 확인
 
-**남은 것:**
+**남은 것:** 없음.
 
-- 사람이 로컬에서 Seller/Admin/UI와 `npm test` / `test:integration` / `build`를 확인
-- 로컬에서 발견한 버그 수정
-- 사용자가 요청할 때만 `VERIFY-HARD` / `VERIFY-SCOPE`
-- 배포 환경 값·Admin 계정·Vercel 설정 (사람)
+새 버그 또는 기능 요청이 생길 때만 현재 상태를 다시 확인한다.
 
-**사용자님이 할 일:** 로컬에서 화면을 직접 확인하고, 고칠 이슈를 넘긴다. 자동 명령도 로컬에서 실행한다.
-
-**제가 할 일:** VERIFY-1부터 화면을 순서대로 다시 클릭하지 않는다. 넘어온 버그만 고친다. 복잡한 검증은 요청이 있을 때만 `VERIFY-HARD` / `VERIFY-SCOPE`를 한다.
+**다음 작업:** 없음.
 
 ---
 
@@ -227,11 +223,45 @@ TASKS.md
 # 3. 현재 Blocker
 
 - 없음.
-- 바로 다음 작업은 사람의 로컬 확인이다. AI는 VERIFY-1을 시작하지 않는다.
 
 ---
 
 # 4. 완료된 작업
+
+## 2026-09-06 (Vercel Production 운영 확인)
+
+- [x] Vercel Production에 `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY` 설정 확인
+- [x] `https://plus-hana.vercel.app/admin` 접속 및 실제 판매 신청 목록 표시 확인
+- [x] Vercel Production과 기존 Supabase 연결 완료 확인
+
+## 2026-09-06 (테스트 이름 한글화와 누락 케이스 보강)
+
+- [x] 테스트 제목을 작성 이유가 보이게 쉬운 한글로 바꿈 — 51개 파일
+- [x] 신청 버튼을 여러 번 눌러도 한 번만 저장되는지 확인하는 테스트 추가
+- [x] 모집 저장 버튼을 여러 번 눌러도 한 번만 변경되는지 확인하는 테스트 추가
+- [x] 카카오톡 아이디 대소문자를 바꾸지 않는 테스트 추가
+- [x] 관리자 목록 상태 필터가 실제로 목록을 가리는지 확인하는 테스트로 교체
+- [x] 단위 테스트 PASS — 39 suites / 279 tests
+
+## 2026-09-06 (VERIFY-HARD / VERIFY-SCOPE)
+
+- [x] non-production Supabase RLS·private Storage·Admin API·metrics 보안 검증 — 4 suites / 22 tests PASS
+- [x] 임시 비관리자 Auth 계정의 Admin API 403 확인 후 즉시 삭제
+- [x] 판매자 경로의 `purchase-evidence` 미참조, production bundle의 service role/Admin credential 미포함 확인
+- [x] `vercel.json` SPA rewrite와 PRD 금지 기능 정적 검사 통과
+- [x] Production Build PASS — 119 modules
+
+## 2026-09-06 (관리자 로그인 후 판매자 제출 오류)
+
+- [x] 관리자 Auth 세션과 판매자 공개 API의 Supabase client를 분리
+- [x] 판매자 모집 조회·증빙 업로드·신청 RPC가 `persistSession: false` client를 사용하도록 수정
+- [x] 관련 Unit Test 및 Production Build 통과 — 39 suites / 276 tests
+
+## 2026-09-06 (연락처 입력 필드 조건부 표시)
+
+- [x] 연락 방식을 선택하기 전에는 휴대폰/카카오톡 연락처 입력 필드를 숨김
+- [x] 연락 방식 선택 후 해당 유형의 입력 필드가 표시되는 회귀 테스트 추가
+- [x] 관련 Seller 테스트 PASS — 13 tests
 
 ## 2026-09-06 (Admin 목록 401을 빈/오류 화면으로 오인하던 문제)
 

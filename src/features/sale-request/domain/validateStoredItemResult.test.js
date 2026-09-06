@@ -5,7 +5,7 @@
  */
 import { validateStoredItemResult } from './validateStoredItemResult';
 
-test('구매는 구매 증빙이 필요하다', () => {
+test('구매로 바꾸려면 구매 증빙이 있어야 한다', () => {
   expect(validateStoredItemResult({
     result: 'purchased',
     purchaseEvidence: null,
@@ -13,7 +13,7 @@ test('구매는 구매 증빙이 필요하다', () => {
   }).valid).toBe(false);
 });
 
-test('거절은 거절 이유가 필요하다', () => {
+test('거절로 바꾸려면 거절 이유가 있어야 한다', () => {
   expect(validateStoredItemResult({
     result: 'rejected',
     purchaseEvidence: null,
@@ -21,7 +21,7 @@ test('거절은 거절 이유가 필요하다', () => {
   }).valid).toBe(false);
 });
 
-test('미처리 상태에는 구매 증빙과 거절 이유가 없어야 한다', () => {
+test('아직 처리 전인 상품에는 구매 증빙이 있으면 안 된다', () => {
   expect(validateStoredItemResult({
     result: 'pending',
     purchaseEvidence: 'path/image.jpg',
@@ -29,7 +29,7 @@ test('미처리 상태에는 구매 증빙과 거절 이유가 없어야 한다'
   }).valid).toBe(false);
 });
 
-test('미처리 상품은 구매 증빙과 거절 이유가 없으면 유효하다', () => {
+test('아직 처리 전인 상품은 증빙·사유 없이 둘 수 있다', () => {
   expect(validateStoredItemResult({
     result: 'pending',
     purchaseEvidence: null,
@@ -37,7 +37,7 @@ test('미처리 상품은 구매 증빙과 거절 이유가 없으면 유효하�
   }).valid).toBe(true);
 });
 
-test('미처리 상품에 거절 이유가 있으면 실패한다', () => {
+test('아직 처리 전인 상품에 거절 이유를 붙이면 안 된다', () => {
   expect(validateStoredItemResult({
     result: 'pending',
     purchaseEvidence: null,
@@ -45,7 +45,7 @@ test('미처리 상품에 거절 이유가 있으면 실패한다', () => {
   }).valid).toBe(false);
 });
 
-test('구매 상품은 구매 증빙이 있고 거절 이유가 없으면 유효하다', () => {
+test('구매한 상품은 증빙만 있고 거절 이유는 없어야 한다', () => {
   expect(validateStoredItemResult({
     result: 'purchased',
     purchaseEvidence: 'deals/purchase/image1.png',
@@ -53,7 +53,7 @@ test('구매 상품은 구매 증빙이 있고 거절 이유가 없으면 유효
   }).valid).toBe(true);
 });
 
-test('구매 상품에 거절 이유가 있으면 실패한다', () => {
+test('구매한 상품에 거절 이유를 같이 남기면 안 된다', () => {
   expect(validateStoredItemResult({
     result: 'purchased',
     purchaseEvidence: 'deals/purchase/image1.png',
@@ -61,7 +61,7 @@ test('구매 상품에 거절 이유가 있으면 실패한다', () => {
   }).valid).toBe(false);
 });
 
-test('거절 상품은 거절 이유가 있고 구매 증빙이 없으면 유효하다', () => {
+test('거절한 상품은 이유만 있고 구매 증빙은 없어야 한다', () => {
   expect(validateStoredItemResult({
     result: 'rejected',
     purchaseEvidence: null,
@@ -69,7 +69,7 @@ test('거절 상품은 거절 이유가 있고 구매 증빙이 없으면 유효
   }).valid).toBe(true);
 });
 
-test('거절 상품에 구매 증빙이 있으면 실패한다', () => {
+test('거절한 상품에 구매 증빙을 같이 남기면 안 된다', () => {
   expect(validateStoredItemResult({
     result: 'rejected',
     purchaseEvidence: 'deals/purchase/image1.png',
@@ -77,7 +77,7 @@ test('거절 상품에 구매 증빙이 있으면 실패한다', () => {
   }).valid).toBe(false);
 });
 
-test('알 수 없는 결과는 실패한다', () => {
+test('구매·거절·미처리가 아닌 결과는 받지 않는다', () => {
   expect(validateStoredItemResult({
     result: 'mystery',
     purchaseEvidence: null,

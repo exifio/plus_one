@@ -70,8 +70,8 @@ function renderPage({ metrics = seededMetrics, getExperimentMetrics } = {}) {
   return { adminApi };
 }
 
-describe('관리자 실험 현황 페이지', () => {
-  test('제목과 현재 모집 상태 배지를 보여준다', async () => {
+describe('핵심 실험 숫자를 실제 값·빈 값·오류로 구분해 보여주는지', () => {
+  test('실험 현황에서 지금 모집이 열려 있는지도 같이 보여준다', async () => {
     renderPage();
 
     expect(screen.getByRole('heading', { name: '실험 현황' })).toBeInTheDocument();
@@ -80,7 +80,7 @@ describe('관리자 실험 현황 페이지', () => {
     expect(await within(badgeRow).findByText('모집 중')).toBeInTheDocument();
   });
 
-  test('상단 내비게이션에 실험 현황 링크가 있다', async () => {
+  test('관리자 화면에서 실험 현황으로 바로 갈 수 있다', async () => {
     renderPage();
 
     expect(
@@ -88,7 +88,7 @@ describe('관리자 실험 현황 페이지', () => {
     ).toHaveAttribute('href', '/admin/experiment');
   });
 
-  test('핵심 요약 카드 4종을 보여준다', async () => {
+  test('전체 신청·고유 판매자·구매 상품·완료 신청 숫자를 보여준다', async () => {
     renderPage();
 
     const summary = await screen.findByTestId('experiment-summary');
@@ -110,7 +110,7 @@ describe('관리자 실험 현황 페이지', () => {
     ]);
   });
 
-  test('분석 항목을 보여준다', async () => {
+  test('가격·비율·편의점·행사·상태·결과 집계를 보여준다', async () => {
     renderPage();
 
     expect(await screen.findByText('판매 희망금액 분포')).toBeInTheDocument();
@@ -122,13 +122,13 @@ describe('관리자 실험 현황 페이지', () => {
     expect(screen.getByText('재신청 판매자 수')).toBeInTheDocument();
   });
 
-  test('분포가 비어 있으면 데이터가 없어요 문구를 보여준다', async () => {
+  test('진짜로 데이터가 없을 때만 데이터가 없어요를 보여준다', async () => {
     renderPage({ metrics: emptyMetrics });
 
     expect(await screen.findByText('데이터가 없어요.')).toBeInTheDocument();
   });
 
-  test('조회 실패 시 0 데이터가 아니라 오류 안내를 보여준다', async () => {
+  test('숫자를 못 불러오면 0건인 척하지 않는다', async () => {
     renderPage({
       getExperimentMetrics: jest.fn(async () => {
         throw new Error('metrics failed');
@@ -141,7 +141,7 @@ describe('관리자 실험 현황 페이지', () => {
     expect(screen.queryByText('전체 판매 신청 수')).not.toBeInTheDocument();
   });
 
-  test('불러오는 중에는 로딩 문구를 보여준다', () => {
+  test('숫자를 불러오는 동안에는 로딩 중이라고 보여준다', () => {
     renderPage({
       getExperimentMetrics: jest.fn(() => new Promise(() => {})),
     });

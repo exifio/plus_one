@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { useServer } from '../../server/ServerContext';
 import StatusBadge from '../components/StatusBadge';
 import AdminNav from '../components/AdminNav';
-import { formatDateTime } from '../../seller/utils/format';
+import { formatDateTime, formatPhoneNumber } from '../../seller/utils/format';
 import { CONTACT_OPTIONS, PROMOTION_OPTIONS, STORE_OPTIONS, labelFor } from '../../seller/utils/options';
 
 const FILTERS = [
@@ -12,6 +12,21 @@ const FILTERS = [
   { value: 'contacting', label: '연락중' },
   { value: 'completed', label: '처리완료' },
 ];
+
+function formatContact(contact) {
+  if (!contact?.contact_value) return '연락처 없음';
+  if (contact.contact_type === 'phone') {
+    return formatPhoneNumber(contact.contact_value);
+  }
+  return contact.contact_value;
+}
+
+function formatRegistrationMethod(request) {
+  if (request.registration_method === 'screenshot' || Boolean(request.evidence_image)) {
+    return '이미지';
+  }
+  return '텍스트';
+}
 
 export default function AdminListPage() {
   const { adminApi } = useServer();
@@ -24,8 +39,29 @@ export default function AdminListPage() {
 
     adminApi
       .getSaleRequests()
-      .then((data) => {
-        if (!cancelled) setRequests(data);
+      .then(async (data) => {
+        if (cancelled) return;
+        setRequests(data);
+
+        const needsDetail = data.filter((item) => item.registration_method === undefined);
+        if (needsDetail.length > 0) {
+          const enriched = await Promise.all(
+            data.map(async (item) => {
+              if (item.registration_method !== undefined) return item;
+              try {
+                const detail = await adminApi.getSaleRequest(item.sale_request_id);
+                return {
+                  ...item,
+                  registration_method: detail.registration_method,
+                  evidence_image: detail.evidence_image,
+                };
+              } catch {
+                return item;
+              }
+            }),
+          );
+          if (!cancelled) setRequests(enriched);
+        }
       })
       .catch(() => {
         if (!cancelled) setLoadError(true);
@@ -85,12 +121,13 @@ export default function AdminListPage() {
                     <StatusBadge status={request.status} />
                   </div>
                   <strong className="request-condition">
-                    {labelFor(STORE_OPTIONS, request.convenience_store)} ·{' '}
-                    {labelFor(PROMOTION_OPTIONS, request.promotion_type)}
+                    {formatContact(request.seller_contact)}
                   </strong>
                   <p className="request-meta">
-                    상품 {request.items_count}개 ·{' '}
-                    {labelFor(CONTACT_OPTIONS, request.seller_contact.contact_type)}
+                    {labelFor(STORE_OPTIONS, request.convenience_store)} ·{' '}
+                    {labelFor(PROMOTION_OPTIONS, request.promotion_type)} ·{' '}
+                    {labelFor(CONTACT_OPTIONS, request.seller_contact?.contact_type)} ·{' '}
+                    {formatRegistrationMethod(request)}
                   </p>
                 </Link>
               </li>

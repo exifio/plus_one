@@ -38,8 +38,8 @@ async function seedAndRender(draft = validDraft) {
   return { adapters, saleRequestId, ...utils };
 }
 
-describe('관리자 신청 상세 페이지', () => {
-  test('상세 정보를 보여준다', async () => {
+describe('운영자가 신청을 보고 연락·구매·거절을 처리할 수 있는지', () => {
+  test('신청 상세에서 상품과 연락처를 확인할 수 있다', async () => {
     await seedAndRender();
 
     expect(await screen.findByText(/코카콜라 제로 500ml/)).toBeInTheDocument();
@@ -47,7 +47,7 @@ describe('관리자 신청 상세 페이지', () => {
     expect(screen.getByText('판매자에게 연락 시작')).toBeInTheDocument();
   });
 
-  test('상품 정보와 보관상품 확인 이미지를 보여준다', async () => {
+  test('보관상품 확인 이미지를 운영자가 볼 수 있다', async () => {
     await seedAndRender();
 
     await screen.findByText(/코카콜라 제로 500ml/);
@@ -58,7 +58,7 @@ describe('관리자 신청 상세 페이지', () => {
     );
   });
 
-  test('연락 시작 버튼 클릭 시 contacting으로 바뀌고 버튼이 사라진다', async () => {
+  test('연락을 시작하면 접수됨에서 연락중으로 바뀌고 버튼을 숨긴다', async () => {
     const user = userEvent.setup();
     await seedAndRender();
 
@@ -68,7 +68,7 @@ describe('관리자 신청 상세 페이지', () => {
     expect(screen.queryByText('판매자에게 연락 시작')).not.toBeInTheDocument();
   });
 
-  test('구매 처리: 증빙 없이 구매 처리를 누르면 처리되지 않는다', async () => {
+  test('구매 증빙이 없으면 구매 완료로 넘기지 않는다', async () => {
     const user = userEvent.setup();
     await seedAndRender();
 
@@ -80,7 +80,7 @@ describe('관리자 신청 상세 페이지', () => {
     expect(submitButton).toBeDisabled();
   });
 
-  test('구매 처리: 증빙을 선택하면 구매가 완료된다', async () => {
+  test('구매 증빙을 올리면 그 상품을 구매 완료로 바꾼다', async () => {
     const user = userEvent.setup();
     const file = new File(['purchase'], 'deal.png', { type: 'image/png' });
 
@@ -98,7 +98,7 @@ describe('관리자 신청 상세 페이지', () => {
     expect(screen.queryByText('구매 처리할까요?')).not.toBeInTheDocument();
   });
 
-  test('거절 처리: 이유를 입력하면 거절된다', async () => {
+  test('거절 이유를 적어야 그 상품을 거절로 바꿀 수 있다', async () => {
     const user = userEvent.setup();
 
     await seedAndRender();

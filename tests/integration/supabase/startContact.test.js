@@ -8,7 +8,7 @@
 import { createAnonClient, createServiceClient } from './clients';
 import { TEST_CONTACT } from './testFixtures';
 
-describe('연락 시작 RPC', () => {
+describe('접수된 신청만 연락중으로 한 번 바꿀 수 있는지', () => {
   let anonClient;
   let serviceClient;
 
@@ -17,14 +17,14 @@ describe('연락 시작 RPC', () => {
     serviceClient = createServiceClient();
   });
 
-  test('anon은 start_contact를 호출할 수 없다', async () => {
+  test('로그인하지 않은 사용자는 연락 시작을 실행할 수 없다', async () => {
     const { error } = await anonClient.rpc('start_contact', {
       p_sale_request_id: '00000000-0000-0000-0000-000000000001',
     });
     expect(error).not.toBeNull();
   });
 
-  test('service_role은 received를 contacting으로 전환할 수 있다', async () => {
+  test('운영자 권한은 접수된 신청을 연락중으로 바꿀 수 있다', async () => {
     // RPC로 sale request를 먼저 생성한다
     const { data: sr } = await serviceClient.rpc('create_sale_request', {
       p_contact_type: 'phone',
@@ -51,7 +51,7 @@ describe('연락 시작 RPC', () => {
     expect(result.data).toBe('contacting');
   });
 
-  test('이미 contacting인 신청은 다시 연락 시작 처리할 수 없다', async () => {
+  test('이미 연락중인 신청은 다시 연락 시작으로 되돌리지 않는다', async () => {
     const { data: sr, error: createError } = await serviceClient.rpc('create_sale_request', {
       p_contact_type: 'phone',
       p_contact_value: TEST_CONTACT.START_CONTACT_DUPLICATE,

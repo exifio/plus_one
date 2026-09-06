@@ -6,7 +6,7 @@
 import { render, screen } from '@testing-library/react';
 import EvidenceThumb from './EvidenceThumb';
 
-test('파일 미리보기 URL을 해제한다', () => {
+test('화면을 닫을 때 사진 미리보기 주소를 정리한다', () => {
   const createObjectURL = jest.fn(() => 'blob:review-evidence');
   const revokeObjectURL = jest.fn();
   global.URL.createObjectURL = createObjectURL;

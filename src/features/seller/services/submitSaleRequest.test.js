@@ -1,5 +1,5 @@
 /*
- * 관련 작업: FE-7 및 LINK-2 — 판매 신청 제출 서비스.
+ * 관련 작업: FE-7 및 LINK-2 — 판매 신청을 올리기 전에 검증·사진·저장 순서를 지키는지.
  * 작성 이유: 검증·이미지 업로드·신청 RPC의 순서를 지키지 않으면 잘못된 신청이나 고아 데이터가 생길 수 있기 때문.
  * 확인 내용: 검증 실패, 업로드 실패, RPC 실패, 모집 중단 오류, 정상 제출의 호출 순서와 결과.
  */
@@ -43,8 +43,8 @@ function makeService(overrides = {}) {
   return { service, storageApi, saleRequestApi };
 }
 
-describe('판매 신청 제출 서비스', () => {
-  test('정상 제출: 업로드 → RPC가 정확히 한 번 호출되고 성공 결과를 반환한다', async () => {
+describe('판매 신청을 올리기 전에 검증·사진·저장 순서를 지키는지', () => {
+  test('스크린샷 신청은 사진을 올린 뒤에만 저장하고 한 번만 저장한다', async () => {
     const { service, storageApi, saleRequestApi } = makeService();
 
     const result = await service(validDraft);
@@ -57,7 +57,7 @@ describe('판매 신청 제출 서비스', () => {
     expect(saleRequestApi.submitSaleRequest).toHaveBeenCalledTimes(1);
   });
 
-  test('업로드 결과 경로가 RPC에 전달된다', async () => {
+  test('올린 사진의 저장 경로가 신청 저장에 넘어가게 한다', async () => {
     const { service, saleRequestApi } = makeService({
       uploadEvidence: jest.fn(async () => 'evidence/sale/evidence.png'),
     });
@@ -68,7 +68,7 @@ describe('판매 신청 제출 서비스', () => {
     expect(payload.evidenceImage).toBe('evidence/sale/evidence.png');
   });
 
-  test('검증 실패 시 업로드와 RPC를 호출하지 않는다', async () => {
+  test('입력이 잘못되면 사진도 올리지 않고 신청도 저장하지 않는다', async () => {
     const { service, storageApi, saleRequestApi } = makeService();
 
     const result = await service({
@@ -82,7 +82,7 @@ describe('판매 신청 제출 서비스', () => {
     expect(saleRequestApi.submitSaleRequest).not.toHaveBeenCalled();
   });
 
-  test('업로드 실패 시 RPC를 호출하지 않고 실패를 반환한다', async () => {
+  test('사진 올리기에 실패하면 신청을 저장하지 않는다', async () => {
     const { service, saleRequestApi } = makeService({
       uploadEvidence: jest.fn(async () => { throw new Error('upload failed'); }),
     });
@@ -94,7 +94,7 @@ describe('판매 신청 제출 서비스', () => {
     expect(saleRequestApi.submitSaleRequest).not.toHaveBeenCalled();
   });
 
-  test('RPC 실패 시 성공 결과를 반환하지 않는다', async () => {
+  test('신청 저장에 실패하면 성공한 것처럼 돌려주지 않는다', async () => {
     const { service } = makeService({
       submitSaleRequest: jest.fn(async () => { throw new Error('rpc failed'); }),
     });
@@ -105,7 +105,7 @@ describe('판매 신청 제출 서비스', () => {
     expect(result.error).toBe('submit');
   });
 
-  test('증빙 이미지가 없으면 업로드와 RPC를 호출하지 않는다', async () => {
+  test('스크린샷 방식인데 사진이 없으면 신청을 저장하지 않는다', async () => {
     const { service, storageApi, saleRequestApi } = makeService();
 
     const result = await service({ ...validDraft, evidenceImage: null });
@@ -116,7 +116,7 @@ describe('판매 신청 제출 서비스', () => {
     expect(saleRequestApi.submitSaleRequest).not.toHaveBeenCalled();
   });
 
-  test('직접 입력 제출은 이미지 업로드 없이 RPC를 호출한다', async () => {
+  test('직접 입력 신청은 사진을 올리지 않고 상품 정보만 저장한다', async () => {
     const { service, storageApi, saleRequestApi } = makeService();
 
     const result = await service({
@@ -135,7 +135,7 @@ describe('판매 신청 제출 서비스', () => {
     );
   });
 
-  test('RECRUITMENT_NOT_OPEN 오류는 모집 실패로 구분해 반환한다', async () => {
+  test('모집이 멈춰 있어서 실패한 것과 일반 저장 실패를 구분한다', async () => {
     const { service } = makeService({
       submitSaleRequest: jest.fn(async () => {
         const error = new Error('RECRUITMENT_NOT_OPEN');

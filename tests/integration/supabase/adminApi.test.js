@@ -15,8 +15,8 @@ import {
 const { email: adminEmail, password: adminPassword } = getTestAdminCredentials();
 const adminAuthTest = adminEmail && adminPassword ? test : test.skip;
 
-describe('관리자 API Edge Function', () => {
-  test('Admin Auth 요청에 필요한 Authorization CORS 헤더를 허용한다', async () => {
+describe('로그인한 관리자만 관리자 API를 쓸 수 있는지', () => {
+  test('관리자 로그인을 실어 보낼 수 있게 브라우저 요청을 허용한다', async () => {
     const response = await fetch(
       `${getTestSupabaseUrl()}/functions/v1/admin-api`,
       {
@@ -36,7 +36,7 @@ describe('관리자 API Edge Function', () => {
     expect(allowedHeaders.toLowerCase()).not.toContain('x-admin-secret');
   });
 
-  test('access token 없이 Admin API를 호출하면 거부한다', async () => {
+  test('로그인 없이 관리자 API를 부르면 막는다', async () => {
     const response = await fetch(
       `${getTestSupabaseUrl()}/functions/v1/admin-api`,
       {
@@ -52,7 +52,7 @@ describe('관리자 API Edge Function', () => {
     expect(response.status).toBe(401);
   });
 
-  test('유효하지 않은 access token으로 Admin API를 호출하면 거부한다', async () => {
+  test('가짜 로그인으로는 관리자 API를 쓰지 못하게 한다', async () => {
     const response = await fetch(
       `${getTestSupabaseUrl()}/functions/v1/admin-api`,
       {
@@ -69,7 +69,7 @@ describe('관리자 API Edge Function', () => {
     expect(response.status).toBe(401);
   });
 
-  adminAuthTest('허용된 Admin Auth 계정은 주요 Admin action을 호출할 수 있다', async () => {
+  adminAuthTest('정해진 관리자 계정만 모집 상태 같은 관리 기능을 쓸 수 있다', async () => {
     const authClient = createAuthClient();
     const { data, error } = await authClient.auth.signInWithPassword({
       email: adminEmail,
